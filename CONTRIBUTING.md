@@ -2,6 +2,8 @@
 
 本项目的目标是让不同课题替换自己的组件后，仍能使用同一套运行、记录和验证机制。
 
+当前采用增量开发：每阶段只实现 roadmap 中当期的必要功能。architecture.md 描述长期方向；初期使用少量明确的函数和结构，随真实复用需求再拆分层次，不预建空接口或目录。
+
 ## 模块边界
 
 1. core 不导入 torch、transformers、TRL、verl、vLLM 或某个 benchmark。

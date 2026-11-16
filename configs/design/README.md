@@ -1,8 +1,10 @@
 # 设计配置
 
-此目录的文件用于审阅字段与实验边界，**不能执行训练**。尚无配置 schema、CLI、adapter 或环境锁；字段在 P0 实施时可能调整。
+此目录的文件用于审阅字段与实验边界，**不能执行训练**。尚无配置 schema、CLI、adapter 或环境锁；字段在对应阶段实施时可能调整。
 
 four_gpu_rsft.json 表示一个 GSM8K 工具推理的四卡 RSFT/LoRA pilot。预算数字是设计上限，不是实测消耗或运行时间估计。model revision、Meta provider、依赖组合和数据 manifest 在 bring-up 时固定。
+
+这是后续扩展实验的设计示例，不是 v0.0/v0.1 的入口。早期只实现单次执行与评分，再加入固定模型、一个候选的改进循环；最小训练在 v0.2 接入。阶段边界见[增量计划](../../docs/roadmap.md)。
 
 设计重点：
 

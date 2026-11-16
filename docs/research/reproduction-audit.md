@@ -117,7 +117,7 @@ SWE 系列训练任务；评估 SWE-bench Verified、Multilingual、Pro。Qwen3.
 - [README](https://github.com/SuJQ0722/CoEvo-RSI/blob/b9928a973af68781f0ea7fccfbb8a6ee7af0f3f1/README.md)列明三个 domain、模型与配套 harness。
 - [领域协议](https://github.com/SuJQ0722/CoEvo-RSI/blob/b9928a973af68781f0ea7fccfbb8a6ee7af0f3f1/src/domains/base.py)已分离部分评估、采样和选择接口；可参考职责划分。
 - [base.yaml](https://github.com/SuJQ0722/CoEvo-RSI/blob/b9928a973af68781f0ea7fccfbb8a6ee7af0f3f1/configs/base.yaml)可直接查到四卡、长上下文、ZeRO-3、Meta CLI 和继承设置。数据准备和外部引擎仍是独立依赖。
-- **独立实现要求**：不继承其代码与默认任务假设。首版先做简单父代继续训练，checkpoint merging 后置，避免一开始引入合并兼容性和额外显存成本。
+- **独立实现要求**：不继承其代码与默认任务假设。接入训练时先做简单父代继续训练，checkpoint merging 后置，避免一开始引入合并兼容性和额外显存成本。
 
 ## 第 5 篇｜WHALE: A Simple Recipe for Joint Harness–Weight Optimization
 
@@ -154,12 +154,12 @@ SearchQA、DAPO-Math/AIME、Lichess puzzles，使用 Qwen3.5-2B/4B。主比较�
 
 | 参考机制 | 我们如何表达 | 实施顺序 |
 | --- | --- | --- |
-| WHALE 式交替 | Recipe 的 phase 顺序和切换规则 | v0.1 固定轮次，后续 adaptive |
-| HarnessForge 式成对适应 | ModelRef + HarnessRef + adapter 谱系 | v0.1 必须有 |
-| SkillRL 式技能演化 | 版本化 SkillBank + EvolveSkills 算子 | v0.2 |
-| CoEvo-RSI 式历史继承 | archive + checkpoint parent selector | v0.2；合并另做 |
-| Self-HPO 式 self-proposal | Meta role 解析到更新后的 Task ModelRef | v0.2 先做小规模检验 |
-| CoHARL 式共享模型种群 | 多 harness 指向共享模型，单独的 pool scheduler | v0.3 |
+| WHALE 式交替 | phase 顺序和切换规则 | v0.2 接入训练后固定交替；adaptive 后置 |
+| HarnessForge 式成对适应 | model–harness 组合与 adapter 谱系 | v0.1 记配置组合，v0.2 加权重/adapter |
+| SkillRL 式技能演化 | 版本化 SkillBank + EvolveSkills 算子 | 后续按课题单独增加 |
+| CoEvo-RSI 式历史继承 | archive + checkpoint parent selector | 后续单独增加；合并另做 |
+| Self-HPO 式 self-proposal | Meta role 解析到更新后的 Task ModelRef | 基础共演化稳定后单独检验 |
+| CoHARL 式共享模型种群 | 多 harness 指向共享模型，单独的 pool scheduler | 研究需要时单独引入 |
 
 这是机制参考顺序，不是对原文效果的横向排名。不同工作数据、模型、预算和指标差异较大，不比较其表面分数。
 

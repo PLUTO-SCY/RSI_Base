@@ -1,6 +1,6 @@
 # 架构与技术选型决策
 
-状态：2026-11-16 的实施建议。未经集成验证的组合都属于待验证选型；具体版本在 P0/P1 锁定并记录。
+状态：2026-11-16 的实施建议，已按增量路线修订。未经集成验证的组合都属于待验证选型；依赖在引入对应功能的阶段锁定并记录。
 
 ## D01｜RSI 编排从零独立实现
 
@@ -10,9 +10,11 @@
 
 不 fork、vendor 或以论文仓库作父工程。允许使用官方引擎包，但其内部类型不泄漏到 core。只有确有必要且可维护的小型补丁才进入独立 adapter patch，并记录上游问题和移除条件。
 
-## D02｜先 RSFT + LoRA SFT，后 GRPO
+## D02｜先固定模型的改进循环，再 RSFT + LoRA SFT，后 GRPO
 
 依据：本项目先验证通用闭环；用户已确认单机四卡，尚未确认可用显存和实际吞吐。
+
+v0.0/v0.1 先固定 Task 模型，完成单任务执行、评分、Meta 配置提案和三轮串行选择。v0.2 加入一种 LoRA SFT 后端；不将训练引擎接入作为第一个可运行版本的前提。
 
 RSFT 拆成四个通用步骤：collect → verify → curate → SFT。SFT learner 只接收训练作业，不承担整个演化循环。这样可把训练替换为 GRPO，而不修改 Meta 提案或 benchmark 接口。
 
@@ -26,11 +28,11 @@ RSFT 拆成四个通用步骤：collect → verify → curate → SFT。SFT lear
 
 采用官方 [vLLM](https://docs.vllm.ai/en/latest/features/lora/) 作为第一本地服务后端。model ID、base/adapter、tokenizer、chat template、工具解析器和采样设置都进入 ModelRef/RuntimeSpec。
 
-首版先用完整服务重载验证阶段交接，再优化热切 adapter。若特定模型无法在锁定版本中正确加载，则选较小/成熟支持的模型，或另接官方推理后端；不将特殊处理写进 core。
+v0.0/v0.1 可直接使用已配置的模型端点。v0.2 引入本地训练时，先用完整服务重载验证阶段交接，再优化热切 adapter。若特定模型无法在锁定版本中正确加载，则选较小/成熟支持的模型，或另接官方推理后端；不将特殊处理写进主循环。
 
 标准 HTTP 调用足够做 SFT 数据采集，但不自动满足 RL 对 token IDs/logprobs 的要求。
 
-## D04｜四卡分时使用
+## D04｜接入本地训练后，四卡分时使用
 
 生成阶段可使用四个小模型副本，或在显存不足时用模型并行；训练阶段暂停生成并释放服务，然后由四卡训练作业独占。
 
@@ -44,13 +46,13 @@ RSFT 拆成四个通用步骤：collect → verify → curate → SFT。SFT lear
 - 配置采用 Pydantic schema + YAML/JSON 输入，拒绝未知字段并输出 resolved config。
 - 编排/推理/SFT/RL/部分任务环境可以使用不同虚拟环境或镜像，以 manifest/JSONL 交换数据。
 - 不预先承诺所有引擎能装进同一个环境；每个被验证的组合有自己的 lock 或镜像 digest。
-- 本轮只交付 JSON 设计示例，schema 与 CLI 在 P0 实现。
+- 现有 JSON 是后续设计示例。v0.0/v0.1 只校验实际需要的少量字段，后续逐步扩展 schema 与 CLI。
 
 当前执行工具中的默认 Python 为 3.8，nvidia-smi 不能与驱动通信。这只说明本轮工具环境尚不能验证宿主 GPU 栈，不否认用户说明的四张实体 GPU。
 
 ## D06｜本地 artifact 与事件记录优先
 
-首版用文件系统存不可变 artifact、JSONL 记事件、SQLite 提供查询索引。外部存储或 W&B/MLflow 作为可选 exporter。
+v0.0/v0.1 用文件系统保存配置、候选、逐题结果与决策，用 JSONL 记录调用和用量。SQLite、通用 ArtifactStore 和外部 exporter 按实际规模与查询需求后置。
 
 数据/权重/轨迹不进 Git；Git 保存代码、实验定义、数据与产物的 manifest、验证摘要。异步后台服务不是首版依赖。
 
@@ -60,9 +62,9 @@ TrainingVerifier 决定训练样本/奖励；SearchEvaluator 决定候选排名�
 
 evaluator 课题可替换前两者、训练 proxy judge，甚至演化评分策略；最终 gold/官方指标保持固定，从而量化偏差、误选和 reward hacking。若研究对象就是 gold verifier，则另外冻结更高层评价集，不能同时修改自己和自己的最终考题。
 
-## D08｜最小两个原生任务，再做外部评测桥接
+## D08｜先一个任务跑通，再用第二任务整理接口
 
-首批使用数学工具推理和 ALFWorld 文本交互，迫使接口覆盖单次生成与有状态 episode。ToolHop/BFCL 随后加入结构化工具调用；Inspect、Harbor、lm-eval 作为独立 bridge。
+v0.0/v0.1 从 GSM8K 的单次生成与评分起步，v0.2 在同一任务接训练。v0.3 再接 ALFWorld 和固定交互 loop，用真实差异检验接口；计算工具、ToolHop/BFCL 和外部 bridge 逐项加入。
 
 增加一个 benchmark 必须明确其支持模式：最终评测、在线执行，还是训练闭环。不能把一个通用评测器的任务列表直接作为本项目的支持列表。
 
@@ -82,3 +84,9 @@ evaluator 课题可替换前两者、训练 proxy judge，甚至演化评分策�
 基线性能不提升时仍可证明基础设施交付完成；要主张某组件有效，则必须用固定预算对照、独立最终测试和统计误差给出证据。
 
 低资源 recipe 命名为项目自己的实验定义，清楚列出与原论文的模型、数据、phase、奖励和预算差异。保留方法引用，不沿用“原样复现”的承诺。
+
+## D11｜每阶段只增加一个主要变化来源
+
+先固定权重验证 harness/config 改进，再加训练，再加第二任务，之后每次只改变一个研究组件。完整架构保持可演化方向，工程抽象由已出现的复用需求驱动。
+
+第一阶段后置通用算子 DAG、插件注册、数据库和复杂调度；数据隔离、固定评分、候选版本与调用上限从一开始保留。版本范围以 roadmap 为准。

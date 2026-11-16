@@ -14,7 +14,7 @@
 
 | 优先级 | 任务族与候选 benchmark | 计划模式 | 评分与关键工程成本 |
 | --- | --- | --- | --- |
-| P1 | GSM8K + 受控计算工具 | 原生 episode/learn/eval | 数值答案；工具执行由宿主隔离，先做第一个真实闭环 |
+| P1 | GSM8K，先单次生成再扩展计算工具 | 先 eval，v0.2 加 learn，后续扩展 episode | 数值答案；计算工具在隔离执行就绪后加入 |
 | P2 | ALFWorld 文本环境 | 原生 episode/learn/eval | 环境目标完成；reset、步数、状态和 action grammar |
 | P3 | ToolHop；BFCL 指定子集 | ToolHop 原生；BFCL 先 eval bridge | 结构化工具调用、依赖链、官方任务判分；逐子集确认在线环境能力 |
 | P3 | MATH-500、AIME | 先 eval；数学训练另用训练来源 | 数学等价/官方规则；小测试集不能承担反复候选搜索 |
@@ -24,7 +24,7 @@
 | P5 | WebShop；后续真实网页环境 | WebShop 原生，浏览器环境独立 adapter | 状态 reset、环境依赖、用户/会话隔离；需专门资源验证 |
 | 辅助 | lm-eval 中选定的语言/推理任务 | model-only eval bridge | 通用能力与遗忘；不代表任意工具 agent 的结果 |
 
-首版 v0.1 的承诺范围是 **GSM8K 工具推理 + ALFWorld**，不是上表全部完成。第二个任务是检验架构边界的必要条件，而非为了凑 benchmark 数量。
+v0.0–v0.2 先只做 GSM8K，先单次生成与评分，再接改进和训练。v0.3 接 ALFWorld，检验有状态交互与任务差异。上表是后续扩展方向，完成一个阶段后再推进下一项。
 
 ## 3. 原生插件契约
 
