@@ -1,0 +1,42 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python and tools
+__pycache__/
+*.py[cod]
+.venv/
+.venvs/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Experiment assets: keep manifests in versioned experiment definitions instead
+/artifacts/
+/runs/
+/data/
+/datasets/
+/checkpoints/
+/models/
+/outputs/
+/logs/
+wandb/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.bin
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
