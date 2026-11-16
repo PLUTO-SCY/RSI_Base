@@ -100,7 +100,7 @@ ToolHop原始benchmark共995题、3,912个本地可执行工具。800/195是Harn
 
 ## 建议落地的首个正式任务
 
-**主参考为Meta-Harness当前公开记忆分类实验；小模型和预算缩减是本项目改动，不宣称复现其主表。** 设计文件：[meta_harness_s2d_pilot.json](../../configs/design/meta_harness_s2d_pilot.json)，当前不能由现有CLI执行。
+**主参考为Meta-Harness当前公开记忆分类实验；小模型和预算缩减是本项目改动，不宣称复现其主表。** 初始设计文件：[meta_harness_s2d_pilot.json](../../configs/design/meta_harness_s2d_pilot.json)。后续运行器已独立实现，实际配置和去重后的协议见[记忆演化实验](../memory-evolution.md)；下面保留当时的设计建议。旧design-only文件不作为可执行配置。
 
 - 数据按官方参考配置使用S2D 200/50/212，固定版本、ID、标签集合及seed42。所有候选只从200条train构建记忆，test标签不进入记忆或proposer。
 - proposer反馈预设为train内32题leave-one-out诊断，检索时去掉当前题自身；val用于候选选择并只回传汇总指标。这个更严格的观察边界是我们的新增设置，不能写成论文原参数。

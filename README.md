@@ -4,6 +4,8 @@
 
 **v0.0/v0.1 已实现，完成真实 API 与本地单卡 GPU 推理验证。** 当前支持固定权重的 prompt/harness 配置改进；LoRA SFT、代码级 harness 编辑和多任务训练尚未实现。
 
+当前集中验证[记忆harness演化](docs/memory-evolution.md)：已实现检索/上下文/两次调用流程搜索、重复选择、随机对照及测试封存；正在运行三次独立搜索。稳定性结果完成后据实更新，LoRA后置。
+
 ## 当前闭环
 
 ~~~text
@@ -46,6 +48,7 @@ sh scripts/run_smoke.sh
 | configs/qwen_math_growth.json | 4B 六轮无增长对照；历史评分协议见诊断记录 |
 | configs/qwen_1_7b_math_growth.json | 1.7B 六轮历史对照，策略与格式耦合 |
 | configs/qwen_1_7b_boxed_growth.json | 当前增长试验：固定格式后缀、600字符策略、八轮搜索 |
+| configs/memory_s2d.json | 记忆分类harness：固定4B模型、5轮×2候选、重复验证、独立搜索与随机对照 |
 | configs/calibration/ | 失败和中间校准配置，供核查，不作为增长成绩 |
 | configs/design/ | 后续 benchmark / 训练方案设计，不能执行当前 CLI |
 

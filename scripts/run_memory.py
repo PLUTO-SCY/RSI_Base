@@ -17,11 +17,25 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("phase", choices=["calibrate", "search", "suite", "finalize"])
     parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d.json")
+    parser.add_argument(
+        "--seed", type=int, help="Independent calibration/search seed; suite seeds are predeclared"
+    )
     parser.add_argument("--data", type=Path, default=root / "data/memory-s2d")
     parser.add_argument("--output", type=Path, default=root / "runs/memory-s2d-seed42")
     args = parser.parse_args()
     os.environ.setdefault("RSI_LOCAL_API_KEY", "EMPTY")
     config = MemoryConfig.model_validate_json(args.config.read_text())
+    if args.seed is not None:
+        if args.phase not in {"calibrate", "search"}:
+            raise ValueError("--seed applies only to independent calibration/search")
+        config = config.model_copy(
+            update={
+                "seed": args.seed,
+                "meta": config.meta.model_copy(
+                    update={"state_dir": f".local/claude-memory/seed{args.seed}"}
+                ),
+            }
+        )
     if args.phase == "calibrate":
         result = calibrate(config, args.data, args.output, root)
     elif args.phase == "search":
