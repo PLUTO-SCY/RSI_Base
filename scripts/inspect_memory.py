@@ -52,6 +52,7 @@ def main():
             "selected_validation_curve": [
                 state["summary"]["correct_by_repeat"] for state in states
             ],
+            "random_candidates_completed": len(list((directory / "random").glob("*/summary.json"))),
             "candidates": proposals,
         }
         reports.append(report)

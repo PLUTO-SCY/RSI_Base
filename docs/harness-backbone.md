@@ -50,7 +50,7 @@ sh scripts/setup_task.sh
 独立测试、消融和恢复检查只在两组搜索都冻结后执行；所有结果按真实证据填写。
 
 ```sh
-.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-starter-v1
+.venv/bin/python scripts/run_memory.py finalize --parallel --output runs/memory-s2d-starter-v1
 .venv/bin/python scripts/audit_memory_ablations.py
 .venv/bin/python scripts/verify_memory_resume.py --suite runs/memory-s2d-starter-v1 --data data/memory-s2d-expanded
 .venv-task/bin/python scripts/record_task_runtime.py --output .local/task-runtime-memory.json

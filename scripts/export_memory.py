@@ -86,12 +86,23 @@ def main():
     parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-starter-v1")
     parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
     parser.add_argument(
+        "--tooling-commit", help="Commit containing the export and scheduling scripts"
+    )
+    parser.add_argument(
         "--name",
         choices=["memory-evolution", "memory-evolution-expanded"],
         default="memory-evolution",
     )
     args = parser.parse_args()
     report = read_json(args.suite / "report.json")
+    for row in report["runs"]:
+        if "strong_fixed_baseline" not in row:
+            if row["source"]["config"].get("initial_baseline") is not None:
+                raise ValueError("Explicit seed report requires its own strong-control audit")
+            # Older strong-start audits already use the strongest fixed policy as baseline.
+            row["strong_fixed_baseline_name"] = row["baseline_name"]
+            row["strong_fixed_baseline"] = row["baseline"]
+            row["selected_vs_strong_fixed"] = row["paired"]
     report["suite_protocol"] = read_json(args.suite / "suite.json")
     report["comparison_definition"] = {
         "primary": "Selected vs configured initial baseline, identified by each run's baseline_name",
@@ -130,12 +141,27 @@ def main():
         ):
             raise ValueError("Worker checkpoints differ")
     report["export_script_sha256"] = file_hash(__file__)
+    report["evaluation_scheduler_sha256"] = file_hash(root / "scripts/run_memory.py")
+    if (args.suite / "audit_scheduler_transition.json").exists():
+        report["evaluation_scheduler_transition"] = read_json(
+            args.suite / "audit_scheduler_transition.json"
+        )
     source = {
         str(p.relative_to(root / "src")): file_hash(p)
         for p in (root / "src/rsi_base").rglob("*.py")
     }
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
     report["verified_source_git_commit"] = commit
+    tooling_commit = args.tooling_commit or commit
+    report["verified_tooling_git_commit"] = subprocess.check_output(
+        ["git", "rev-parse", tooling_commit], cwd=root, text=True
+    ).strip()
+    for path in ["scripts/export_memory.py", "scripts/run_memory.py"]:
+        committed_script = subprocess.check_output(
+            ["git", "show", f"{tooling_commit}:{path}"], cwd=root
+        )
+        if committed_script != (root / path).read_bytes():
+            raise ValueError(f"Uncommitted tooling: {path}")
     # Verify current worktree and committed package bytes match the source used in each run.
     paths = subprocess.check_output(
         ["git", "ls-tree", "-r", "--name-only", commit, "--", "src/rsi_base"], cwd=root, text=True

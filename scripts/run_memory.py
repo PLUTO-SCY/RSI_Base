@@ -31,7 +31,7 @@ def main():
     parser.add_argument(
         "--parallel",
         action="store_true",
-        help="Run the three independent suite workers concurrently",
+        help="Run suite searches or frozen test workers concurrently",
     )
     parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
     parser.add_argument("--output", type=Path, default=root / "runs/memory-s2d-starter-v1")
@@ -136,6 +136,24 @@ def main():
                     search(local, args.data, directory, root)
             result = {"searches_frozen": True, "seeds": seeds, "test_evaluated": False}
         else:
+            if args.parallel:
+                if any(not (directory / "frozen.json").exists() for directory in directories):
+                    raise ValueError("All searches must be frozen before parallel test access")
+                # Separate worker outputs leave the suite's sealed final protocol intact.
+                # The official aggregate below reuses every completed policy evaluation.
+                with ThreadPoolExecutor(max_workers=3) as pool:
+                    jobs = [
+                        pool.submit(
+                            finalize,
+                            [directory],
+                            args.data,
+                            args.output / "audit_workers" / directory.name,
+                            root,
+                        )
+                        for directory in directories
+                    ]
+                    for job in jobs:
+                        job.result()
             result = finalize(directories, args.data, args.output, root)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 

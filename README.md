@@ -35,7 +35,7 @@ Task 执行训练诊断与候选选择样本 → 固定规则评分
 ~~~sh
 .venv/bin/python scripts/run_memory.py suite --parallel \
   --task-base-urls http://127.0.0.1:18000/v1 http://127.0.0.1:18001/v1 http://127.0.0.1:18002/v1
-.venv/bin/python scripts/run_memory.py finalize
+.venv/bin/python scripts/run_memory.py finalize --parallel
 .venv/bin/python scripts/export_memory.py
 ~~~
 
