@@ -6,6 +6,8 @@
 
 当前集中验证[记忆harness演化](docs/memory-evolution.md)：已实现检索/上下文/两次调用流程搜索、重复选择、随机对照及测试封存；正在运行三次独立搜索。稳定性结果完成后据实更新，LoRA后置。
 
+50题选择集上的三次开发增长未通过211题独立测试；完整保留负结果。当前按[扩大选择集协议](docs/memory-evolution-expanded.md)使用200记忆/300选择/291全新测试，继续只做harness。
+
 ## 当前闭环
 
 ~~~text
@@ -49,6 +51,7 @@ sh scripts/run_smoke.sh
 | configs/qwen_1_7b_math_growth.json | 1.7B 六轮历史对照，策略与格式耦合 |
 | configs/qwen_1_7b_boxed_growth.json | 当前增长试验：固定格式后缀、600字符策略、八轮搜索 |
 | configs/memory_s2d.json | 记忆分类harness：固定4B模型、5轮×2候选、重复验证、独立搜索与随机对照 |
+| configs/memory_s2d_expanded.json | 扩大选择集协议；三张卡分别运行独立搜索，训练记忆和模型权重固定 |
 | configs/calibration/ | 失败和中间校准配置，供核查，不作为增长成绩 |
 | configs/design/ | 后续 benchmark / 训练方案设计，不能执行当前 CLI |
 

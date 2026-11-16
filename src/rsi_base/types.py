@@ -43,6 +43,7 @@ class MetaSettings(StrictModel):
     command: str = "claude"
     state_dir: str = ".local/claude"
     prompt_char_budget: int = Field(default=6000, ge=128, le=8000)
+    effort: Literal["low", "medium", "high", "xhigh", "max"] | None = None
 
     @field_validator("base_url")
     @classmethod

@@ -7,13 +7,14 @@ import subprocess
 from pathlib import Path
 
 from rsi_base.loop import file_hash
-from rsi_base.storage import write_json
+from rsi_base.storage import read_json, write_json
 
 
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", type=Path, required=True)
+    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d")
     args = parser.parse_args()
     directories = sorted(args.suite.glob("seed*"))
     if len(directories) != 3 or any(not (d / "frozen.json").exists() for d in directories):
@@ -33,11 +34,18 @@ def main():
         }
 
     before = state()
+    protocol = read_json(args.suite / "suite.json")
+    config_path = args.suite / "verification_config.json"
+    write_json(config_path, protocol["config"])
     subprocess.run(
         [
             str(root / ".venv/bin/python"),
             str(root / "scripts/run_memory.py"),
             "suite",
+            "--config",
+            str(config_path),
+            "--data",
+            str(args.data),
             "--output",
             str(args.suite),
         ],

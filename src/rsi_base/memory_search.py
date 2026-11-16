@@ -12,7 +12,7 @@ from .classification import (
     effective_policy,
     normalize,
 )
-from .improve import ClaudeMeta
+from .improve import ClaudeMeta, MetaCallFailure
 from .memory_loop import (
     calibrate,
     evaluate_policy,
@@ -45,7 +45,14 @@ def random_policy(rng):
 
 def local_neighbor(current, index, seen):
     """A bounded one-field neighborhood, independent of labels or reference answers."""
-    variants = []
+    variants = [
+        (
+            "workflow",
+            current.model_copy(
+                update={"workflow": "direct" if current.workflow == "verify" else "verify"}
+            ),
+        )
+    ]
     fields = ["max_per_label", "examples"]
     if current.workflow == "verify" and current.review_retrieval == "draft_contrast":
         fields += ["confirmers", "challengers"]
@@ -63,12 +70,6 @@ def local_neighbor(current, index, seen):
             ),
         ),
         ("label_hints", current.model_copy(update={"label_hints": not current.label_hints})),
-        (
-            "workflow",
-            current.model_copy(
-                update={"workflow": "direct" if current.workflow == "verify" else "verify"}
-            ),
-        ),
     ]
     for offset in range(len(variants)):
         field, policy = variants[(index - 1 + offset) % len(variants)]
@@ -259,7 +260,7 @@ def search(config, data, output, root, *, meta=None):
                     ]
                     proposal = MemoryBatch(candidates=items)
                     first = proposal.candidates[0].policy
-                    if (
+                    if local is None and (
                         first.system_prompt != current.system_prompt
                         or sum(
                             value != current.model_dump()[key]
@@ -278,13 +279,26 @@ def search(config, data, output, root, *, meta=None):
                             raise ValueError("Candidate embeds dataset identifiers")
                     write_json(path, proposal.model_dump())
                     ledger.finish(identifier, "meta", **metadata)
-                except ValueError as exc:
+                except (ValueError, MetaCallFailure) as exc:
+                    if isinstance(exc, MetaCallFailure) and local is None:
+                        ledger.finish(
+                            identifier,
+                            "meta",
+                            error_type=type(exc).__name__,
+                            usage_unconfirmed=True,
+                        )
+                        raise
                     write_json(
                         invalid, {"error_type": type(exc).__name__, "detail": str(exc)[:600]}
                     )
                     if local is not None:
                         write_json(path, {"candidates": [local.model_dump()]})
-                    ledger.finish(identifier, "meta", error_type=type(exc).__name__)
+                    ledger.finish(
+                        identifier,
+                        "meta",
+                        error_type=type(exc).__name__,
+                        usage_unconfirmed=isinstance(exc, MetaCallFailure),
+                    )
                 except Exception as exc:
                     ledger.finish(
                         identifier, "meta", error_type=type(exc).__name__, usage_unconfirmed=True

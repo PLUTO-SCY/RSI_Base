@@ -11,7 +11,7 @@ from rsi_base.storage import read_json, write_json
 from rsi_base.types import digest
 
 
-def plot(report, destination):
+def plot(report, destination, name):
     import matplotlib
 
     matplotlib.use("Agg")
@@ -43,8 +43,10 @@ def plot(report, destination):
         ax.grid(alpha=0.25)
         ax.legend(fontsize=8)
         ax.set_ylabel("Exact-label accuracy (%)")
-    axes[0].set_title("Search validation (50 queries × 3)")
-    axes[1].set_title("Frozen test replay (211 queries × 3)")
+    validation_size = report["runs"][0]["curve"][0]["validation"]["examples"]
+    test_size = report["runs"][0]["baseline"]["examples"]
+    axes[0].set_title(f"Search validation ({validation_size} queries × 3)")
+    axes[1].set_title(f"Frozen test replay ({test_size} queries × 3)")
     axes[2].set_title("Final test; × = random-search control")
     axes[0].set_xlabel("Evolution iteration")
     axes[1].set_xlabel("Evolution iteration")
@@ -60,7 +62,7 @@ def plot(report, destination):
     )
     fig.tight_layout(rect=[0, 0.06, 1, 0.94])
     for extension in ["png", "svg"]:
-        target = destination / f"memory-evolution.{extension}"
+        target = destination / f"{name}.{extension}"
         fig.savefig(target, dpi=180)
         if extension == "svg":
             target.write_text(
@@ -72,12 +74,29 @@ def plot(report, destination):
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-suite-v4")
+    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-expanded-v1")
+    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
+    parser.add_argument(
+        "--name",
+        choices=["memory-evolution", "memory-evolution-expanded"],
+        default="memory-evolution",
+    )
     args = parser.parse_args()
     report = read_json(args.suite / "report.json")
     report["suite_protocol"] = read_json(args.suite / "suite.json")
-    report["data_manifest"] = read_json(root / "data/memory-s2d/manifest.json")
+    report["data_manifest"] = read_json(args.data / "manifest.json")
     report["task_runtime"] = read_json(root / ".local/task-runtime-memory.json")
+    runtimes = {
+        row["seed"]: root / f".local/task-runtime-expanded-{row['seed']}.json"
+        for row in report["runs"]
+    }
+    if all(path.exists() for path in runtimes.values()):
+        report["task_runtime_by_seed"] = {seed: read_json(path) for seed, path in runtimes.items()}
+        if any(
+            r["files"] != report["task_runtime"]["files"]
+            for r in report["task_runtime_by_seed"].values()
+        ):
+            raise ValueError("Worker checkpoints differ")
     report["export_script_sha256"] = file_hash(__file__)
     source = {
         str(p.relative_to(root / "src")): file_hash(p)
@@ -118,14 +137,14 @@ def main():
     texts = [
         json.loads(line)["question"]
         for split in ["train", "val"]
-        for line in (root / f"data/memory-s2d/{split}.jsonl").read_text().splitlines()
+        for line in (args.data / f"{split}.jsonl").read_text().splitlines()
     ]
     serialized = " ".join(json.dumps(report, ensure_ascii=False).split()).casefold()
     if any(" ".join(text.split()).casefold() in serialized for text in texts):
         raise ValueError("Dataset query in public output; keep raw evidence private")
     destination = root / "docs/validation"
-    write_json(destination / "memory-evolution.json", report)
-    plot(report, destination)
+    write_json(destination / f"{args.name}.json", report)
+    plot(report, destination, args.name)
     print(
         json.dumps(
             {

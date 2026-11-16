@@ -269,7 +269,7 @@ def test_effective_policy_ignores_unused_review_knobs():
 def test_local_neighbor_is_bounded_structural_and_label_independent():
     parent = MemoryPolicy(examples=32, max_per_label=4, workflow="verify")
     candidate = local_neighbor(parent, 1, {})
-    assert candidate.policy.max_per_label == 3
+    assert candidate.policy.workflow == "direct"
     assert candidate.policy.system_prompt == parent.system_prompt
     assert (
         sum(a != parent.model_dump()[key] for key, a in candidate.policy.model_dump().items()) == 1

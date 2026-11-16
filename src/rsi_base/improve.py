@@ -27,6 +27,10 @@ META_SYSTEM = (
 )
 
 
+class MetaCallFailure(RuntimeError):
+    """Provider/transport failure, distinguished from monitored configuration changes."""
+
+
 def global_config_fingerprints():
     import hashlib
 
@@ -111,6 +115,8 @@ class ClaudeMeta:
             self.system_prompt
             + f" The system_prompt must be at most {self.settings.prompt_char_budget} characters.",
         ]
+        if self.settings.effort is not None:
+            command.extend(["--effort", self.settings.effort])
         request = {"current": current.model_dump(), "development_evidence": evidence}
         write_json(
             Path(output) / "meta_runtime.json",
@@ -134,7 +140,7 @@ class ClaudeMeta:
                 timeout=self.settings.timeout,
             )
         except subprocess.TimeoutExpired as exc:
-            raise RuntimeError("Claude invocation timed out; usage may be unconfirmed") from exc
+            raise MetaCallFailure("Claude invocation timed out; usage may be unconfirmed") from exc
         finally:
             if global_config_fingerprints() != before:
                 raise RuntimeError(
@@ -147,12 +153,12 @@ class ClaudeMeta:
                 Path(output) / "meta_error.json",
                 {"exit_code": process.returncode, "stderr": redact(process.stderr)[-1000:]},
             )
-            raise RuntimeError("Claude did not return a JSON envelope") from exc
+            raise MetaCallFailure("Claude did not return a JSON envelope") from exc
         write_json(Path(output) / "meta_result.json", result)
         if process.returncode or result.get("is_error") or result.get("type") != "result":
             if result.get("is_error") and "output token maximum" in str(result.get("result", "")):
                 raise ValueError("Meta proposal exceeded its output token budget")
-            raise RuntimeError("Claude returned an error; inspect the redacted meta_result.json")
+            raise MetaCallFailure("Claude returned an error; inspect the redacted meta_result.json")
         proposal = parse_proposal(result.get("result", ""), self.proposal_type)
         return proposal, {
             "usage": result.get("usage"),

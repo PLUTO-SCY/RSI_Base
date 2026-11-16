@@ -17,8 +17,8 @@ from rsi_base.types import digest
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-suite-v4")
-    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d")
+    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-expanded-v1")
+    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
     args = parser.parse_args()
     os.environ.setdefault("RSI_LOCAL_API_KEY", "EMPTY")
     protocol = read_json(args.suite / "suite.json")

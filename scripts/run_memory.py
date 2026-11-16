@@ -4,6 +4,8 @@
 import argparse
 import json
 import os
+import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from rsi_base.memory_audit import finalize
@@ -18,13 +20,32 @@ def main():
     parser.add_argument("phase", choices=["calibrate", "search", "suite", "finalize"])
     parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d.json")
     parser.add_argument(
+        "--task-base-url", help="Endpoint for one independent calibration/search worker"
+    )
+    parser.add_argument(
+        "--task-base-urls", nargs=3, help="Suite endpoints in seed order 42, 123, 2026"
+    )
+    parser.add_argument(
         "--seed", type=int, help="Independent calibration/search seed; suite seeds are predeclared"
+    )
+    parser.add_argument(
+        "--parallel",
+        action="store_true",
+        help="Run the three independent suite workers concurrently",
     )
     parser.add_argument("--data", type=Path, default=root / "data/memory-s2d")
     parser.add_argument("--output", type=Path, default=root / "runs/memory-s2d-seed42")
     args = parser.parse_args()
     os.environ.setdefault("RSI_LOCAL_API_KEY", "EMPTY")
     config = MemoryConfig.model_validate_json(args.config.read_text())
+    if args.task_base_url:
+        config = config.model_copy(
+            update={
+                "task": type(config.task).model_validate(
+                    {**config.task.model_dump(), "base_url": args.task_base_url}
+                )
+            }
+        )
     if args.seed is not None:
         if args.phase not in {"calibrate", "search"}:
             raise ValueError("--seed applies only to independent calibration/search")
@@ -42,11 +63,19 @@ def main():
         result = search(config, args.data, args.output, root)
     else:
         seeds = [42, 123, 2026]
+        existing_path = args.output / "suite.json"
+        existing = read_json(existing_path) if existing_path.exists() else {}
+        endpoints = (
+            dict(zip(map(str, seeds), args.task_base_urls, strict=True))
+            if args.task_base_urls
+            else existing.get("task_base_urls_by_seed", {})
+        )
         protocol = {
             "config": config.model_dump(),
             "seeds": seeds,
             "test_gate": "Freeze all three searches before any final evaluation",
             "stability_gate": "Positive test delta in every search seed and question-cluster bootstrap lower bound > 0; repeats averaged within each question",
+            "task_base_urls_by_seed": endpoints,
         }
         args.output.mkdir(parents=True, exist_ok=True)
         path = args.output / "suite.json"
@@ -55,16 +84,56 @@ def main():
         write_json(path, protocol)
         directories = [args.output / f"seed{seed}" for seed in seeds]
         if args.phase == "suite":
-            for seed, directory in zip(seeds, directories, strict=True):
-                local = config.model_copy(
-                    update={
-                        "seed": seed,
-                        "meta": config.meta.model_copy(
-                            update={"state_dir": f".local/claude-memory/seed{seed}"}
-                        ),
-                    }
-                )
-                search(local, args.data, directory, root)
+            if args.parallel:
+
+                def worker(item):
+                    seed, directory = item
+                    with (args.output / f"driver-seed{seed}.log").open("a") as log:
+                        subprocess.run(
+                            [
+                                str(root / ".venv/bin/python"),
+                                str(Path(__file__).resolve()),
+                                "search",
+                                "--seed",
+                                str(seed),
+                                "--config",
+                                str(args.config.resolve()),
+                                "--data",
+                                str(args.data.resolve()),
+                                "--output",
+                                str(directory.resolve()),
+                                "--task-base-url",
+                                endpoints.get(str(seed), config.task.base_url),
+                            ],
+                            cwd=root,
+                            check=True,
+                            stdout=log,
+                            stderr=subprocess.STDOUT,
+                        )
+
+                with ThreadPoolExecutor(max_workers=3) as pool:
+                    jobs = [
+                        pool.submit(worker, item) for item in zip(seeds, directories, strict=True)
+                    ]
+                    for job in jobs:
+                        job.result()
+            else:
+                for seed, directory in zip(seeds, directories, strict=True):
+                    local = config.model_copy(
+                        update={
+                            "seed": seed,
+                            "task": type(config.task).model_validate(
+                                {
+                                    **config.task.model_dump(),
+                                    "base_url": endpoints.get(str(seed), config.task.base_url),
+                                }
+                            ),
+                            "meta": config.meta.model_copy(
+                                update={"state_dir": f".local/claude-memory/seed{seed}"}
+                            ),
+                        }
+                    )
+                    search(local, args.data, directory, root)
             result = {"searches_frozen": True, "seeds": seeds, "test_evaluated": False}
         else:
             result = finalize(directories, args.data, args.output, root)
