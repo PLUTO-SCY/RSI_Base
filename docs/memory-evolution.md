@@ -38,8 +38,8 @@ RSI_GPU=0 sh scripts/serve_task.sh
 另一个终端运行：
 
 ```sh
-.venv/bin/python scripts/run_memory.py suite --output runs/memory-s2d-suite-v1
-.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-suite-v1
+.venv/bin/python scripts/run_memory.py suite --output runs/memory-s2d-suite-v2
+.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-suite-v2
 ```
 
 当前配置 `configs/memory_s2d.json`；Task每次输出128token、temperature0，记忆上下文12000字符、单题至多两次调用。搜索中断后同命令恢复，源代码/依赖/输入变化则拒绝恢复。正式搜索时不修改实现。凭据仍为忽略的`.env.local`，本地无鉴权Task端点使用`EMPTY`。
@@ -49,3 +49,7 @@ RSI_GPU=0 sh scripts/serve_task.sh
 首次标签占位符指令引起严重格式误解，已弃用，未作为增长起点。改为“仅输出允许标签的完整名称”，重新固定评分和输出约定后，三次验证重复均得到：no-memory27/50、few-shot28/50、BM25 39/50、固定验证40/50。它们是校准结果，正式搜索将重新测定并选择父代。
 
 正式结果待运行完成后按原协议填写，不预填收益。
+
+首次正式运行在第一个Meta提案时遭遇CLI输出4096token上限，未产生任何候选或测试评估。保留`runs/memory-s2d-suite-v1`，Meta预算改为8192、要求紧凑JSON后另开v2。Task预算、评分与数据不变；这属于接入修正，不算演化收益。
+
+预先安排机制消融：冻结后分别评“仅采用演化结构、保留父代prompt”和“仅采用演化prompt、保留父代结构”。消融只解释收益来源，不参与策略选择或后续演化。

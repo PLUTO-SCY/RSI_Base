@@ -32,6 +32,8 @@ class MemoryConfig(StrictModel):
 META_MEMORY = """Improve a fixed-weight classification agent's memory/retrieval harness.
 Return one JSON object containing exactly `candidates`, an array of TWO different
 objects each with `policy` and `reason`. Policy follows the supplied JSON schema.
+Keep the JSON compact. Each reason must be at most 200 characters. Give no prose
+outside the JSON. Prefer one or two targeted changes per candidate.
 You may change retrieval algorithm, example count, label diversity/caps, ordering,
 retrieval hints, system_prompt, and direct/verify/rewrite workflow. Every query has
 at most two model calls. All retrieval uses labeled TRAINING memory only.

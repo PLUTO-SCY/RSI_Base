@@ -10,8 +10,8 @@
   "meta": {
     "model": "deepseek-v4.1-flash",
     "base_url": "https://zgc.apihy.com",
-    "max_tokens": 4096,
-    "timeout": 300,
+    "max_tokens": 8192,
+    "timeout": 600,
     "state_dir": ".local/claude-memory",
     "prompt_char_budget": 1200
   },
