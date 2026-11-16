@@ -93,7 +93,7 @@ v0.0/v0.1 从 GSM8K 的单次生成与评分起步，v0.2 在同一任务接训�
 
 ## D12｜Meta 首选 Claude Code，Task 使用自研薄 harness
 
-状态：当前推荐的起步方案，尚未实现或执行真实模型调用。用户提出 Claude Code 作为 Meta、Task 使用简单 agent 架构，与增量路线一致。
+状态：已实现 v0.1 并完成真实 API pilot。Meta 使用 Claude Code + DeepSeek，Task 使用 OpenAI 兼容调用与自研薄 harness；本地 Qwen 接入模板尚未实测，训练后续实现。
 
 ### 模型与 harness 分开选择
 

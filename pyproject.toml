@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rsi-base"
+version = "0.1.0"
+description = "A minimal, inspectable recursive improvement experiment loop"
+requires-python = ">=3.11,<3.13"
+dependencies = ["openai>=2,<3", "httpx[socks]>=0.28,<1", "python-dotenv>=1,<2", "pydantic>=2.12,<3"]
+
+[project.scripts]
+rsi = "rsi_base.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.12,<1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rsi_base"]

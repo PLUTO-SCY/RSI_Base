@@ -67,6 +67,17 @@
 - 已读取官方程序化调用/权限文档，并只读核对本机 CLI 版本 2.1.169 和 help 能力；未运行真实模型 prompt，也未验证登录或模型服务。
 - 本次仍是设计细化，未实现 v0.0 或 Meta adapter。
 
+## 2026-11-16｜v0.0 / v0.1 实现与真实 DeepSeek 接入
+
+- 已建立项目 .venv（Python 3.11.15），保留 pyproject.toml、uv.lock、固定 Python 版本和 setup.sh；不修改系统 Python 环境或 shell 配置。
+- 已实现 Task 单次执行、GSM8K-style 数值评分、Claude Code Meta 提案、单候选三轮选择、原子文件 checkpoint/哈希、逐题恢复与调用记账。
+- 已实测给定网关的 OpenAI 与 Anthropic 协议，以及 Claude Code 2.1.169 + deepseek-v4.1-flash。凭据、状态和完整产物保存在 Git 忽略的本地目录中。
+- 已通过 17 项离线测试；Meta 配置隔离、回退、预算、数据边界和恢复均有覆盖。
+- 最终真实 pilot：6 个开发题、6 个独立留出题，3 轮，30 次 Task 调用与 3 次 Meta 调用；三轮均平局保留父代，留出完成 6/6、答对 6/6。
+- 初测留出为 5/6，最终复验为 6/6，两次都保留记录；不将其解释为改进收益。已完成运行恢复保持同一汇总，新增调用 0。
+- 详细事实与机器可读摘要见 validation-v0.1.md 和 validation/v0.1.json；原始题目、回答、密钥和完整日志不提交 Git。
+- 本地 Qwen 配置仅是模板，未验证 GPU 或权重训练。v0.2 及后续仍未实现。
+
 ## 状态用语
 
 - 设计完成：已形成可审阅的协议/方案。

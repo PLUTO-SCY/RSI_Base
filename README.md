@@ -1,83 +1,75 @@
 # RSI Base
 
-面向 evaluator、效率和泛化研究的递归自我改进（RSI）实验基础框架。
+独立实现的最小 RSI 实验框架，按阶段扩展，面向 evaluator、效率和泛化研究。
 
-**当前状态：调研与设计阶段。尚未实现演化运行时、真实模型训练或 benchmark 适配器。** 本仓库中的配置是接口设计示例，不能用于启动训练。完成情况见[进度记录](docs/progress.md)。
+**v0.0/v0.1 已实现并完成真实 API 小规模验证。** 当前支持固定权重的 prompt/harness 配置改进；LoRA SFT、代码级 harness 编辑和多任务训练尚未实现。
 
-## 已确认的边界
-
-- 从零独立实现 RSI 编排、Meta/Task Agent 接口、候选管理和实验记录；论文实现只用于理解与核对机制。
-- 单机四卡优先，首个模型以 Qwen3-4B 或更小的同系列模型为候选；显存、驱动和实际吞吐经实测后确定。
-- 官方维护的训练、推理、评测引擎通过适配层使用；不复制论文仓库中的训练框架或任务专用控制逻辑。
-- 采用增量设计：先完成单任务执行与评分，再做固定权重的 prompt/受限 harness 改进；随后接 LoRA SFT 形成模型–harness 共演化，再逐项扩展任务和研究组件。
-- 不把分数提升设为软件交付的必要条件：零增益、退化和失败也是需要完整保留的实验结果。
-
-## 建议先读
-
-| 文档 | 回答的问题 |
-| --- | --- |
-| [调研地图](docs/research/landscape.md) | 相关工作已经做了什么，哪些部分值得参考？ |
-| [重点论文与代码核查](docs/research/reproduction-audit.md) | 用户列出的五篇工作提供了哪些真实资产，复现边界是什么？ |
-| [架构方案](docs/architecture.md) | Meta Agent、Task Agent、训练、harness、数据如何解耦？ |
-| [技术选型](docs/decisions.md) | 哪些自己写，哪些通过官方引擎复用？ |
-| [实验协议与四卡预算](docs/experiment-protocol.md) | 如何防止评估泄漏、做归因、控制成本和验证泛化？ |
-| [Benchmark 接入计划](docs/benchmarks.md) | 各任务支持到什么程度，先做哪几个？ |
-| [开发计划与验收](docs/roadmap.md) | 每阶段交付什么，什么条件算完成？ |
-| [进度记录](docs/progress.md) | 本轮完成了什么，下一步是什么，GitHub 同步状态如何？ |
-
-## 当前实施顺序
-
-| 版本 | 交付 |
-| --- | --- |
-| v0.0 | 一个模型、一个任务、固定 prompt 的执行与评估 |
-| v0.1 | 固定权重，Meta 每轮提出一个受限 harness 候选，串行运行三轮 |
-| v0.2 | 加入成功轨迹筛选、LoRA SFT、模型重载和下一轮 |
-| v0.3 | 接第二任务，根据实际差异整理接口与交互 loop |
-| v0.4 及后续 | 按课题逐项加入 evaluator、数据配比、效率策略及其他能力 |
-
-每阶段有独立验收。当前仍无已实现版本；具体范围见[增量开发计划](docs/roadmap.md)。
-
-## 长期目标闭环
-
-~~~mermaid
-flowchart LR
-    A["版本化 AgentSnapshot"] --> B["Task Agent 执行训练侧任务"]
-    B --> C["轨迹、反馈和成本"]
-    C --> D["Meta Agent 提出 ImprovementPlan"]
-    D --> E["执行 harness / 数据 / 训练算子"]
-    E --> F["固定协议下验证候选"]
-    F --> G["选择新快照或保留父代"]
-    G --> A
-~~~
-
-Meta Agent 是提出改进的角色，Task Agent 是执行任务的角色；两者可以使用不同模型，也可以在后续实验中共享同一份更新后的权重。角色关系必须记录在实验清单中。
-
-当前首选实现：Claude Code CLI 承担 Meta 的提案执行，Task 使用自研薄 harness；两侧底层模型分别配置。v0.1 先做受限配置提案与单次任务生成，具体边界见[选型决策](docs/decisions.md)。
-
-## 仓库组织
-
-当前只提交设计文档、设计示例和协作约定。实现按里程碑逐步新增，避免先建大量空模块。
+## 当前闭环
 
 ~~~text
-README.md
-CONTRIBUTING.md
-configs/design/                 # 明确标为 design-only 的示例
-docs/
-  research/                     # 文献证据、代码核查与检索边界
-  architecture.md
-  decisions.md
-  experiment-protocol.md
-  benchmarks.md
-  roadmap.md
-  progress.md
+Task 执行开发样本 → 固定规则评分
+→ Meta 提出一个新 system prompt
+→ 子代在相同样本与协议下执行
+→ 严格改善则接受，否则保留父代
+→ 下一轮；最后冻结选择并独立评估
 ~~~
 
-计划采用 Python 的 src 布局。初期保持少量平坦模块；在第二个任务和训练接口带来实际差异后，再逐步整理 core、adapters、benchmarks 和 recipes，详见[长期架构](docs/architecture.md)。
+- Meta：Claude Code CLI + 可配置底层模型；本次接通 deepseek-v4.1-flash。
+- Task：自研单次模型调用 harness，通过 OpenAI 兼容接口执行。
+- 默认每轮一个候选，三轮串行运行；评分、模型、生成预算和数据划分固定。
+- 保存配置、源代码/依赖锁哈希、逐题记录、提案、决策、调用账本和校验后的轮次 checkpoint。
+- 支持完成轮次与部分逐题结果恢复；拒绝输入变更和已封存产物损坏。
 
-## 开发与进度同步
+## 快速开始
 
-每个里程碑提交可审阅的代码、配置、验证结果，并更新 docs/progress.md。仅在远端实际接受提交并核对提交 SHA 后，标记为“已同步 GitHub”。数据、权重和完整轨迹存于外部 artifact 目录，Git 中保存来源、哈希、配置和摘要。
+需要 uv；Meta 还需已有的 Claude Code CLI。本机验证版本为 Python 3.11.15、uv 0.11.17、Claude Code 2.1.169。所有 Python 依赖安装到项目 .venv。
 
-远端仓库：[PLUTO-SCY/RSI_Base](https://github.com/PLUTO-SCY/RSI_Base)。
+~~~sh
+sh scripts/setup.sh
+.venv/bin/python scripts/configure_credentials.py
+.venv/bin/python scripts/fetch_gsm8k.py \
+  --revision 3101c7d5072418e28b9008a6636bde82a006892c \
+  --dev-size 6 --test-size 6
+sh scripts/run_smoke.sh
+~~~
 
-调研日期：2026-11-16。文献结论、代码检查和待验证设计分别标识；没有执行过的实验不写成复现结果。
+凭据脚本隐藏输入，将密钥写入被 Git 忽略的 .env.local，权限 0600。已有文件不会被覆盖。无需修改用户的 shell 或全局 Claude 配置。
+
+运行说明、独立 baseline 和恢复命令见[上手指南](docs/getting-started.md)。运行真实命令会消费所配置服务的 API 用量。
+
+## 配置
+
+| 配置 | 状态与用途 |
+| --- | --- |
+| configs/deepseek_smoke.json | 实测：Meta 和 Task 分别通过 Claude Code / OpenAI SDK 调用同一 DeepSeek 服务，验证软件闭环 |
+| configs/local_qwen.json | 本地 Task endpoint 模板，尚未在 Qwen 服务上实测；Meta 仍使用 DeepSeek |
+| configs/design/ | 后续训练方案示例，不能执行当前 CLI |
+
+Meta 的凭据、状态和调用参数仅设置在子进程中。使用项目 .local/claude、bare 模式、关闭模型工具/MCP，并监测全局 Claude/shell 配置哈希。Meta 不直接操作实验仓库或评分器。
+
+## 验证
+
+~~~sh
+sh scripts/check.sh
+~~~
+
+离线测试覆盖评分、数据隔离、选择/回退、非法提案、恢复、产物校验、预算保留和 Claude 配置隔离，不使用真实凭据或模型服务。
+
+真实运行结果与复现范围见[验证记录](docs/validation-v0.1.md)。小集合上跑通循环不代表获得了能力提升，当前版本也没有更新模型权重。
+
+## 代码与文档
+
+~~~text
+src/rsi_base/        # 类型、Task、Meta、评分、串行循环、文件记录与 CLI
+scripts/            # 环境创建、凭据输入、数据准备、接入探测、检查与运行
+tests/              # 无网络的契约和故障路径测试
+configs/            # 当前可运行配置与独立的 design-only 目录
+uv.lock             # Python 依赖锁
+docs/               # 上手、验证、调研、架构和开发计划
+~~~
+
+优先阅读[上手指南](docs/getting-started.md)、[增量路线](docs/roadmap.md)、[进度](docs/progress.md)与[选型决策](docs/decisions.md)。
+
+调研参考：[文献地图](docs/research/landscape.md)、[五篇论文与代码核查](docs/research/reproduction-audit.md)。长期方案：[架构](docs/architecture.md)、[实验协议](docs/experiment-protocol.md)、[benchmark 计划](docs/benchmarks.md)。
+
+代码从零实现，论文只作机制参考；官方 SDK/CLI 作为依赖。数据、权重、密钥和完整运行记录不进 Git，验证摘要与复现脚本随代码提交。

@@ -1,0 +1,258 @@
+import json
+from types import SimpleNamespace
+
+import pytest
+
+from rsi_base.benchmark import check_disjoint, parse_number, score
+from rsi_base.improve import ClaudeMeta, parse_proposal
+from rsi_base.loop import run
+from rsi_base.storage import BudgetExceeded, Ledger
+from rsi_base.types import AgentSpec, Limits, Proposal, RunConfig
+
+
+def configuration(rounds=3):
+    return RunConfig.model_validate(
+        {
+            "task": {"model": "fixture", "base_url": "http://localhost:8000/v1"},
+            "meta": {"model": "fixture", "base_url": "http://localhost:8000"},
+            "agent": {"system_prompt": "seed"},
+            "limits": {
+                "rounds": rounds,
+                "max_task_calls": 20,
+                "max_meta_calls": 10,
+                "wall_seconds": 600,
+            },
+        }
+    )
+
+
+def datasets(tmp_path):
+    for name, question in (("dev", "DEVELOPMENT task"), ("test", "HELDOUT task")):
+        (tmp_path / f"{name}.jsonl").write_text(
+            json.dumps({"id": name, "question": question, "answer": "2"}) + "\n"
+        )
+    return tmp_path / "dev.jsonl", tmp_path / "test.jsonl"
+
+
+class FakeTask:
+    def __init__(self):
+        self.calls = []
+
+    def run(self, spec, question):
+        self.calls.append((spec.system_prompt, question))
+        return {
+            "response": "#### 2" if spec.system_prompt == "improved" else "#### 1",
+            "usage": {"completion_tokens": 3},
+            "elapsed_seconds": 0,
+        }
+
+
+class FakeMeta:
+    def __init__(self):
+        self.calls = []
+
+    def propose(self, current, evidence, output):
+        self.calls.append((current, evidence))
+        number = len(self.calls)
+        if number == 3:
+            return SimpleNamespace(
+                model_dump=lambda: {
+                    "system_prompt": "improved",
+                    "reason": "invalid",
+                    "model": "changed",
+                }
+            ), {}
+        return Proposal(system_prompt="improved" if number == 1 else "worse", reason="fixture"), {}
+
+
+@pytest.mark.parametrize(
+    ("response", "target"),
+    [
+        ("work\n#### 1,234", "1234"),
+        ("#### -0.5", "-1/2"),
+        ("\\boxed{2}", "2"),
+        ("$5", "5"),
+        ("#### 6.", "6"),
+    ],
+)
+def test_numeric_score(response, target):
+    assert score(response, target)["score"] == 1
+
+
+def test_score_requires_explicit_numeric_answer():
+    assert score("I think it is 3", "3")["status"] == "format_error"
+    assert score("#### 3", "4")["score"] == 0
+    with pytest.raises(ValueError):
+        parse_number("__import__('os').system('false')")
+
+
+def test_proposal_cannot_modify_fixed_model():
+    with pytest.raises(ValueError):
+        parse_proposal('{"system_prompt":"x","reason":"y","model":"changed"}')
+
+
+def test_meta_rejects_unsupported_sampling_settings():
+    config = configuration().model_dump()
+    config["meta"]["temperature"] = 0.5
+    with pytest.raises(ValueError):
+        RunConfig.model_validate(config)
+
+
+def test_overlap_detected_by_question():
+    with pytest.raises(ValueError):
+        check_disjoint(
+            [{"id": "a", "question": "Same  question"}], [{"id": "b", "question": "same question"}]
+        )
+
+
+def test_loop_selection_rollback_isolation_and_resume(tmp_path):
+    dev, test = datasets(tmp_path)
+    task, meta = FakeTask(), FakeMeta()
+    out = tmp_path / "run"
+    first = run(configuration(), dev, test, out, tmp_path, task=task, meta=meta)
+    assert first["selected_round"] == 1
+    assert [s["decision"] for s in first["history"]] == [
+        "baseline",
+        "accepted",
+        "retained_parent",
+        "rejected_invalid_proposal",
+    ]
+    assert first["held_out"]["accuracy"] == 1
+    assert first["weights_updated"] is False
+    assert first["application_calls"] == {"task": 4, "meta": 3}
+    assert all("HELDOUT" not in json.dumps(evidence) for _, evidence in meta.calls)
+    before = (len(task.calls), len(meta.calls))
+    resumed = run(configuration(), dev, test, out, tmp_path, resume=True, task=task, meta=meta)
+    assert resumed == first
+    assert before == (len(task.calls), len(meta.calls))
+
+
+def test_resume_refuses_changed_configuration_and_tampering(tmp_path):
+    dev, test = datasets(tmp_path)
+    out = tmp_path / "run"
+    run(configuration(0), dev, test, out, tmp_path, task=FakeTask(), meta=FakeMeta())
+    with pytest.raises(ValueError, match="identical"):
+        run(
+            configuration(1),
+            dev,
+            test,
+            out,
+            tmp_path,
+            resume=True,
+            task=FakeTask(),
+            meta=FakeMeta(),
+        )
+    result = out / "rounds/000/results.jsonl"
+    result.write_text(result.read_text().replace("#### 1", "#### 2"))
+    with pytest.raises(ValueError, match="checksum"):
+        run(
+            configuration(0),
+            dev,
+            test,
+            out,
+            tmp_path,
+            resume=True,
+            task=FakeTask(),
+            meta=FakeMeta(),
+        )
+
+
+def test_interrupted_evaluation_resumes_without_repeating_completed_tasks(tmp_path):
+    dev, test = datasets(tmp_path)
+
+    class Flaky(FakeTask):
+        fail = True
+
+        def run(self, spec, question):
+            if spec.system_prompt == "improved" and self.fail:
+                self.fail = False
+                raise ConnectionError("fixture interruption")
+            return super().run(spec, question)
+
+    task, meta = Flaky(), FakeMeta()
+    out = tmp_path / "run"
+    with pytest.raises(ConnectionError):
+        run(configuration(1), dev, test, out, tmp_path, task=task, meta=meta)
+    result = run(configuration(1), dev, test, out, tmp_path, resume=True, task=task, meta=meta)
+    assert len(meta.calls) == 1
+    assert task.calls.count(("seed", "DEVELOPMENT task")) == 1
+    assert result["application_calls"] == {"task": 4, "meta": 1}
+
+
+def test_failed_calls_consume_budget_across_resume(tmp_path):
+    limits = Limits(max_task_calls=1)
+    ledger = Ledger(tmp_path / "calls.jsonl", limits)
+    ledger.start("task")
+    again = Ledger(tmp_path / "calls.jsonl", limits)
+    with pytest.raises(BudgetExceeded):
+        again.start("task")
+
+
+def test_wall_deadline_survives_hard_restart(tmp_path, monkeypatch):
+    monkeypatch.setattr("rsi_base.storage.time.time", lambda: 1000)
+    limits = Limits(wall_seconds=10)
+    Ledger(tmp_path / "calls.jsonl", limits).start("task")
+    monkeypatch.setattr("rsi_base.storage.time.time", lambda: 1011)
+    with pytest.raises(BudgetExceeded, match="wall-time"):
+        Ledger(tmp_path / "calls.jsonl", limits).start("task")
+
+
+def test_development_cannot_spend_final_evaluation_reservation(tmp_path):
+    ledger = Ledger(tmp_path / "calls.jsonl", Limits(max_task_calls=3))
+    ledger.reserved_task_calls = 2
+    ledger.start("task")
+    with pytest.raises(BudgetExceeded):
+        ledger.start("task")
+    ledger.reserved_task_calls = 0
+    ledger.start("task")
+    ledger.start("task")
+
+
+def test_claude_uses_project_state_and_process_local_provider(tmp_path, monkeypatch):
+    (tmp_path / ".env.local").write_text("RSI_API_KEY=fixture-key\n")
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://unrelated.example")
+    monkeypatch.setenv("ANTHROPIC_AUTH_TOKEN", "unrelated-token")
+    monkeypatch.setattr("rsi_base.improve.shutil.which", lambda _: "/fake/claude")
+    captured = {}
+
+    def fake_run(command, **kwargs):
+        if "--version" in command:
+            return SimpleNamespace(stdout="fixture-version")
+        captured.update(kwargs)
+        captured["command"] = command
+        return SimpleNamespace(
+            returncode=0,
+            stderr="",
+            stdout=json.dumps(
+                {
+                    "type": "result",
+                    "is_error": False,
+                    "num_turns": 1,
+                    "result": '{"system_prompt":"improved","reason":"fixture"}',
+                }
+            ),
+        )
+
+    monkeypatch.setattr("rsi_base.improve.subprocess.run", fake_run)
+    proposal, metadata = ClaudeMeta(configuration().meta, tmp_path).propose(
+        AgentSpec(system_prompt="seed"), {"examples": []}, tmp_path / "result"
+    )
+    assert proposal.system_prompt == "improved"
+    assert captured["env"]["ANTHROPIC_BASE_URL"] == "http://localhost:8000"
+    assert "ANTHROPIC_AUTH_TOKEN" not in captured["env"]
+    assert captured["env"]["CLAUDE_CONFIG_DIR"].startswith(str(tmp_path))
+    assert "--bare" in captured["command"]
+    assert captured["command"][captured["command"].index("--tools") + 1] == ""
+    assert metadata["global_configuration_unchanged"]
+    import os
+
+    assert os.environ["ANTHROPIC_BASE_URL"] == "https://unrelated.example"
+
+
+def test_claude_state_cannot_escape_project(tmp_path, monkeypatch):
+    monkeypatch.setattr("rsi_base.improve.shutil.which", lambda _: "/fake/claude")
+    config = configuration()
+    settings = config.meta.model_copy(update={"state_dir": "../elsewhere"})
+    (tmp_path / ".env.local").write_text("RSI_API_KEY=fixture-key\n")
+    with pytest.raises(ValueError, match="inside"):
+        ClaudeMeta(settings, tmp_path).propose(config.agent, [], tmp_path)
