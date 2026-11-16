@@ -1,0 +1,94 @@
+{
+  "status": "design-only; not executable by current RSI CLI",
+  "reference": {
+    "paper": "https://arxiv.org/html/2603.28052v1",
+    "released_config": "https://github.com/stanford-iris-lab/meta-harness/blob/main/reference_examples/text_classification/config.yaml",
+    "inspected_on": "2026-11-16",
+    "pin_code_and_data_revision_before_implementation": true
+  },
+  "benchmark": {
+    "name": "Symptom2Disease from the Meta-Harness/MCE release",
+    "memory_train": 200,
+    "search_validation": 50,
+    "final_test": 212,
+    "class_count": 22,
+    "reset_memory_for_each_candidate_and_repeat": true,
+    "test_labels_never_enter_memory_or_meta_feedback": true,
+    "seed": 42,
+    "use_released_reference_split_ids": true
+  },
+  "task": {
+    "model": "Qwen/Qwen3-4B-Instruct-2507",
+    "revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+    "weights_fixed": true,
+    "max_model_calls_per_query": 2,
+    "max_output_tokens_per_call": 128,
+    "temperature": 0,
+    "context_budget_must_be_fixed_before_search": true
+  },
+  "meta": {
+    "model": "deepseek-v4.1-flash",
+    "entrypoint": "project-local Claude Code invocation",
+    "mutation_scope": [
+      "memory selection and organization",
+      "retrieval",
+      "context construction",
+      "draft verification policy"
+    ],
+    "protected": [
+      "data split",
+      "labels",
+      "evaluator",
+      "output contract",
+      "model and call/token limits"
+    ]
+  },
+  "pilot": {
+    "iterations": 5,
+    "candidates_per_iteration": 2,
+    "validation_repeats": 3,
+    "candidate_budget_includes_seed_policies": true,
+    "preflight": {
+      "use_training_and_validation_only": true,
+      "check_strong_baseline_ceiling_and_near_chance_floor": true,
+      "alternative_benchmarks_if_unsuitable": [
+        "LawBench",
+        "ToolHop"
+      ],
+      "do_not_weaken_baseline_or_consult_test_for_task_selection": true
+    },
+    "static_baselines": [
+      "no_memory",
+      "fixed_fewshot",
+      "BM25_retrieval",
+      "fixed_two_pass_verification"
+    ],
+    "compare_actual_tokens_calls_latency": true,
+    "finalize_before_test_curve_replay": true,
+    "search_controls": [
+      "static",
+      "budget_matched_random_proposals"
+    ],
+    "feedback_policy": {
+      "source": "memory_train",
+      "diagnostic_queries": 32,
+      "exclude_query_from_its_own_memory_context": true,
+      "meta_observes_aggregate_validation_metrics": true,
+      "note": "Proposed leave-one-out training diagnostics are our additional observation boundary, not a claimed original-paper parameter."
+    }
+  },
+  "paper_alignment_target": {
+    "classification_iterations": 20,
+    "candidates_per_iteration": 2,
+    "paper_task_model": "GPT-OSS-120B",
+    "current_release_memory_learning": "offline, one epoch",
+    "note": "Small model, pilot budget, repeat count, and restricted edit space are our changes; this is not a claim to reproduce the paper's main table."
+  },
+  "not_implemented": [
+    "classification benchmark adapter",
+    "memory/context builder",
+    "two-call task protocol",
+    "multiple-candidate selector",
+    "native class-label evaluation"
+  ]
+}

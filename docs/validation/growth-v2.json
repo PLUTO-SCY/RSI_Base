@@ -1,0 +1,923 @@
+{
+  "protocol": "numeric MATH-500 research split; not official benchmark accuracy",
+  "task_model": "Qwen/Qwen3-1.7B",
+  "weights_updated": false,
+  "evaluator": "math_numeric",
+  "selection": "strict dev accuracy gain; no monitor/final feedback to Meta",
+  "monitor_protocol": "Evaluate each unique selected incumbent once after search; cache unchanged prompts",
+  "curve": [
+    {
+      "round": 0,
+      "decision": "baseline",
+      "selected_round": 0,
+      "candidate_dev": 0.6875,
+      "selected_dev": 0.6875,
+      "candidate_monitor": 0.625,
+      "selected_monitor": 0.625,
+      "dev_summary": {
+        "assigned": 48,
+        "completed": 48,
+        "correct": 33,
+        "accuracy": 0.6875,
+        "format_errors": 3,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 29,
+        "truncated": 1,
+        "output_tokens": 37592
+      },
+      "monitor_summary": {
+        "assigned": 32,
+        "completed": 32,
+        "correct": 20,
+        "accuracy": 0.625,
+        "format_errors": 5,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 9,
+        "truncated": 3,
+        "output_tokens": 44634
+      }
+    },
+    {
+      "round": 1,
+      "decision": "retained_parent",
+      "selected_round": 0,
+      "candidate_dev": 0.4791666666666667,
+      "selected_dev": 0.6875,
+      "candidate_monitor": null,
+      "selected_monitor": 0.625,
+      "dev_summary": {
+        "assigned": 48,
+        "completed": 48,
+        "correct": 23,
+        "accuracy": 0.4791666666666667,
+        "format_errors": 17,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 7,
+        "truncated": 2,
+        "output_tokens": 42753
+      },
+      "monitor_summary": {
+        "assigned": 32,
+        "completed": 32,
+        "correct": 20,
+        "accuracy": 0.625,
+        "format_errors": 5,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 9,
+        "truncated": 3,
+        "output_tokens": 44634
+      },
+      "gained_vs_parent": 4,
+      "lost_vs_parent": 14
+    },
+    {
+      "round": 2,
+      "decision": "retained_parent",
+      "selected_round": 0,
+      "candidate_dev": 0.625,
+      "selected_dev": 0.6875,
+      "candidate_monitor": null,
+      "selected_monitor": 0.625,
+      "dev_summary": {
+        "assigned": 48,
+        "completed": 48,
+        "correct": 30,
+        "accuracy": 0.625,
+        "format_errors": 8,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 0,
+        "truncated": 2,
+        "output_tokens": 49108
+      },
+      "monitor_summary": {
+        "assigned": 32,
+        "completed": 32,
+        "correct": 20,
+        "accuracy": 0.625,
+        "format_errors": 5,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 9,
+        "truncated": 3,
+        "output_tokens": 44634
+      },
+      "gained_vs_parent": 5,
+      "lost_vs_parent": 8
+    },
+    {
+      "round": 3,
+      "decision": "retained_parent",
+      "selected_round": 0,
+      "candidate_dev": 0.6041666666666666,
+      "selected_dev": 0.6875,
+      "candidate_monitor": null,
+      "selected_monitor": 0.625,
+      "dev_summary": {
+        "assigned": 48,
+        "completed": 48,
+        "correct": 29,
+        "accuracy": 0.6041666666666666,
+        "format_errors": 9,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 2,
+        "truncated": 0,
+        "output_tokens": 31733
+      },
+      "monitor_summary": {
+        "assigned": 32,
+        "completed": 32,
+        "correct": 20,
+        "accuracy": 0.625,
+        "format_errors": 5,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 9,
+        "truncated": 3,
+        "output_tokens": 44634
+      },
+      "gained_vs_parent": 4,
+      "lost_vs_parent": 8
+    },
+    {
+      "round": 4,
+      "decision": "retained_parent",
+      "selected_round": 0,
+      "candidate_dev": 0.6458333333333334,
+      "selected_dev": 0.6875,
+      "candidate_monitor": null,
+      "selected_monitor": 0.625,
+      "dev_summary": {
+        "assigned": 48,
+        "completed": 48,
+        "correct": 31,
+        "accuracy": 0.6458333333333334,
+        "format_errors": 7,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 10,
+        "truncated": 2,
+        "output_tokens": 43510
+      },
+      "monitor_summary": {
+        "assigned": 32,
+        "completed": 32,
+        "correct": 20,
+        "accuracy": 0.625,
+        "format_errors": 5,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 9,
+        "truncated": 3,
+        "output_tokens": 44634
+      },
+      "gained_vs_parent": 5,
+      "lost_vs_parent": 7
+    },
+    {
+      "round": 5,
+      "decision": "retained_parent",
+      "selected_round": 0,
+      "candidate_dev": 0.6666666666666666,
+      "selected_dev": 0.6875,
+      "candidate_monitor": null,
+      "selected_monitor": 0.625,
+      "dev_summary": {
+        "assigned": 48,
+        "completed": 48,
+        "correct": 32,
+        "accuracy": 0.6666666666666666,
+        "format_errors": 3,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 17,
+        "truncated": 2,
+        "output_tokens": 49177
+      },
+      "monitor_summary": {
+        "assigned": 32,
+        "completed": 32,
+        "correct": 20,
+        "accuracy": 0.625,
+        "format_errors": 5,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 9,
+        "truncated": 3,
+        "output_tokens": 44634
+      },
+      "gained_vs_parent": 5,
+      "lost_vs_parent": 6
+    },
+    {
+      "round": 6,
+      "decision": "retained_parent",
+      "selected_round": 0,
+      "candidate_dev": 0.6458333333333334,
+      "selected_dev": 0.6875,
+      "candidate_monitor": null,
+      "selected_monitor": 0.625,
+      "dev_summary": {
+        "assigned": 48,
+        "completed": 48,
+        "correct": 31,
+        "accuracy": 0.6458333333333334,
+        "format_errors": 1,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 0,
+        "truncated": 0,
+        "output_tokens": 33963
+      },
+      "monitor_summary": {
+        "assigned": 32,
+        "completed": 32,
+        "correct": 20,
+        "accuracy": 0.625,
+        "format_errors": 5,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 9,
+        "truncated": 3,
+        "output_tokens": 44634
+      },
+      "gained_vs_parent": 6,
+      "lost_vs_parent": 8
+    }
+  ],
+  "selected_round": 0,
+  "final": {
+    "identical_prompt": true,
+    "baseline": {
+      "assigned": 64,
+      "completed": 64,
+      "correct": 42,
+      "accuracy": 0.65625,
+      "format_errors": 6,
+      "answer_conflicts": 0,
+      "strict_format_compliant": 22,
+      "truncated": 2,
+      "output_tokens": 48868
+    },
+    "selected": {
+      "assigned": 64,
+      "completed": 64,
+      "correct": 42,
+      "accuracy": 0.65625,
+      "format_errors": 6,
+      "answer_conflicts": 0,
+      "strict_format_compliant": 22,
+      "truncated": 2,
+      "output_tokens": 48868
+    },
+    "paired": {
+      "gained": 0,
+      "lost": 0,
+      "delta": 0.0,
+      "gained_from_baseline_status": {},
+      "paired_bootstrap_95_percent_interval": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "search_application_calls": {
+    "task": 368,
+    "meta": 6
+  },
+  "audit_application_calls": {
+    "task": 96,
+    "meta": 0
+  },
+  "data_manifest": {
+    "source": "https://huggingface.co/datasets/HuggingFaceH4/MATH-500/resolve/6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be/test.jsonl",
+    "revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+    "source_sha256": "35dc41080a3680858b27fa7e0533d2d547825316fc5dafe5d316f4ccc5a06132",
+    "seed": 42,
+    "source_count": 500,
+    "eligible_count": 255,
+    "filter": "level >= 3; no [asy]; numeric or integer fraction answer",
+    "protocol": "repartitioned numeric MATH-500; not an official benchmark score",
+    "splits": {
+      "calibration": {
+        "count": 16,
+        "sha256": "52ef9cef8e3c383e1dee2ea2fabc588dee18f5e916d4a54edb9dbfc163424dd5",
+        "ids": [
+          "math500-101",
+          "math500-022",
+          "math500-151",
+          "math500-150",
+          "math500-011",
+          "math500-104",
+          "math500-251",
+          "math500-349",
+          "math500-303",
+          "math500-258",
+          "math500-441",
+          "math500-009",
+          "math500-114",
+          "math500-064",
+          "math500-162",
+          "math500-421"
+        ],
+        "levels": {
+          "5": 10,
+          "4": 4,
+          "3": 2
+        }
+      },
+      "dev": {
+        "count": 48,
+        "sha256": "abda00fc7dcecb48ce5db840db1cc89fd9a64d49ad65a97895412e4fc3259c97",
+        "ids": [
+          "math500-443",
+          "math500-479",
+          "math500-269",
+          "math500-394",
+          "math500-403",
+          "math500-132",
+          "math500-297",
+          "math500-390",
+          "math500-483",
+          "math500-417",
+          "math500-200",
+          "math500-131",
+          "math500-278",
+          "math500-351",
+          "math500-321",
+          "math500-440",
+          "math500-049",
+          "math500-226",
+          "math500-416",
+          "math500-037",
+          "math500-138",
+          "math500-266",
+          "math500-216",
+          "math500-497",
+          "math500-367",
+          "math500-180",
+          "math500-163",
+          "math500-032",
+          "math500-490",
+          "math500-423",
+          "math500-062",
+          "math500-176",
+          "math500-327",
+          "math500-288",
+          "math500-272",
+          "math500-461",
+          "math500-136",
+          "math500-092",
+          "math500-328",
+          "math500-232",
+          "math500-436",
+          "math500-208",
+          "math500-230",
+          "math500-010",
+          "math500-118",
+          "math500-377",
+          "math500-229",
+          "math500-204"
+        ],
+        "levels": {
+          "4": 16,
+          "5": 17,
+          "3": 15
+        }
+      },
+      "monitor": {
+        "count": 32,
+        "sha256": "d669cd19b7f2a8edc6b5ee8da9f4037255b610c0535bcf9495be81c987cfaa50",
+        "ids": [
+          "math500-024",
+          "math500-482",
+          "math500-469",
+          "math500-067",
+          "math500-412",
+          "math500-105",
+          "math500-239",
+          "math500-006",
+          "math500-309",
+          "math500-359",
+          "math500-391",
+          "math500-250",
+          "math500-498",
+          "math500-330",
+          "math500-108",
+          "math500-247",
+          "math500-335",
+          "math500-159",
+          "math500-214",
+          "math500-170",
+          "math500-088",
+          "math500-244",
+          "math500-033",
+          "math500-190",
+          "math500-477",
+          "math500-135",
+          "math500-075",
+          "math500-002",
+          "math500-434",
+          "math500-241",
+          "math500-411",
+          "math500-084"
+        ],
+        "levels": {
+          "5": 14,
+          "3": 9,
+          "4": 9
+        }
+      },
+      "final": {
+        "count": 64,
+        "sha256": "e25d0c071c3d09a0ee3321aeb62e61ca6626b3ac3f2413f00e623d54b031556b",
+        "ids": [
+          "math500-215",
+          "math500-315",
+          "math500-173",
+          "math500-203",
+          "math500-080",
+          "math500-254",
+          "math500-289",
+          "math500-220",
+          "math500-249",
+          "math500-263",
+          "math500-304",
+          "math500-428",
+          "math500-493",
+          "math500-069",
+          "math500-271",
+          "math500-337",
+          "math500-332",
+          "math500-110",
+          "math500-354",
+          "math500-292",
+          "math500-158",
+          "math500-388",
+          "math500-415",
+          "math500-282",
+          "math500-341",
+          "math500-450",
+          "math500-045",
+          "math500-475",
+          "math500-225",
+          "math500-451",
+          "math500-375",
+          "math500-401",
+          "math500-252",
+          "math500-486",
+          "math500-299",
+          "math500-381",
+          "math500-355",
+          "math500-224",
+          "math500-424",
+          "math500-134",
+          "math500-489",
+          "math500-386",
+          "math500-082",
+          "math500-429",
+          "math500-212",
+          "math500-253",
+          "math500-287",
+          "math500-291",
+          "math500-122",
+          "math500-039",
+          "math500-322",
+          "math500-213",
+          "math500-165",
+          "math500-470",
+          "math500-442",
+          "math500-034",
+          "math500-174",
+          "math500-437",
+          "math500-285",
+          "math500-142",
+          "math500-334",
+          "math500-238",
+          "math500-446",
+          "math500-491"
+        ],
+        "levels": {
+          "4": 24,
+          "5": 21,
+          "3": 19
+        }
+      }
+    }
+  },
+  "first_selected_monitor_evaluation": {
+    "assigned": 32,
+    "completed": 32,
+    "correct": 22,
+    "accuracy": 0.6875,
+    "format_errors": 1,
+    "answer_conflicts": 0,
+    "strict_format_compliant": 15,
+    "truncated": 1,
+    "output_tokens": 30156
+  },
+  "monitor_repeat_note": "Core evaluates the frozen selected prompt once; the displayed audit curve then evaluates each distinct incumbent. Both passes are retained.",
+  "selected_agent": {
+    "system_prompt": "Solve the math problem carefully. Show your reasoning. End your response with exactly one line in the form: #### <number>. Write a rational number as an integer, decimal, or a/b, without LaTeX or units on that final line."
+  },
+  "proposals": [
+    {
+      "round": 1,
+      "system_prompt": "Solve the math problem carefully. Show concise reasoning.\n\nBefore answering: restate the target and constraints; track units and conversion direction; for combinatorial or probability processes, update the actual contents/cases rather than assuming symmetry. In number theory, common factors divide the gcd; after solving congruences, verify every original condition and check boundary cases. In geometry, use a valid coordinate/area formula and sanity-check it. For matrix inequalities over all vectors, use the operator norm (largest singular value via A^T A), not merely eigenvalues. Verify symbolic algebra; do not rely on one convenient numeric example unless it satisfies all original conditions.\n\nIf a calculation repeats without progress, switch methods and stop; do not loop. Check the answer against the original question. End with exactly one final line '#### <number>' containing only the answer as an integer, decimal, or a/b, with no LaTeX, units, or duplicate lines.",
+      "reason": "Targeted edits address observed failure modes: probability state updates, conversion direction, gcd/divisibility completeness, CRT verification, operator norm via singular values, geometry formula validity, anti-loop behavior, and strict final-line formatting while preserving the baseline's successful behavior."
+    },
+    {
+      "round": 2,
+      "system_prompt": "Solve carefully and show concise reasoning. Restate the target and constraints; use exact arithmetic and keep track of units. When an operation changes a set/bag, update actual contents and the new denominator after each step. Convert by cancellation (write the ratio that cancels the unwanted unit). For factors, GCDs, roots, and congruences, enumerate all possibilities systematically, include negative values and endpoints, then test each candidate against every original condition. Use a formula only if its hypotheses match; distinguish spectral radius/eigenvalues from the operator norm (largest singular value) when bounding vectors. If work repeats without progress, stop and change method. Check that the final value answers the exact question.\n\nEnd with exactly one final line: `#### ANSWER`, where ANSWER is only the requested number (integer, decimal, or a/b; no LaTeX, units, extra words, or duplicate lines).",
+      "reason": "Targeted fixes for observed failures: preserve exact state and changing denominators in probability, use unit cancellation for conversions, enumerate factors/roots/congruences completely including endpoints and negative cases, verify candidates against original conditions, avoid invalid formula pattern-matching and eigenvalue-vs-operator-norm confusion, stop unproductive loops, and emit a single unambiguous final answer line without placeholder text or LaTeX."
+    },
+    {
+      "round": 3,
+      "system_prompt": "Solve the math problem carefully. Show concise reasoning.\n\nRestate the requested quantity and constraints. Use exact arithmetic; check units by ratios that cancel unwanted units. In multi-step processes, update actual contents and the new denominator after each step; don't assume symmetry. For factors/divisibility, common factors divide the gcd and enumerate all cases including endpoints; for congruences, substitute each candidate into every original condition. Use a formula only if its hypotheses hold: in geometry prefer coordinates/vectors or identities; a numeric test must satisfy all givens. For ||Av|| ≤ C||v|| over all vectors, C is the largest singular value, not merely an eigenvalue. Preserve signs when simplifying. If work repeats without progress, stop and change methods. Before finishing, verify the result answers the exact question.\n\nEnd with exactly one final line: #### <number>. Replace <number> with the actual value as an integer, decimal, or a/b; no LaTeX, units, extra words, or additional ####/boxed answer lines.",
+      "reason": "Minimal targeted extension of the baseline: keeps the successful final-answer format while adding compact checks for observed failures—state and denominator updates in multi-step processes, unit cancellation, complete divisor/congruence verification, formula-hypothesis and singular-value checks, sign preservation, and loop-breaking—plus explicit instructions to avoid placeholder or duplicate final lines."
+    },
+    {
+      "round": 4,
+      "system_prompt": "Solve the math problem carefully. Show concise reasoning. Restate the target quantity and constraints; use exact arithmetic and preserve signs. In multi-step processes, update actual states and denominators rather than assuming symmetry. Verify the result against every original condition, including boundary cases. Use a formula only when its hypotheses hold. If a calculation repeats without progress, stop and switch methods. End with exactly one line in the form `#### <number>`, where `<number>` is replaced by the actual answer only: an integer, decimal, or a/b. Do not use LaTeX, units, extra words, placeholder text, boxed answers, or duplicate final lines.",
+      "reason": "Minimal targeted edit preserving the baseline's concise reasoning and numeric final format while adding general verification, state-update, and formula-hypothesis checks from the failure traces. The final-line instruction is tightened to prevent observed placeholder, duplicate, and LaTeX format errors."
+    },
+    {
+      "round": 5,
+      "system_prompt": "Solve the math problem carefully. Show concise, coherent reasoning. Restate the target and all constraints. Use exact arithmetic and preserve signs; in conversions, track units by cancellation, and in multi-step processes update the actual contents/denominator after each step rather than assuming symmetry. Enumerate possibilities completely, including endpoints, and test every candidate against all original conditions. Use a formula only when its hypotheses hold; for a bound ||Av|| <= C||v|| over all vectors, C is the largest singular value, not merely an eigenvalue. Recheck symbolic simplifications with an identity or a valid special case. If reasoning repeats without progress, stop and switch methods. End your response with exactly one line in the form: #### <number>. Write a rational number as an integer, decimal, or a/b, without LaTeX or units on that final line. That final line must contain only #### followed by the actual number, with no placeholder, boxed text, or duplicate answer line.",
+      "reason": "Targeted minimal edit to the baseline: preserve the proven one-line numeric answer format and concise reasoning, while adding general state-tracking, complete-enumeration, candidate-verification, formula-hypothesis, singular-value, sign-preservation, and loop-breaking checks learned from the failures. Explicitly forbids placeholder or duplicate final lines, which caused format errors in earlier candidates."
+    },
+    {
+      "round": 6,
+      "system_prompt": "Solve the math problem carefully with concise reasoning. State the requested quantity, use all given constraints, and don't test an arbitrary specific case unless it satisfies every given. Use exact arithmetic; track units and ratios by cancellation; after each step of a multi-step process update actual contents and the new denominator rather than assuming symmetry. Enumerate cases completely, including endpoints, and check each candidate against all original conditions. Apply a formula only when its hypotheses hold (e.g., a bound ||Av|| ≤ C||v|| is governed by singular values, not eigenvalues). Preserve signs and verify algebraic simplifications. If work repeats without progress, stop and switch methods. Finish with exactly one line and then stop: #### <number>, where <number> is only the answer as an integer, decimal, or a/b, with no LaTeX, units, boxed text, placeholder, or duplicate answer line.",
+      "reason": "Minimal targeted edit to the baseline, preserving concise reasoning and the successful single numeric final line. Adds general reusable checks from the failure traces: verify givens before using special cases, update actual states/denominators, enumerate completely, test all candidates, respect formula hypotheses, preserve signs, verify algebra, break unproductive loops, and enforce strict final-line formatting."
+    }
+  ],
+  "provenance": {
+    "implementation_sha256": "686c92f87946e960b749f61c36987be6a7ca9b02d26bfcc02711c8323aa4e9c0",
+    "dependency_lock_sha256": "fb5b6fc4bbf71733688c25c0f6f4462090910b5abcd81f44ef3303b27f6f4ea9",
+    "config": {
+      "evaluator": "math_numeric",
+      "task": {
+        "model": "Qwen/Qwen3-1.7B",
+        "base_url": "http://127.0.0.1:18002/v1",
+        "api_key_env": "RSI_LOCAL_API_KEY",
+        "max_tokens": 8192,
+        "timeout": 240.0,
+        "temperature": 0.0,
+        "extra_body": {
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          },
+          "repetition_penalty": 1.0
+        }
+      },
+      "meta": {
+        "model": "deepseek-v4.1-flash",
+        "base_url": "https://zgc.apihy.com",
+        "api_key_env": "RSI_API_KEY",
+        "max_tokens": 4096,
+        "timeout": 240.0,
+        "command": "claude",
+        "state_dir": ".local/claude-1_7b"
+      },
+      "agent": {
+        "system_prompt": "Solve the math problem carefully. Show your reasoning. End your response with exactly one line in the form: #### <number>. Write a rational number as an integer, decimal, or a/b, without LaTeX or units on that final line."
+      },
+      "limits": {
+        "task_concurrency": 16,
+        "rounds": 6,
+        "max_task_calls": 420,
+        "max_meta_calls": 8,
+        "wall_seconds": 10800.0
+      }
+    },
+    "dev_sha256": "abda00fc7dcecb48ce5db840db1cc89fd9a64d49ad65a97895412e4fc3259c97",
+    "test_sha256": "d669cd19b7f2a8edc6b5ee8da9f4037255b610c0535bcf9495be81c987cfaa50",
+    "rounds": 6,
+    "scope": "harness-only; weights fixed",
+    "selection": "strict development accuracy gain",
+    "task_input_excludes_reference": true
+  },
+  "implementation_git_commit": "8dbed754dc90511ae3a84540fd752de7e6d099d9",
+  "audit_manifest": {
+    "config": {
+      "evaluator": "math_numeric",
+      "task": {
+        "model": "Qwen/Qwen3-1.7B",
+        "base_url": "http://127.0.0.1:18002/v1",
+        "api_key_env": "RSI_LOCAL_API_KEY",
+        "max_tokens": 8192,
+        "timeout": 240.0,
+        "temperature": 0.0,
+        "extra_body": {
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          },
+          "repetition_penalty": 1.0
+        }
+      },
+      "meta": {
+        "model": "deepseek-v4.1-flash",
+        "base_url": "https://zgc.apihy.com",
+        "api_key_env": "RSI_API_KEY",
+        "max_tokens": 4096,
+        "timeout": 240.0,
+        "command": "claude",
+        "state_dir": ".local/claude-1_7b"
+      },
+      "agent": {
+        "system_prompt": "Solve the math problem carefully. Show your reasoning. End your response with exactly one line in the form: #### <number>. Write a rational number as an integer, decimal, or a/b, without LaTeX or units on that final line."
+      },
+      "limits": {
+        "task_concurrency": 16,
+        "rounds": 6,
+        "max_task_calls": 420,
+        "max_meta_calls": 8,
+        "wall_seconds": 10800.0
+      }
+    },
+    "search_sha256": "cf0a314d022d269908403caa660bc00f384bcf27cf0fad50f9f605bdadf24e0f",
+    "script_sha256": "46099be0d41868b56445f19155095b271984ee45d7223ce3e1ea606402387c46",
+    "split_manifest": {
+      "source": "https://huggingface.co/datasets/HuggingFaceH4/MATH-500/resolve/6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be/test.jsonl",
+      "revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "source_sha256": "35dc41080a3680858b27fa7e0533d2d547825316fc5dafe5d316f4ccc5a06132",
+      "seed": 42,
+      "source_count": 500,
+      "eligible_count": 255,
+      "filter": "level >= 3; no [asy]; numeric or integer fraction answer",
+      "protocol": "repartitioned numeric MATH-500; not an official benchmark score",
+      "splits": {
+        "calibration": {
+          "count": 16,
+          "sha256": "52ef9cef8e3c383e1dee2ea2fabc588dee18f5e916d4a54edb9dbfc163424dd5",
+          "ids": [
+            "math500-101",
+            "math500-022",
+            "math500-151",
+            "math500-150",
+            "math500-011",
+            "math500-104",
+            "math500-251",
+            "math500-349",
+            "math500-303",
+            "math500-258",
+            "math500-441",
+            "math500-009",
+            "math500-114",
+            "math500-064",
+            "math500-162",
+            "math500-421"
+          ],
+          "levels": {
+            "5": 10,
+            "4": 4,
+            "3": 2
+          }
+        },
+        "dev": {
+          "count": 48,
+          "sha256": "abda00fc7dcecb48ce5db840db1cc89fd9a64d49ad65a97895412e4fc3259c97",
+          "ids": [
+            "math500-443",
+            "math500-479",
+            "math500-269",
+            "math500-394",
+            "math500-403",
+            "math500-132",
+            "math500-297",
+            "math500-390",
+            "math500-483",
+            "math500-417",
+            "math500-200",
+            "math500-131",
+            "math500-278",
+            "math500-351",
+            "math500-321",
+            "math500-440",
+            "math500-049",
+            "math500-226",
+            "math500-416",
+            "math500-037",
+            "math500-138",
+            "math500-266",
+            "math500-216",
+            "math500-497",
+            "math500-367",
+            "math500-180",
+            "math500-163",
+            "math500-032",
+            "math500-490",
+            "math500-423",
+            "math500-062",
+            "math500-176",
+            "math500-327",
+            "math500-288",
+            "math500-272",
+            "math500-461",
+            "math500-136",
+            "math500-092",
+            "math500-328",
+            "math500-232",
+            "math500-436",
+            "math500-208",
+            "math500-230",
+            "math500-010",
+            "math500-118",
+            "math500-377",
+            "math500-229",
+            "math500-204"
+          ],
+          "levels": {
+            "4": 16,
+            "5": 17,
+            "3": 15
+          }
+        },
+        "monitor": {
+          "count": 32,
+          "sha256": "d669cd19b7f2a8edc6b5ee8da9f4037255b610c0535bcf9495be81c987cfaa50",
+          "ids": [
+            "math500-024",
+            "math500-482",
+            "math500-469",
+            "math500-067",
+            "math500-412",
+            "math500-105",
+            "math500-239",
+            "math500-006",
+            "math500-309",
+            "math500-359",
+            "math500-391",
+            "math500-250",
+            "math500-498",
+            "math500-330",
+            "math500-108",
+            "math500-247",
+            "math500-335",
+            "math500-159",
+            "math500-214",
+            "math500-170",
+            "math500-088",
+            "math500-244",
+            "math500-033",
+            "math500-190",
+            "math500-477",
+            "math500-135",
+            "math500-075",
+            "math500-002",
+            "math500-434",
+            "math500-241",
+            "math500-411",
+            "math500-084"
+          ],
+          "levels": {
+            "5": 14,
+            "3": 9,
+            "4": 9
+          }
+        },
+        "final": {
+          "count": 64,
+          "sha256": "e25d0c071c3d09a0ee3321aeb62e61ca6626b3ac3f2413f00e623d54b031556b",
+          "ids": [
+            "math500-215",
+            "math500-315",
+            "math500-173",
+            "math500-203",
+            "math500-080",
+            "math500-254",
+            "math500-289",
+            "math500-220",
+            "math500-249",
+            "math500-263",
+            "math500-304",
+            "math500-428",
+            "math500-493",
+            "math500-069",
+            "math500-271",
+            "math500-337",
+            "math500-332",
+            "math500-110",
+            "math500-354",
+            "math500-292",
+            "math500-158",
+            "math500-388",
+            "math500-415",
+            "math500-282",
+            "math500-341",
+            "math500-450",
+            "math500-045",
+            "math500-475",
+            "math500-225",
+            "math500-451",
+            "math500-375",
+            "math500-401",
+            "math500-252",
+            "math500-486",
+            "math500-299",
+            "math500-381",
+            "math500-355",
+            "math500-224",
+            "math500-424",
+            "math500-134",
+            "math500-489",
+            "math500-386",
+            "math500-082",
+            "math500-429",
+            "math500-212",
+            "math500-253",
+            "math500-287",
+            "math500-291",
+            "math500-122",
+            "math500-039",
+            "math500-322",
+            "math500-213",
+            "math500-165",
+            "math500-470",
+            "math500-442",
+            "math500-034",
+            "math500-174",
+            "math500-437",
+            "math500-285",
+            "math500-142",
+            "math500-334",
+            "math500-238",
+            "math500-446",
+            "math500-491"
+          ],
+          "levels": {
+            "4": 24,
+            "5": 21,
+            "3": 19
+          }
+        }
+      }
+    }
+  },
+  "calibration_8k": {
+    "assigned": 16,
+    "completed": 16,
+    "correct": 6,
+    "accuracy": 0.375,
+    "format_errors": 1,
+    "answer_conflicts": 0,
+    "strict_format_compliant": 5,
+    "truncated": 1,
+    "output_tokens": 21097
+  },
+  "calibration_application_calls": {
+    "task": 16,
+    "meta": 0
+  },
+  "task_runtime": {
+    "model": "Qwen/Qwen3-1.7B",
+    "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+    "gpu_index": 2,
+    "port": 18002,
+    "python": "3.11.15",
+    "packages": {
+      "vllm": "0.11.0",
+      "torch": "2.8.0",
+      "transformers": "4.57.6",
+      "huggingface-hub": "0.35.3"
+    },
+    "gpu": "NVIDIA A100-SXM4-80GB, 81920 MiB, 580.65.06",
+    "files": {
+      "config.json": "1ddb5b89ebc90dcb417a45c213d818577e65976454d29385c8f6140771d95197",
+      "generation_config.json": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+      "model-00001-of-00002.safetensors": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
+      "model-00002-of-00002.safetensors": "912becff8d60672aa8628ef08c05898d9adf17c2ad4ae3caf99b065622fdeff9",
+      "model.safetensors.index.json": "0d660e94b165eb912669a5249dff44b83188c4777a07ddb9611fb78d91b0578d",
+      "tokenizer.json": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+      "tokenizer_config.json": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+      "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+    },
+    "server_script": "#!/bin/sh\nset -eu\nRSI_ROOT=$(CDPATH= cd -- \"$(dirname -- \"$0\")/..\" && pwd)\ncd \"$RSI_ROOT\"\nexport CUDA_VISIBLE_DEVICES=\"${RSI_GPU:-0}\"\nexport HF_HOME=\"$RSI_ROOT/.local/hf\"\nexport XDG_CACHE_HOME=\"$RSI_ROOT/.local/cache\"\nexport TRITON_CACHE_DIR=\"$RSI_ROOT/.local/triton\"\nexport TORCHINDUCTOR_CACHE_DIR=\"$RSI_ROOT/.local/torch-inductor\"\nexport VLLM_NO_USAGE_STATS=1\nexport DO_NOT_TRACK=1\nexec .venv-task/bin/vllm serve \"${RSI_TASK_MODEL_DIR:-.local/models/qwen3-4b-instruct-2507}\" \\\n  --served-model-name \"${RSI_TASK_MODEL_NAME:-Qwen/Qwen3-4B-Instruct-2507}\" \\\n  --host 127.0.0.1 --port \"${RSI_TASK_PORT:-18000}\" \\\n  --dtype bfloat16 --max-model-len 16384 --max-num-seqs 32 \\\n  --gpu-memory-utilization 0.65 \\\n  --seed 42 --disable-log-requests \"$@\"\n",
+    "task_requirements_sha256": "b984e92d5f0574b59dc0f42c58b0dc12fca6bf333a2de656c01e5a7c37a11ef3"
+  },
+  "previous_smoke": {
+    "baseline": {
+      "assigned": 6,
+      "completed": 6,
+      "correct": 6,
+      "accuracy": 1.0,
+      "format_errors": 0
+    },
+    "candidates": [
+      {
+        "assigned": 6,
+        "completed": 6,
+        "correct": 6,
+        "accuracy": 1.0,
+        "format_errors": 0
+      },
+      {
+        "assigned": 6,
+        "completed": 6,
+        "correct": 6,
+        "accuracy": 1.0,
+        "format_errors": 0
+      },
+      {
+        "assigned": 6,
+        "completed": 6,
+        "correct": 6,
+        "accuracy": 1.0,
+        "format_errors": 0
+      }
+    ],
+    "conclusion": "All 6/6: no headroom for strict dev improvement"
+  }
+}

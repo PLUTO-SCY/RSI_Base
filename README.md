@@ -2,7 +2,7 @@
 
 独立实现的最小 RSI 实验框架，按阶段扩展，面向 evaluator、效率和泛化研究。
 
-**v0.0/v0.1 已实现并完成真实 API 小规模验证。** 当前支持固定权重的 prompt/harness 配置改进；LoRA SFT、代码级 harness 编辑和多任务训练尚未实现。
+**v0.0/v0.1 已实现，完成真实 API 与本地单卡 GPU 推理验证。** 当前支持固定权重的 prompt/harness 配置改进；LoRA SFT、代码级 harness 编辑和多任务训练尚未实现。
 
 ## 当前闭环
 
@@ -47,7 +47,7 @@ sh scripts/run_smoke.sh
 | configs/qwen_1_7b_math_growth.json | 1.7B 六轮历史对照，策略与格式耦合 |
 | configs/qwen_1_7b_boxed_growth.json | 当前增长试验：固定格式后缀、600字符策略、八轮搜索 |
 | configs/calibration/ | 失败和中间校准配置，供核查，不作为增长成绩 |
-| configs/design/ | 后续训练方案示例，不能执行当前 CLI |
+| configs/design/ | 后续 benchmark / 训练方案设计，不能执行当前 CLI |
 
 Meta 的凭据、状态和调用参数仅设置在子进程中。使用项目 .local/claude、bare 模式、关闭模型工具/MCP，并监测全局 Claude/shell 配置哈希。Meta 不直接操作实验仓库或评分器。
 
@@ -61,7 +61,9 @@ sh scripts/check.sh
 
 真实运行结果与复现范围见[验证记录](docs/validation-v0.1.md)。小集合上跑通循环不代表获得了能力提升，当前版本也没有更新模型权重。
 
-增长实验的难度校准、数据隔离、曲线解释和重跑命令见[增长诊断](docs/growth-diagnosis.md)。
+八轮实验出现开发集 35→37→40/48；独立观察集 25→19/32，最终验收 40→41/64，尚未确认稳定泛化收益。难度校准、失败对照、复测、完整曲线和重跑命令见[增长诊断](docs/growth-diagnosis.md)。
+
+后续任务选型参考[论文 benchmark 与协议核查](docs/research/harness-benchmark-setups.md)。
 
 ## 代码与文档
 

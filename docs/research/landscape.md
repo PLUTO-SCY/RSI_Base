@@ -92,3 +92,8 @@ HELIX 将 harness 拆为可追溯的 ports/atoms/recipes，保留 sibling succes
 - 工程：官方 SFT、LoRA serving、multi-turn rollout、benchmark runner 与环境文档。
 
 本轮足以支持“独立的小核心 + 适配器 + 机制 recipe”的工程选型；不构成全领域系统综述，也没有证明某种方法在本地四卡机器上最优。HASE、EvoTrainer、Co-Harness 等仅作定位，实施相应 recipe 前再读其方法、实验和官方配置。即使后续出现更近工作，独立实现与可替换协议的选择仍可保留。
+
+
+## 本地实验后的设置补查
+
+2026-11-16补充核查见[harness benchmark与协议](harness-benchmark-setups.md)。重点是候选编辑空间、反馈/选择/测试划分、重复次数和真实调用预算；同时补入AFlow、RRSI与ToolHop的具体设置。此补查不改变论文结果未在本机复现的边界。
