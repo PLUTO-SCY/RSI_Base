@@ -71,3 +71,25 @@ v4与v3保持相同固定参考父代、任务模型、评分和单题预算，�
 同时补齐每一步预测和记忆顺序；同一训练记忆在Meta输入中只传一次。无效的未启用参数会规范化，防止相同执行被当作新策略重评。Meta输出溢出会被拒绝，混合策略仍可评估合法的局部候选。随机对照的整数参数改为在完整合法范围均匀采样；v2/v3历史随机对照使用粗网格，需区分其采样分布。
 
 上述为一组工程调整，不能把全部收益单独归因于某一个改动。v4仍按原定三次搜索、三次重复和独立测试门槛验收；LoRA继续后置。
+
+## 预先封存的额外确认集
+
+为提高小幅差异的评估精度，在尚未读取任何测试成绩时，另从[Gretel上游数据](https://huggingface.co/datasets/gretelai/symptom_to_diagnosis)固定revision `722cfb0e11f8ae37339c7f573b5e10429b94df49`取全部未使用的训练池样本。853条中排除与现有三个划分精确重复的文本，以及字符三元组Jaccard≥0.9的近重复，留下591条。它们只用于额外确认，不进入训练记忆、Meta反馈或候选选择。
+
+原始211题与额外591题分别报告。原始稳定性门槛保持不变；另预先设定扩展门槛：每次搜索在两个集合上的配对差均为正，合并802题后按题聚类的95%区间下界大于0。不得仅挑通过的集合汇报；两个门槛都据实填写。这仍是同一公开合成数据分布，不能解释为OOD或临床验证。
+
+数据与协议在测试之前固定，见[确认集manifest](validation/memory-confirmation-manifest.json)与[预先计划](validation/memory-confirmation-plan.json)。运行顺序：
+
+```sh
+.venv/bin/python scripts/prepare_memory_confirmation.py
+.venv/bin/python scripts/run_memory_confirmation.py plan
+# 等全部搜索冻结后，原始测试与确认评估才能启动
+.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-suite-v4
+.venv/bin/python scripts/run_memory_confirmation.py evaluate
+.venv/bin/python scripts/run_memory_confirmation.py summarize
+.venv/bin/python scripts/audit_memory_ablations.py
+.venv/bin/python scripts/verify_memory_resume.py --suite runs/memory-s2d-suite-v4
+.venv/bin/python scripts/export_memory.py
+```
+
+确认评估有单独调用账本与预算；不将重复评测视为新增独立题目。候选效果与搜索成功率分别报告。

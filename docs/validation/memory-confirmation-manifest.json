@@ -1,0 +1,1655 @@
+{
+  "source": "https://huggingface.co/datasets/gretelai/symptom_to_diagnosis/resolve/722cfb0e11f8ae37339c7f573b5e10429b94df49/train.jsonl",
+  "revision": "722cfb0e11f8ae37339c7f573b5e10429b94df49",
+  "source_sha256": "9b8ff27dab30cdeb194d6581dcebffe0d91e21921f974f091736c1f25cad283c",
+  "source_count": 853,
+  "retained_count": 591,
+  "prior_data_manifest_sha256": "68048ea10b4154c91cf40f9e7be52a973c8fe6b72ca053c1e806e3a6b5b91622",
+  "test_sha256": "36994c7b5a4f9e6cd15f4a21bfb52475066d664e908bb665f21843b4bdf24b5d",
+  "ids": [
+    "s2d-confirm-0000",
+    "s2d-confirm-0001",
+    "s2d-confirm-0002",
+    "s2d-confirm-0003",
+    "s2d-confirm-0004",
+    "s2d-confirm-0005",
+    "s2d-confirm-0006",
+    "s2d-confirm-0007",
+    "s2d-confirm-0008",
+    "s2d-confirm-0009",
+    "s2d-confirm-0011",
+    "s2d-confirm-0013",
+    "s2d-confirm-0014",
+    "s2d-confirm-0016",
+    "s2d-confirm-0017",
+    "s2d-confirm-0018",
+    "s2d-confirm-0019",
+    "s2d-confirm-0020",
+    "s2d-confirm-0021",
+    "s2d-confirm-0022",
+    "s2d-confirm-0023",
+    "s2d-confirm-0026",
+    "s2d-confirm-0027",
+    "s2d-confirm-0029",
+    "s2d-confirm-0030",
+    "s2d-confirm-0031",
+    "s2d-confirm-0032",
+    "s2d-confirm-0033",
+    "s2d-confirm-0034",
+    "s2d-confirm-0035",
+    "s2d-confirm-0037",
+    "s2d-confirm-0038",
+    "s2d-confirm-0039",
+    "s2d-confirm-0040",
+    "s2d-confirm-0041",
+    "s2d-confirm-0042",
+    "s2d-confirm-0043",
+    "s2d-confirm-0044",
+    "s2d-confirm-0045",
+    "s2d-confirm-0046",
+    "s2d-confirm-0047",
+    "s2d-confirm-0048",
+    "s2d-confirm-0049",
+    "s2d-confirm-0050",
+    "s2d-confirm-0051",
+    "s2d-confirm-0052",
+    "s2d-confirm-0053",
+    "s2d-confirm-0054",
+    "s2d-confirm-0056",
+    "s2d-confirm-0060",
+    "s2d-confirm-0061",
+    "s2d-confirm-0062",
+    "s2d-confirm-0063",
+    "s2d-confirm-0064",
+    "s2d-confirm-0065",
+    "s2d-confirm-0066",
+    "s2d-confirm-0069",
+    "s2d-confirm-0072",
+    "s2d-confirm-0073",
+    "s2d-confirm-0074",
+    "s2d-confirm-0075",
+    "s2d-confirm-0076",
+    "s2d-confirm-0077",
+    "s2d-confirm-0078",
+    "s2d-confirm-0080",
+    "s2d-confirm-0082",
+    "s2d-confirm-0083",
+    "s2d-confirm-0084",
+    "s2d-confirm-0086",
+    "s2d-confirm-0087",
+    "s2d-confirm-0088",
+    "s2d-confirm-0091",
+    "s2d-confirm-0093",
+    "s2d-confirm-0094",
+    "s2d-confirm-0095",
+    "s2d-confirm-0098",
+    "s2d-confirm-0099",
+    "s2d-confirm-0101",
+    "s2d-confirm-0102",
+    "s2d-confirm-0103",
+    "s2d-confirm-0104",
+    "s2d-confirm-0105",
+    "s2d-confirm-0108",
+    "s2d-confirm-0109",
+    "s2d-confirm-0113",
+    "s2d-confirm-0117",
+    "s2d-confirm-0118",
+    "s2d-confirm-0119",
+    "s2d-confirm-0121",
+    "s2d-confirm-0122",
+    "s2d-confirm-0123",
+    "s2d-confirm-0124",
+    "s2d-confirm-0125",
+    "s2d-confirm-0126",
+    "s2d-confirm-0128",
+    "s2d-confirm-0129",
+    "s2d-confirm-0130",
+    "s2d-confirm-0131",
+    "s2d-confirm-0132",
+    "s2d-confirm-0133",
+    "s2d-confirm-0134",
+    "s2d-confirm-0135",
+    "s2d-confirm-0136",
+    "s2d-confirm-0137",
+    "s2d-confirm-0138",
+    "s2d-confirm-0140",
+    "s2d-confirm-0141",
+    "s2d-confirm-0142",
+    "s2d-confirm-0143",
+    "s2d-confirm-0144",
+    "s2d-confirm-0145",
+    "s2d-confirm-0147",
+    "s2d-confirm-0148",
+    "s2d-confirm-0149",
+    "s2d-confirm-0150",
+    "s2d-confirm-0152",
+    "s2d-confirm-0154",
+    "s2d-confirm-0155",
+    "s2d-confirm-0159",
+    "s2d-confirm-0160",
+    "s2d-confirm-0162",
+    "s2d-confirm-0164",
+    "s2d-confirm-0165",
+    "s2d-confirm-0167",
+    "s2d-confirm-0169",
+    "s2d-confirm-0170",
+    "s2d-confirm-0171",
+    "s2d-confirm-0172",
+    "s2d-confirm-0173",
+    "s2d-confirm-0175",
+    "s2d-confirm-0178",
+    "s2d-confirm-0180",
+    "s2d-confirm-0181",
+    "s2d-confirm-0183",
+    "s2d-confirm-0185",
+    "s2d-confirm-0187",
+    "s2d-confirm-0191",
+    "s2d-confirm-0192",
+    "s2d-confirm-0194",
+    "s2d-confirm-0195",
+    "s2d-confirm-0196",
+    "s2d-confirm-0198",
+    "s2d-confirm-0200",
+    "s2d-confirm-0201",
+    "s2d-confirm-0202",
+    "s2d-confirm-0203",
+    "s2d-confirm-0205",
+    "s2d-confirm-0208",
+    "s2d-confirm-0211",
+    "s2d-confirm-0212",
+    "s2d-confirm-0213",
+    "s2d-confirm-0214",
+    "s2d-confirm-0215",
+    "s2d-confirm-0218",
+    "s2d-confirm-0219",
+    "s2d-confirm-0221",
+    "s2d-confirm-0222",
+    "s2d-confirm-0224",
+    "s2d-confirm-0225",
+    "s2d-confirm-0226",
+    "s2d-confirm-0227",
+    "s2d-confirm-0228",
+    "s2d-confirm-0231",
+    "s2d-confirm-0233",
+    "s2d-confirm-0234",
+    "s2d-confirm-0235",
+    "s2d-confirm-0236",
+    "s2d-confirm-0237",
+    "s2d-confirm-0238",
+    "s2d-confirm-0239",
+    "s2d-confirm-0240",
+    "s2d-confirm-0241",
+    "s2d-confirm-0242",
+    "s2d-confirm-0243",
+    "s2d-confirm-0244",
+    "s2d-confirm-0247",
+    "s2d-confirm-0248",
+    "s2d-confirm-0250",
+    "s2d-confirm-0253",
+    "s2d-confirm-0255",
+    "s2d-confirm-0256",
+    "s2d-confirm-0257",
+    "s2d-confirm-0258",
+    "s2d-confirm-0260",
+    "s2d-confirm-0261",
+    "s2d-confirm-0263",
+    "s2d-confirm-0267",
+    "s2d-confirm-0268",
+    "s2d-confirm-0269",
+    "s2d-confirm-0270",
+    "s2d-confirm-0271",
+    "s2d-confirm-0275",
+    "s2d-confirm-0276",
+    "s2d-confirm-0278",
+    "s2d-confirm-0280",
+    "s2d-confirm-0281",
+    "s2d-confirm-0284",
+    "s2d-confirm-0287",
+    "s2d-confirm-0288",
+    "s2d-confirm-0290",
+    "s2d-confirm-0291",
+    "s2d-confirm-0292",
+    "s2d-confirm-0294",
+    "s2d-confirm-0296",
+    "s2d-confirm-0297",
+    "s2d-confirm-0299",
+    "s2d-confirm-0300",
+    "s2d-confirm-0305",
+    "s2d-confirm-0306",
+    "s2d-confirm-0307",
+    "s2d-confirm-0310",
+    "s2d-confirm-0311",
+    "s2d-confirm-0312",
+    "s2d-confirm-0313",
+    "s2d-confirm-0314",
+    "s2d-confirm-0315",
+    "s2d-confirm-0319",
+    "s2d-confirm-0320",
+    "s2d-confirm-0323",
+    "s2d-confirm-0324",
+    "s2d-confirm-0325",
+    "s2d-confirm-0326",
+    "s2d-confirm-0328",
+    "s2d-confirm-0329",
+    "s2d-confirm-0331",
+    "s2d-confirm-0332",
+    "s2d-confirm-0335",
+    "s2d-confirm-0336",
+    "s2d-confirm-0338",
+    "s2d-confirm-0340",
+    "s2d-confirm-0341",
+    "s2d-confirm-0342",
+    "s2d-confirm-0343",
+    "s2d-confirm-0344",
+    "s2d-confirm-0345",
+    "s2d-confirm-0346",
+    "s2d-confirm-0347",
+    "s2d-confirm-0348",
+    "s2d-confirm-0349",
+    "s2d-confirm-0352",
+    "s2d-confirm-0353",
+    "s2d-confirm-0354",
+    "s2d-confirm-0355",
+    "s2d-confirm-0357",
+    "s2d-confirm-0358",
+    "s2d-confirm-0360",
+    "s2d-confirm-0362",
+    "s2d-confirm-0365",
+    "s2d-confirm-0366",
+    "s2d-confirm-0367",
+    "s2d-confirm-0370",
+    "s2d-confirm-0371",
+    "s2d-confirm-0372",
+    "s2d-confirm-0373",
+    "s2d-confirm-0374",
+    "s2d-confirm-0375",
+    "s2d-confirm-0376",
+    "s2d-confirm-0377",
+    "s2d-confirm-0378",
+    "s2d-confirm-0379",
+    "s2d-confirm-0380",
+    "s2d-confirm-0383",
+    "s2d-confirm-0386",
+    "s2d-confirm-0387",
+    "s2d-confirm-0388",
+    "s2d-confirm-0391",
+    "s2d-confirm-0393",
+    "s2d-confirm-0396",
+    "s2d-confirm-0397",
+    "s2d-confirm-0398",
+    "s2d-confirm-0400",
+    "s2d-confirm-0404",
+    "s2d-confirm-0405",
+    "s2d-confirm-0407",
+    "s2d-confirm-0408",
+    "s2d-confirm-0409",
+    "s2d-confirm-0410",
+    "s2d-confirm-0411",
+    "s2d-confirm-0413",
+    "s2d-confirm-0414",
+    "s2d-confirm-0415",
+    "s2d-confirm-0416",
+    "s2d-confirm-0417",
+    "s2d-confirm-0419",
+    "s2d-confirm-0420",
+    "s2d-confirm-0421",
+    "s2d-confirm-0422",
+    "s2d-confirm-0425",
+    "s2d-confirm-0426",
+    "s2d-confirm-0434",
+    "s2d-confirm-0435",
+    "s2d-confirm-0436",
+    "s2d-confirm-0439",
+    "s2d-confirm-0440",
+    "s2d-confirm-0441",
+    "s2d-confirm-0442",
+    "s2d-confirm-0443",
+    "s2d-confirm-0444",
+    "s2d-confirm-0445",
+    "s2d-confirm-0446",
+    "s2d-confirm-0447",
+    "s2d-confirm-0448",
+    "s2d-confirm-0449",
+    "s2d-confirm-0450",
+    "s2d-confirm-0451",
+    "s2d-confirm-0452",
+    "s2d-confirm-0453",
+    "s2d-confirm-0454",
+    "s2d-confirm-0455",
+    "s2d-confirm-0457",
+    "s2d-confirm-0458",
+    "s2d-confirm-0459",
+    "s2d-confirm-0461",
+    "s2d-confirm-0462",
+    "s2d-confirm-0463",
+    "s2d-confirm-0464",
+    "s2d-confirm-0466",
+    "s2d-confirm-0467",
+    "s2d-confirm-0472",
+    "s2d-confirm-0473",
+    "s2d-confirm-0474",
+    "s2d-confirm-0475",
+    "s2d-confirm-0476",
+    "s2d-confirm-0477",
+    "s2d-confirm-0478",
+    "s2d-confirm-0479",
+    "s2d-confirm-0480",
+    "s2d-confirm-0482",
+    "s2d-confirm-0484",
+    "s2d-confirm-0485",
+    "s2d-confirm-0486",
+    "s2d-confirm-0487",
+    "s2d-confirm-0488",
+    "s2d-confirm-0489",
+    "s2d-confirm-0490",
+    "s2d-confirm-0491",
+    "s2d-confirm-0493",
+    "s2d-confirm-0494",
+    "s2d-confirm-0495",
+    "s2d-confirm-0496",
+    "s2d-confirm-0497",
+    "s2d-confirm-0498",
+    "s2d-confirm-0500",
+    "s2d-confirm-0501",
+    "s2d-confirm-0504",
+    "s2d-confirm-0505",
+    "s2d-confirm-0506",
+    "s2d-confirm-0507",
+    "s2d-confirm-0509",
+    "s2d-confirm-0510",
+    "s2d-confirm-0511",
+    "s2d-confirm-0512",
+    "s2d-confirm-0514",
+    "s2d-confirm-0515",
+    "s2d-confirm-0516",
+    "s2d-confirm-0517",
+    "s2d-confirm-0518",
+    "s2d-confirm-0520",
+    "s2d-confirm-0521",
+    "s2d-confirm-0522",
+    "s2d-confirm-0523",
+    "s2d-confirm-0524",
+    "s2d-confirm-0525",
+    "s2d-confirm-0526",
+    "s2d-confirm-0527",
+    "s2d-confirm-0528",
+    "s2d-confirm-0530",
+    "s2d-confirm-0531",
+    "s2d-confirm-0532",
+    "s2d-confirm-0533",
+    "s2d-confirm-0535",
+    "s2d-confirm-0536",
+    "s2d-confirm-0538",
+    "s2d-confirm-0539",
+    "s2d-confirm-0540",
+    "s2d-confirm-0541",
+    "s2d-confirm-0543",
+    "s2d-confirm-0544",
+    "s2d-confirm-0545",
+    "s2d-confirm-0546",
+    "s2d-confirm-0547",
+    "s2d-confirm-0549",
+    "s2d-confirm-0555",
+    "s2d-confirm-0556",
+    "s2d-confirm-0557",
+    "s2d-confirm-0558",
+    "s2d-confirm-0560",
+    "s2d-confirm-0561",
+    "s2d-confirm-0563",
+    "s2d-confirm-0564",
+    "s2d-confirm-0566",
+    "s2d-confirm-0567",
+    "s2d-confirm-0568",
+    "s2d-confirm-0569",
+    "s2d-confirm-0570",
+    "s2d-confirm-0571",
+    "s2d-confirm-0572",
+    "s2d-confirm-0573",
+    "s2d-confirm-0574",
+    "s2d-confirm-0575",
+    "s2d-confirm-0577",
+    "s2d-confirm-0578",
+    "s2d-confirm-0579",
+    "s2d-confirm-0580",
+    "s2d-confirm-0581",
+    "s2d-confirm-0582",
+    "s2d-confirm-0583",
+    "s2d-confirm-0584",
+    "s2d-confirm-0585",
+    "s2d-confirm-0586",
+    "s2d-confirm-0588",
+    "s2d-confirm-0589",
+    "s2d-confirm-0590",
+    "s2d-confirm-0592",
+    "s2d-confirm-0593",
+    "s2d-confirm-0595",
+    "s2d-confirm-0596",
+    "s2d-confirm-0597",
+    "s2d-confirm-0598",
+    "s2d-confirm-0601",
+    "s2d-confirm-0602",
+    "s2d-confirm-0604",
+    "s2d-confirm-0605",
+    "s2d-confirm-0608",
+    "s2d-confirm-0609",
+    "s2d-confirm-0610",
+    "s2d-confirm-0613",
+    "s2d-confirm-0614",
+    "s2d-confirm-0615",
+    "s2d-confirm-0616",
+    "s2d-confirm-0617",
+    "s2d-confirm-0618",
+    "s2d-confirm-0619",
+    "s2d-confirm-0620",
+    "s2d-confirm-0621",
+    "s2d-confirm-0624",
+    "s2d-confirm-0625",
+    "s2d-confirm-0626",
+    "s2d-confirm-0627",
+    "s2d-confirm-0629",
+    "s2d-confirm-0630",
+    "s2d-confirm-0631",
+    "s2d-confirm-0632",
+    "s2d-confirm-0634",
+    "s2d-confirm-0638",
+    "s2d-confirm-0640",
+    "s2d-confirm-0642",
+    "s2d-confirm-0643",
+    "s2d-confirm-0644",
+    "s2d-confirm-0645",
+    "s2d-confirm-0647",
+    "s2d-confirm-0648",
+    "s2d-confirm-0649",
+    "s2d-confirm-0650",
+    "s2d-confirm-0651",
+    "s2d-confirm-0652",
+    "s2d-confirm-0653",
+    "s2d-confirm-0655",
+    "s2d-confirm-0656",
+    "s2d-confirm-0659",
+    "s2d-confirm-0660",
+    "s2d-confirm-0661",
+    "s2d-confirm-0662",
+    "s2d-confirm-0663",
+    "s2d-confirm-0664",
+    "s2d-confirm-0665",
+    "s2d-confirm-0666",
+    "s2d-confirm-0667",
+    "s2d-confirm-0668",
+    "s2d-confirm-0670",
+    "s2d-confirm-0671",
+    "s2d-confirm-0673",
+    "s2d-confirm-0674",
+    "s2d-confirm-0678",
+    "s2d-confirm-0680",
+    "s2d-confirm-0681",
+    "s2d-confirm-0683",
+    "s2d-confirm-0686",
+    "s2d-confirm-0687",
+    "s2d-confirm-0688",
+    "s2d-confirm-0689",
+    "s2d-confirm-0691",
+    "s2d-confirm-0692",
+    "s2d-confirm-0693",
+    "s2d-confirm-0694",
+    "s2d-confirm-0697",
+    "s2d-confirm-0700",
+    "s2d-confirm-0701",
+    "s2d-confirm-0702",
+    "s2d-confirm-0703",
+    "s2d-confirm-0704",
+    "s2d-confirm-0705",
+    "s2d-confirm-0706",
+    "s2d-confirm-0708",
+    "s2d-confirm-0709",
+    "s2d-confirm-0710",
+    "s2d-confirm-0711",
+    "s2d-confirm-0713",
+    "s2d-confirm-0716",
+    "s2d-confirm-0718",
+    "s2d-confirm-0719",
+    "s2d-confirm-0721",
+    "s2d-confirm-0722",
+    "s2d-confirm-0723",
+    "s2d-confirm-0724",
+    "s2d-confirm-0725",
+    "s2d-confirm-0726",
+    "s2d-confirm-0727",
+    "s2d-confirm-0729",
+    "s2d-confirm-0730",
+    "s2d-confirm-0731",
+    "s2d-confirm-0732",
+    "s2d-confirm-0734",
+    "s2d-confirm-0735",
+    "s2d-confirm-0736",
+    "s2d-confirm-0738",
+    "s2d-confirm-0739",
+    "s2d-confirm-0741",
+    "s2d-confirm-0743",
+    "s2d-confirm-0744",
+    "s2d-confirm-0745",
+    "s2d-confirm-0746",
+    "s2d-confirm-0748",
+    "s2d-confirm-0751",
+    "s2d-confirm-0752",
+    "s2d-confirm-0753",
+    "s2d-confirm-0755",
+    "s2d-confirm-0756",
+    "s2d-confirm-0757",
+    "s2d-confirm-0758",
+    "s2d-confirm-0759",
+    "s2d-confirm-0760",
+    "s2d-confirm-0761",
+    "s2d-confirm-0762",
+    "s2d-confirm-0763",
+    "s2d-confirm-0764",
+    "s2d-confirm-0766",
+    "s2d-confirm-0770",
+    "s2d-confirm-0771",
+    "s2d-confirm-0772",
+    "s2d-confirm-0773",
+    "s2d-confirm-0774",
+    "s2d-confirm-0776",
+    "s2d-confirm-0777",
+    "s2d-confirm-0780",
+    "s2d-confirm-0781",
+    "s2d-confirm-0782",
+    "s2d-confirm-0786",
+    "s2d-confirm-0787",
+    "s2d-confirm-0789",
+    "s2d-confirm-0790",
+    "s2d-confirm-0791",
+    "s2d-confirm-0792",
+    "s2d-confirm-0795",
+    "s2d-confirm-0798",
+    "s2d-confirm-0799",
+    "s2d-confirm-0801",
+    "s2d-confirm-0802",
+    "s2d-confirm-0803",
+    "s2d-confirm-0804",
+    "s2d-confirm-0808",
+    "s2d-confirm-0809",
+    "s2d-confirm-0810",
+    "s2d-confirm-0811",
+    "s2d-confirm-0812",
+    "s2d-confirm-0813",
+    "s2d-confirm-0817",
+    "s2d-confirm-0818",
+    "s2d-confirm-0819",
+    "s2d-confirm-0821",
+    "s2d-confirm-0822",
+    "s2d-confirm-0823",
+    "s2d-confirm-0824",
+    "s2d-confirm-0825",
+    "s2d-confirm-0826",
+    "s2d-confirm-0827",
+    "s2d-confirm-0828",
+    "s2d-confirm-0829",
+    "s2d-confirm-0830",
+    "s2d-confirm-0831",
+    "s2d-confirm-0833",
+    "s2d-confirm-0834",
+    "s2d-confirm-0837",
+    "s2d-confirm-0840",
+    "s2d-confirm-0842",
+    "s2d-confirm-0846",
+    "s2d-confirm-0847",
+    "s2d-confirm-0848",
+    "s2d-confirm-0849",
+    "s2d-confirm-0850",
+    "s2d-confirm-0851"
+  ],
+  "exclusions": [
+    {
+      "source_index": 10,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 12,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 15,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 24,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 25,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 28,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 36,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 55,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 57,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 58,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 59,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 67,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 68,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 70,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 71,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 79,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 81,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 85,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 89,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 90,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 92,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 96,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 97,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 100,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 106,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 107,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 110,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 111,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 112,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 114,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 115,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 116,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 120,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 127,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 139,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 146,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 151,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 153,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 156,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 157,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 158,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 161,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 163,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 166,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 168,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 174,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 176,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 177,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 179,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 182,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 184,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 186,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 188,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 189,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 190,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 193,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 197,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 199,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 204,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 206,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 207,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 209,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 210,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 216,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 217,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 220,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 223,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 229,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 230,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 232,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 245,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 246,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 249,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 251,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 252,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 254,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 259,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 262,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 264,
+      "reason": "character-trigram Jaccard >= 0.9 with a prior split/retained row"
+    },
+    {
+      "source_index": 265,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 266,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 272,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 273,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 274,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 277,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 279,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 282,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 283,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 285,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 286,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 289,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 293,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 295,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 298,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 301,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 302,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 303,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 304,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 308,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 309,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 316,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 317,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 318,
+      "reason": "character-trigram Jaccard >= 0.9 with a prior split/retained row"
+    },
+    {
+      "source_index": 321,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 322,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 327,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 330,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 333,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 334,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 337,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 339,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 350,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 351,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 356,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 359,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 361,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 363,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 364,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 368,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 369,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 381,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 382,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 384,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 385,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 389,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 390,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 392,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 394,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 395,
+      "reason": "character-trigram Jaccard >= 0.9 with a prior split/retained row"
+    },
+    {
+      "source_index": 399,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 401,
+      "reason": "character-trigram Jaccard >= 0.9 with a prior split/retained row"
+    },
+    {
+      "source_index": 402,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 403,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 406,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 412,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 418,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 423,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 424,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 427,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 428,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 429,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 430,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 431,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 432,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 433,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 437,
+      "reason": "character-trigram Jaccard >= 0.9 with a prior split/retained row"
+    },
+    {
+      "source_index": 438,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 456,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 460,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 465,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 468,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 469,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 470,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 471,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 481,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 483,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 492,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 499,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 502,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 503,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 508,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 513,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 519,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 529,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 534,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 537,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 542,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 548,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 550,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 551,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 552,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 553,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 554,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 559,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 562,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 565,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 576,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 587,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 591,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 594,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 599,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 600,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 603,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 606,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 607,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 611,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 612,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 622,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 623,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 628,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 633,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 635,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 636,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 637,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 639,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 641,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 646,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 654,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 657,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 658,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 669,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 672,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 675,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 676,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 677,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 679,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 682,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 684,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 685,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 690,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 695,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 696,
+      "reason": "character-trigram Jaccard >= 0.9 with a prior split/retained row"
+    },
+    {
+      "source_index": 698,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 699,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 707,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 712,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 714,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 715,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 717,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 720,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 728,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 733,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 737,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 740,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 742,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 747,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 749,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 750,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 754,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 765,
+      "reason": "character-trigram Jaccard >= 0.9 with a prior split/retained row"
+    },
+    {
+      "source_index": 767,
+      "reason": "character-trigram Jaccard >= 0.9 with a prior split/retained row"
+    },
+    {
+      "source_index": 768,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 769,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 775,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 778,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 779,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 783,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 784,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 785,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 788,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 793,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 794,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 796,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 797,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 800,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 805,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 806,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 807,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 814,
+      "reason": "character-trigram Jaccard >= 0.9 with a prior split/retained row"
+    },
+    {
+      "source_index": 815,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 816,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 820,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 832,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 835,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 836,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 838,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 839,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 841,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 843,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 844,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 845,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    },
+    {
+      "source_index": 852,
+      "reason": "normalized exact overlap with an existing split or earlier source row"
+    }
+  ],
+  "source_role": "Unused upstream training rows reassigned to confirmation only; never enter training memory, Meta feedback or selection",
+  "scope": "Additional in-distribution synthetic public data; separate from the released 211-question test; not OOD or a standard benchmark score",
+  "selection_rule": "All unused allowed-label rows in source order after fixed exact and >=0.9 character-trigram deduplication; no model outcomes consulted"
+}

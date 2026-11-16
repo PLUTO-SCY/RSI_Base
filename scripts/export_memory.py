@@ -112,6 +112,8 @@ def main():
         report["diagnostic_ablations"] = read_json(args.suite / "ablations.json")
     if (args.suite / "resume_verification.json").exists():
         report["resume_verification"] = read_json(args.suite / "resume_verification.json")
+    if (args.suite / "confirmation.json").exists():
+        report["additional_confirmation"] = read_json(args.suite / "confirmation.json")
     # Exact dataset text must not appear in any publicly exported policy/rationale.
     texts = [
         json.loads(line)["question"]
