@@ -3,6 +3,7 @@
 import hashlib
 import json
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -64,6 +65,7 @@ class Limits(StrictModel):
 
 
 class RunConfig(StrictModel):
+    evaluator: Literal["numeric", "math_numeric"] = "numeric"
     task: ModelSettings
     meta: MetaSettings
     agent: AgentSpec

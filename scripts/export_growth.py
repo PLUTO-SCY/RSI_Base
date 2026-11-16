@@ -30,6 +30,18 @@ def main():
     for path in (search / "rounds").iterdir():
         if path.is_dir() and completed(path) is None:
             raise ValueError("Incomplete search round")
+    history = read_json(search / "summary.json")["history"]
+    for index, row in enumerate(report["curve"]):
+        if not index or row["candidate_dev"] is None:
+            continue
+        parent = search / "rounds" / f"{history[index - 1]['selected_round']:03}/results.jsonl"
+        previous = {r["id"]: r["score"] for r in map(json.loads, parent.read_text().splitlines())}
+        current = [
+            json.loads(line)
+            for line in (search / f"rounds/{index:03}/results.jsonl").read_text().splitlines()
+        ]
+        row["gained_vs_parent"] = sum(r["score"] > previous[r["id"]] for r in current)
+        row["lost_vs_parent"] = sum(r["score"] < previous[r["id"]] for r in current)
     if completed(search / "final") is None:
         raise ValueError("Incomplete monitor evaluation")
     report["provenance"] = provenance

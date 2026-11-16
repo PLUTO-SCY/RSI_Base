@@ -1,0 +1,194 @@
+{
+  "calibration_sha256": "52ef9cef8e3c383e1dee2ea2fabc588dee18f5e916d4a54edb9dbfc163424dd5",
+  "attempts": [
+    {
+      "run": "qwen-math-growth",
+      "config": "configs/calibration/qwen3_4b_4k.json",
+      "config_sha256": "62bb4be9b03ffafd6bc589a861b4c5fed3ef66272717f528ac012ac901a7abc6",
+      "task_model": "Qwen/Qwen3-4B-Instruct-2507",
+      "evaluator": "numeric",
+      "summary": {
+        "assigned": 16,
+        "completed": 16,
+        "correct": 11,
+        "accuracy": 0.6875,
+        "format_errors": 4,
+        "truncated": 4,
+        "output_tokens": 33322
+      },
+      "application_calls": {
+        "task": 16,
+        "meta": 0
+      },
+      "math_numeric_rescore_diagnostic_only": {
+        "correct": 11,
+        "format_errors": 4
+      }
+    },
+    {
+      "run": "qwen-math-growth-8k",
+      "config": "configs/qwen_math_growth.json",
+      "config_sha256": "ad41078536d311ca120654e7df0937935ac23ee792a87af6d7998262e844902c",
+      "task_model": "Qwen/Qwen3-4B-Instruct-2507",
+      "evaluator": "numeric",
+      "summary": {
+        "assigned": 16,
+        "completed": 16,
+        "correct": 14,
+        "accuracy": 0.875,
+        "format_errors": 1,
+        "truncated": 1,
+        "output_tokens": 46735
+      },
+      "application_calls": {
+        "task": 16,
+        "meta": 0
+      },
+      "math_numeric_rescore_diagnostic_only": {
+        "correct": 14,
+        "format_errors": 1
+      }
+    },
+    {
+      "run": "qwen-small-math-growth",
+      "config": "configs/calibration/qwen2_5_1_5b_system.json",
+      "config_sha256": "d233bddc70f3750cc58ab50879faeff475c4925876e88fac1f2cd69027dfc27b",
+      "task_model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "evaluator": "numeric",
+      "summary": {
+        "assigned": 16,
+        "completed": 16,
+        "correct": 0,
+        "accuracy": 0.0,
+        "format_errors": 15,
+        "truncated": 0,
+        "output_tokens": 10843
+      },
+      "application_calls": {
+        "task": 16,
+        "meta": 0
+      },
+      "math_numeric_rescore_diagnostic_only": {
+        "correct": 1,
+        "format_errors": 4
+      }
+    },
+    {
+      "run": "qwen-small-math-growth-format",
+      "config": "configs/calibration/qwen2_5_1_5b_system_example.json",
+      "config_sha256": "ef1ec26ada5da163a5cc62e136940e1fc8933dc4a357d24e10a43ffab5f71b7b",
+      "task_model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "evaluator": "numeric",
+      "summary": {
+        "assigned": 16,
+        "completed": 16,
+        "correct": 0,
+        "accuracy": 0.0,
+        "format_errors": 15,
+        "truncated": 0,
+        "output_tokens": 13110
+      },
+      "application_calls": {
+        "task": 16,
+        "meta": 0
+      },
+      "math_numeric_rescore_diagnostic_only": {
+        "correct": 2,
+        "format_errors": 4
+      }
+    },
+    {
+      "run": "qwen-small-math-growth-user",
+      "config": "configs/calibration/qwen2_5_1_5b_user.json",
+      "config_sha256": "b12d3f8e892783a5b895a5fc8a125cac5168d711c089c87357bab6b491f264d3",
+      "task_model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "evaluator": "numeric",
+      "summary": {
+        "assigned": 16,
+        "completed": 16,
+        "correct": 4,
+        "accuracy": 0.25,
+        "format_errors": 9,
+        "truncated": 0,
+        "output_tokens": 11097
+      },
+      "application_calls": {
+        "task": 16,
+        "meta": 0
+      },
+      "math_numeric_rescore_diagnostic_only": {
+        "correct": 6,
+        "format_errors": 1
+      }
+    },
+    {
+      "run": "qwen-1_7b-math-growth",
+      "config": "configs/calibration/qwen3_1_7b_strict.json",
+      "config_sha256": "82e5ba74b2468dc136ed757930d4df22a643254de0838b1661e4be21f9d35251",
+      "task_model": "Qwen/Qwen3-1.7B",
+      "evaluator": "numeric",
+      "summary": {
+        "assigned": 16,
+        "completed": 16,
+        "correct": 3,
+        "accuracy": 0.1875,
+        "format_errors": 11,
+        "truncated": 0,
+        "output_tokens": 12897
+      },
+      "application_calls": {
+        "task": 16,
+        "meta": 0
+      },
+      "math_numeric_rescore_diagnostic_only": {
+        "correct": 6,
+        "format_errors": 0
+      }
+    },
+    {
+      "run": "qwen-1_7b-math-v2",
+      "config": "configs/qwen_1_7b_math_growth.json",
+      "config_sha256": "363b8b4eff06f15dbd6239e276a308d5f16ca771582adf0a504431bd3b36e9f0",
+      "task_model": "Qwen/Qwen3-1.7B",
+      "evaluator": "math_numeric",
+      "summary": {
+        "assigned": 16,
+        "completed": 16,
+        "correct": 6,
+        "accuracy": 0.375,
+        "format_errors": 1,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 5,
+        "truncated": 1,
+        "output_tokens": 21097
+      },
+      "application_calls": {
+        "task": 16,
+        "meta": 0
+      },
+      "math_numeric_rescore_diagnostic_only": {
+        "correct": 6,
+        "format_errors": 1
+      }
+    }
+  ],
+  "application_calls": {
+    "task": 112,
+    "meta": 0
+  },
+  "interpretation": "Protocol/model calibration and same-response rescoring are not RSI improvements",
+  "native_vs_served_probe": [
+    {
+      "native": "2",
+      "served": "2"
+    },
+    {
+      "native": "PINEAPPLE",
+      "served": "PINEAPPLE"
+    },
+    {
+      "native": "2",
+      "served": "2"
+    }
+  ]
+}

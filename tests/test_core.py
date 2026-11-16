@@ -266,6 +266,30 @@ def test_concurrent_batch_settles_successes_and_resumes_missing_rows(tmp_path):
     )
 
 
+def test_math_evaluator_is_used_by_both_development_and_final(tmp_path):
+    class BoxedTask:
+        def run(self, spec, question):
+            return {"response": r"Work. \boxed{2}"}
+
+    dev, test = datasets(tmp_path)
+    config = configuration(0).model_copy(update={"evaluator": "math_numeric"})
+    result = run(config, dev, test, tmp_path / "out", tmp_path, task=BoxedTask(), meta=FakeMeta())
+    assert result["development_accuracy"] == 1
+    assert result["held_out"]["accuracy"] == 1
+    assert result["held_out"]["strict_format_compliant"] == 0
+    with pytest.raises(ValueError, match="identical"):
+        run(
+            configuration(0),
+            dev,
+            test,
+            tmp_path / "out",
+            tmp_path,
+            resume=True,
+            task=BoxedTask(),
+            meta=FakeMeta(),
+        )
+
+
 def test_claude_uses_project_state_and_process_local_provider(tmp_path, monkeypatch):
     (tmp_path / ".env.local").write_text("RSI_API_KEY=fixture-key\n")
     monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://unrelated.example")

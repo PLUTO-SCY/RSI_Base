@@ -29,5 +29,6 @@
     "max_meta_calls": 8,
     "task_concurrency": 16,
     "wall_seconds": 10800
-  }
+  },
+  "evaluator": "math_numeric"
 }

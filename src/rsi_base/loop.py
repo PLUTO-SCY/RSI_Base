@@ -9,6 +9,7 @@ from pathlib import Path
 from .agent import TaskAgent
 from .benchmark import check_disjoint, load_problems, score
 from .improve import ClaudeMeta
+from .math_scoring import math_score
 from .storage import Ledger, append_json, read_json, write_json
 from .types import AgentSpec, Proposal, digest
 
@@ -39,10 +40,14 @@ def completed(directory):
     return value["state"]
 
 
-def evaluate(directory, problems, spec, task, ledger, concurrency=1):
+def evaluate(directory, problems, spec, task, ledger, concurrency=1, scorer=score):
     """Settle every admitted call; resume successes even across an interrupted batch."""
     directory.mkdir(parents=True, exist_ok=True)
-    identity = {"agent": spec.model_dump(), "tasks": digest(problems)}
+    identity = {
+        "agent": spec.model_dump(),
+        "tasks": digest(problems),
+        "scorer": f"{scorer.__module__}.{scorer.__name__}",
+    }
     manifest = directory / "evaluation.json"
     if manifest.exists():
         if read_json(manifest) != identity:
@@ -84,7 +89,7 @@ def evaluate(directory, problems, spec, task, ledger, concurrency=1):
                     "id": problem["id"],
                     "question": problem["question"],
                     **result,
-                    **score(result["response"], problem["answer"]),
+                    **scorer(result["response"], problem["answer"]),
                 }
                 append_json(path, row)
                 done[row["id"]] = row
@@ -103,6 +108,10 @@ def evaluate(directory, problems, spec, task, ledger, concurrency=1):
         "correct": sum(r["score"] for r in records),
         "accuracy": sum(r["score"] for r in records) / len(problems),
         "format_errors": sum(r["status"] == "format_error" for r in records),
+        "answer_conflicts": sum(r["status"] == "conflicting_answers" for r in records),
+        "strict_format_compliant": sum(
+            r.get("strict_format_compliant", r["status"] != "format_error") for r in records
+        ),
         "truncated": sum(r.get("finish_reason") == "length" for r in records),
         "output_tokens": sum((r.get("usage") or {}).get("completion_tokens", 0) for r in records),
     }
@@ -114,19 +123,22 @@ def build_evidence(parent_records, problems, history, rounds_dir):
     """Prioritize mistakes rather than the first dataset rows; retain rejected attempts."""
     references = {p["id"]: p["answer"] for p in problems}
 
-    def examples(rows):
+    def examples(rows, failure_limit=8, success_limit=2):
         failures = [r for r in rows if not r["score"]]
         successes = [r for r in rows if r["score"]]
-        selected = failures[:8] + successes[:2]
+        selected = failures[:failure_limit] + successes[:success_limit]
         return [
             {
                 "id": r["id"],
                 "question": r["question"],
-                "response": r["response"][:5000],
+                "response": r["response"]
+                if len(r["response"]) <= 5000
+                else r["response"][:2800] + "\n[... middle omitted ...]\n" + r["response"][-2200:],
                 "score": r["score"],
                 "status": r["status"],
                 "reference_answer": references[r["id"]],
                 "finish_reason": r.get("finish_reason"),
+                "parsed_answer": r.get("parsed_answer"),
             }
             for r in selected
         ]
@@ -147,7 +159,7 @@ def build_evidence(parent_records, problems, history, rounds_dir):
                     "proposal": read_json(directory / "proposal.json"),
                     "decision": decision["decision"],
                     "candidate_accuracy": decision.get("candidate_accuracy"),
-                    "examples": examples(rows),
+                    "examples": examples(rows, 4, 1),
                 }
             )
     return {
@@ -211,13 +223,14 @@ def run(
 
 
 def _run(config, dev, test, output, ledger, task, meta, rounds):
+    scorer = math_score if config.evaluator == "math_numeric" else score
     current = config.agent
     parent_dir = output / "rounds" / "000"
     parent_dir.mkdir(parents=True, exist_ok=True)
     state = completed(parent_dir)
     if state is None:
         records, summary = evaluate(
-            parent_dir, dev, current, task, ledger, config.limits.task_concurrency
+            parent_dir, dev, current, task, ledger, config.limits.task_concurrency, scorer
         )
         state = {
             "agent": current.model_dump(),
@@ -270,7 +283,7 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
             proposal = Proposal.model_validate(read_json(proposal_path))
             child = AgentSpec(system_prompt=proposal.system_prompt)
             _records, summary = evaluate(
-                directory, dev, child, task, ledger, config.limits.task_concurrency
+                directory, dev, child, task, ledger, config.limits.task_concurrency, scorer
             )
             next_state["candidate_accuracy"] = summary["accuracy"]
             if summary["accuracy"] > state["dev_accuracy"]:
@@ -294,7 +307,7 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
     final_state = completed(final_dir)
     if final_state is None:
         _, final_summary = evaluate(
-            final_dir, test, frozen, task, ledger, config.limits.task_concurrency
+            final_dir, test, frozen, task, ledger, config.limits.task_concurrency, scorer
         )
         final_state = {"agent": frozen.model_dump(), "metrics": final_summary}
         seal(final_dir, final_state)
@@ -308,6 +321,7 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
         "weights_updated": False,
         "model": config.task.model,
         "meta_model": config.meta.model,
+        "evaluator": config.evaluator,
     }
     write_json(output / "summary.json", result)
     return result

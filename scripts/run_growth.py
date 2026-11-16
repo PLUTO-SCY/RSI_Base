@@ -7,8 +7,9 @@ import json
 from pathlib import Path
 
 from rsi_base.agent import TaskAgent
-from rsi_base.benchmark import check_disjoint, load_problems
+from rsi_base.benchmark import check_disjoint, load_problems, score
 from rsi_base.loop import completed, evaluate, file_hash, run
+from rsi_base.math_scoring import math_score
 from rsi_base.storage import Ledger, read_json, write_json
 from rsi_base.types import AgentSpec, RunConfig, digest
 
@@ -81,6 +82,7 @@ def paired(baseline, selected):
 
 
 def audit(config, output, data):
+    scorer = math_score if config.evaluator == "math_numeric" else score
     # Revalidate immutable search artifacts without making additional requests.
     search = run(
         config, data / "dev.jsonl", data / "monitor.jsonl", output / "search", ROOT, resume=True
@@ -142,6 +144,7 @@ def audit(config, output, data):
                     task,
                     ledger,
                     config.limits.task_concurrency,
+                    scorer,
                 )
             dev_summary = read_json(round_dir / "summary.json")
             curve.append(
@@ -167,6 +170,7 @@ def audit(config, output, data):
             task,
             ledger,
             config.limits.task_concurrency,
+            scorer,
         )
         identical_prompt = frozen == config.agent
         if identical_prompt:
@@ -179,11 +183,13 @@ def audit(config, output, data):
                 task,
                 ledger,
                 config.limits.task_concurrency,
+                scorer,
             )
         report = {
             "protocol": "numeric MATH-500 research split; not official benchmark accuracy",
             "task_model": config.task.model,
             "weights_updated": False,
+            "evaluator": config.evaluator,
             "selection": "strict dev accuracy gain; no monitor/final feedback to Meta",
             "monitor_protocol": "Evaluate each unique selected incumbent once after search; cache unchanged prompts",
             "curve": curve,
@@ -222,6 +228,7 @@ def main():
             identity = {
                 "task": config.task.model_dump(),
                 "agent": config.agent.model_dump(),
+                "evaluator": config.evaluator,
                 "data_sha256": file_hash(data / "calibration.jsonl"),
             }
             manifest = directory / "inputs.json"
@@ -237,6 +244,7 @@ def main():
                     TaskAgent(config.task, ROOT),
                     ledger,
                     config.limits.task_concurrency,
+                    math_score if config.evaluator == "math_numeric" else score,
                 )
                 print(json.dumps(summary, indent=2))
             finally:
