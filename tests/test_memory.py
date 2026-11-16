@@ -266,6 +266,17 @@ def test_effective_policy_ignores_unused_review_knobs():
     )
 
 
+def test_class_caps_above_example_count_are_one_execution_policy(training):
+    parent = MemoryPolicy(examples=2, max_per_label=32)
+    equivalent = MemoryPolicy(examples=2, max_per_label=31)
+    assert effective_policy(parent) == effective_policy(equivalent)
+    harness = MemoryHarness(training, ["fruit", "machine"])
+    assert harness.context("apple orchard", parent) == harness.context("apple orchard", equivalent)
+    assert effective_policy(MemoryPolicy(examples=32, max_per_label=3)) != effective_policy(
+        MemoryPolicy(examples=32, max_per_label=4)
+    )
+
+
 def test_local_neighbor_is_bounded_structural_and_label_independent():
     parent = MemoryPolicy(examples=32, max_per_label=4, workflow="verify")
     candidate = local_neighbor(parent, 1, {})

@@ -34,16 +34,18 @@ RSI_GPU=2 RSI_TASK_PORT=18002 sh scripts/serve_task.sh
 .venv/bin/python scripts/run_memory.py suite --parallel \
   --config configs/memory_s2d_expanded.json --data data/memory-s2d-expanded \
   --task-base-urls http://127.0.0.1:18000/v1 http://127.0.0.1:18001/v1 http://127.0.0.1:18002/v1 \
-  --output runs/memory-s2d-expanded-v1
+  --output runs/memory-s2d-expanded-v2
 .venv/bin/python scripts/run_memory.py finalize \
   --config configs/memory_s2d_expanded.json --data data/memory-s2d-expanded \
-  --output runs/memory-s2d-expanded-v1
+  --output runs/memory-s2d-expanded-v2
 .venv/bin/python scripts/audit_memory_ablations.py
 .venv/bin/python scripts/verify_memory_resume.py \
-  --suite runs/memory-s2d-expanded-v1 --data data/memory-s2d-expanded
+  --suite runs/memory-s2d-expanded-v2 --data data/memory-s2d-expanded
 .venv/bin/python scripts/export_memory.py
 ```
 
 原始日志、数据和模型继续位于Git忽略目录；脚本、配置、指纹、曲线及正负结果进入Git。历史实验需检出对应源码提交恢复。
 
 结果等待实际执行，不预填增长或通过状态。
+
+实现检查发现：当总示例数为8时，每类上限32→31不会改变执行。v1在测试解封前停止，保留调用与部分结果；对这类等价策略做规范化后另开v2。该修正防止相同执行的推理波动被当成新策略收益，数据划分不变。

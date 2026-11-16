@@ -50,6 +50,11 @@ def effective_policy(policy):
         values["review_retrieval"] = "same"
     if values["review_retrieval"] == "same":
         values.update(confirmers=5, challengers=5)
+    if policy.retrieval != "none":
+        if policy.layout == "contrast_pairs":
+            values["max_per_label"] = 32
+        elif policy.examples:
+            values["max_per_label"] = min(policy.max_per_label, policy.examples)
     if policy.retrieval == "none":
         values.update(
             examples=0,

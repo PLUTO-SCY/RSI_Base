@@ -74,7 +74,7 @@ def plot(report, destination, name):
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-expanded-v1")
+    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-expanded-v2")
     parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
     parser.add_argument(
         "--name",
