@@ -44,7 +44,8 @@ sh scripts/run_smoke.sh
 | configs/deepseek_smoke.json | 实测：Meta 和 Task 分别通过 Claude Code / OpenAI SDK 调用同一 DeepSeek 服务，验证软件闭环 |
 | configs/local_qwen.json | 本地 Task endpoint 模板，尚未在 Qwen 服务上实测；Meta 仍使用 DeepSeek |
 | configs/qwen_math_growth.json | 4B 六轮无增长对照；历史评分协议见诊断记录 |
-| configs/qwen_1_7b_math_growth.json | 1.7B 本地 Task、MATH 数值评分、六轮 prompt 搜索 |
+| configs/qwen_1_7b_math_growth.json | 1.7B 六轮历史对照，策略与格式耦合 |
+| configs/qwen_1_7b_boxed_growth.json | 当前增长试验：固定格式后缀、600字符策略、八轮搜索 |
 | configs/calibration/ | 失败和中间校准配置，供核查，不作为增长成绩 |
 | configs/design/ | 后续训练方案示例，不能执行当前 CLI |
 

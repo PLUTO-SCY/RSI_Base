@@ -170,10 +170,36 @@
         "correct": 6,
         "format_errors": 1
       }
+    },
+    {
+      "run": "qwen-1_7b-boxed-v3",
+      "config": "configs/qwen_1_7b_boxed_growth.json",
+      "config_sha256": "3e9ecea193c979d06f934599ad0c4f56665723f2ad9aec7d0c57b28c0f5a5654",
+      "task_model": "Qwen/Qwen3-1.7B",
+      "evaluator": "math_numeric",
+      "summary": {
+        "assigned": 16,
+        "completed": 16,
+        "correct": 8,
+        "accuracy": 0.5,
+        "format_errors": 1,
+        "answer_conflicts": 0,
+        "strict_format_compliant": 0,
+        "truncated": 1,
+        "output_tokens": 26688
+      },
+      "application_calls": {
+        "task": 16,
+        "meta": 0
+      },
+      "math_numeric_rescore_diagnostic_only": {
+        "correct": 8,
+        "format_errors": 1
+      }
     }
   ],
   "application_calls": {
-    "task": 112,
+    "task": 128,
     "meta": 0
   },
   "interpretation": "Protocol/model calibration and same-response rescoring are not RSI improvements",

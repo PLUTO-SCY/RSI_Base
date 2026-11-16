@@ -21,6 +21,7 @@ class ModelSettings(StrictModel):
     timeout: float = Field(default=90, gt=0, le=600)
     temperature: float = Field(default=0, ge=0, le=2)
     extra_body: dict = Field(default_factory=dict)
+    user_suffix: str = Field(default="", max_length=2000)
 
     @field_validator("base_url")
     @classmethod
@@ -41,6 +42,7 @@ class MetaSettings(StrictModel):
     timeout: float = Field(default=180, gt=0, le=600)
     command: str = "claude"
     state_dir: str = ".local/claude"
+    prompt_char_budget: int = Field(default=6000, ge=128, le=8000)
 
     @field_validator("base_url")
     @classmethod

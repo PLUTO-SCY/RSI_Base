@@ -16,7 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", type=Path, default=root / "runs/qwen-math-growth-8k")
     parser.add_argument("--runtime", type=Path, default=root / ".local/task-runtime.json")
-    parser.add_argument("--name", choices=["growth", "growth-small"], default="growth")
+    parser.add_argument("--name", choices=["growth", "growth-v2", "growth-small"], default="growth")
     parser.add_argument("--implementation", type=Path, default=root / "src/rsi_base")
     args = parser.parse_args()
     search = args.run / "search"

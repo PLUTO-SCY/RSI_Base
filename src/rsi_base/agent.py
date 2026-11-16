@@ -27,9 +27,12 @@ class TaskAgent:
         )
 
     def run(self, spec, question):
+        user_content = question
+        if self.settings.user_suffix:
+            user_content += "\n\n" + self.settings.user_suffix
         messages = [
             {"role": "system", "content": spec.system_prompt},
-            {"role": "user", "content": question},
+            {"role": "user", "content": user_content},
         ]
         started = time.monotonic()
         response = self.client.chat.completions.create(

@@ -19,6 +19,7 @@ def main():
         ("qwen-small-math-growth-user", "calibration/qwen2_5_1_5b_user.json"),
         ("qwen-1_7b-math-growth", "calibration/qwen3_1_7b_strict.json"),
         ("qwen-1_7b-math-v2", "qwen_1_7b_math_growth.json"),
+        ("qwen-1_7b-boxed-v3", "qwen_1_7b_boxed_growth.json"),
     ]
     data = root / "data/math-growth/calibration.jsonl"
     references = {r["id"]: r["answer"] for r in map(json.loads, data.read_text().splitlines())}

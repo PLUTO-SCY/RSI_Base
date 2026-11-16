@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from rsi_base.agent import TaskAgent
 from rsi_base.benchmark import check_disjoint, parse_number, score
 from rsi_base.improve import ClaudeMeta, parse_proposal
 from rsi_base.loop import build_evidence, evaluate, run
@@ -288,6 +289,52 @@ def test_math_evaluator_is_used_by_both_development_and_final(tmp_path):
             task=BoxedTask(),
             meta=FakeMeta(),
         )
+
+
+def test_fixed_output_contract_survives_strategy_changes(tmp_path, monkeypatch):
+    captured = []
+
+    def create(**kwargs):
+        captured.append(kwargs["messages"])
+        return SimpleNamespace(
+            choices=[
+                SimpleNamespace(message=SimpleNamespace(content=r"\boxed{2}"), finish_reason="stop")
+            ],
+            usage=None,
+            model="fixture",
+        )
+
+    monkeypatch.setenv("RSI_API_KEY", "fixture")
+    monkeypatch.setattr(
+        "rsi_base.agent.OpenAI",
+        lambda **_: SimpleNamespace(
+            chat=SimpleNamespace(completions=SimpleNamespace(create=create))
+        ),
+    )
+    settings = configuration().task.model_copy(update={"user_suffix": "Put the answer in a box."})
+    task = TaskAgent(settings, tmp_path)
+    for strategy in ["Solve carefully.", "Check all cases."]:
+        task.run(AgentSpec(system_prompt=strategy), "The question")
+    assert captured[0][0] != captured[1][0]
+    assert captured[0][1] == captured[1][1]
+    assert captured[0][1]["content"] == "The question\n\nPut the answer in a box."
+    with pytest.raises(ValueError):
+        parse_proposal('{"system_prompt":"x","reason":"x","user_suffix":"change contract"}')
+
+
+def test_loop_rejects_strategy_over_configured_character_budget(tmp_path):
+    class TooLong:
+        def propose(self, current, evidence, output):
+            return Proposal(system_prompt="x" * 129, reason="too long"), {}
+
+    dev, test = datasets(tmp_path)
+    config = configuration(1)
+    config = config.model_copy(
+        update={"meta": config.meta.model_copy(update={"prompt_char_budget": 128})}
+    )
+    result = run(config, dev, test, tmp_path / "run", tmp_path, task=FakeTask(), meta=TooLong())
+    assert result["history"][1]["decision"] == "rejected_invalid_proposal"
+    assert result["application_calls"] == {"task": 2, "meta": 1}
 
 
 def test_claude_uses_project_state_and_process_local_provider(tmp_path, monkeypatch):

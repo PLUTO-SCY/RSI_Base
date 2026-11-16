@@ -254,6 +254,9 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
             json.loads(line) for line in (parent_dir / "results.jsonl").read_text().splitlines()
         ]
         evidence = build_evidence(parent_records, dev, history, output / "rounds")
+        evidence["fixed_task_instructions"] = (
+            config.task.user_suffix or "Preserve the parent's answer-format contract."
+        )
         proposal_path = directory / "proposal.json"
         invalid_path = directory / "invalid_proposal.json"
         if not proposal_path.exists() and not invalid_path.exists():
@@ -265,6 +268,8 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
             try:
                 proposal, metadata = meta.propose(current, evidence, directory)
                 proposal = Proposal.model_validate(proposal.model_dump())
+                if len(proposal.system_prompt) > config.meta.prompt_char_budget:
+                    raise ValueError("Candidate exceeds the configured prompt character budget")
                 write_json(proposal_path, proposal.model_dump())
                 ledger.finish(call_id, "meta", **metadata)
             except ValueError as exc:
