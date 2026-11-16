@@ -2,6 +2,8 @@
 
 当前优先级是先验证可重复的 harness 收益；LoRA、RL 与权重更新均后置。以下协议在正式搜索前固定，结果无论正负都保留。
 
+本页保存200/50/211历史实验；v4对应源码`d133cd6`。当前默认入口已改为[200/300/291标准起点实验](harness-backbone.md)。恢复旧运行必须检出对应源码；新目录重跑也应显式指定配置和数据，避免混用默认设置。
+
 ## 任务和数据
 
 参考 [Meta-Harness](https://arxiv.org/html/2603.28052v1) 的记忆分类实验，只复用公开数据，独立实现执行与演化代码。Task 为固定快照 Qwen3-4B-Instruct-2507，Meta 为项目隔离的 Claude Code + DeepSeek。该小模型实验不宣称复现论文主表。
@@ -38,8 +40,8 @@ RSI_GPU=0 sh scripts/serve_task.sh
 另一个终端运行：
 
 ```sh
-.venv/bin/python scripts/run_memory.py suite --output runs/memory-s2d-suite-v4
-.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-suite-v4
+.venv/bin/python scripts/run_memory.py suite --config configs/memory_s2d.json --data data/memory-s2d --output runs/memory-s2d-suite-v4
+.venv/bin/python scripts/run_memory.py finalize --config configs/memory_s2d.json --data data/memory-s2d --output runs/memory-s2d-suite-v4
 ```
 
 当前配置 `configs/memory_s2d.json`；Task每次输出128token、temperature0，记忆上下文12000字符、单题至多两次调用。搜索中断后同命令恢复，源代码/依赖/输入变化则拒绝恢复。正式搜索时不修改实现。凭据仍为忽略的`.env.local`，本地无鉴权Task端点使用`EMPTY`。
@@ -48,7 +50,7 @@ RSI_GPU=0 sh scripts/serve_task.sh
 
 首次标签占位符指令引起严重格式误解，已弃用，未作为增长起点。改为“仅输出允许标签的完整名称”，重新固定评分和输出约定后，三次验证重复均得到：no-memory27/50、few-shot28/50、BM25 39/50、固定验证40/50。它们是校准结果，正式搜索将重新测定并选择父代。
 
-正式结果待运行完成后按原协议填写，不预填收益。
+正式结果见本页末尾的v4验收；下方校准与计划按发生时的状态保留。
 
 首次正式运行在第一个Meta提案时遭遇CLI输出4096token上限，未产生任何候选或测试评估。保留`runs/memory-s2d-suite-v1`，Meta预算改为8192、要求紧凑JSON后另开v2。Task预算、评分与数据不变；这属于接入修正，不算演化收益。
 
@@ -84,12 +86,12 @@ v4与v3保持相同固定参考父代、任务模型、评分和单题预算，�
 .venv/bin/python scripts/prepare_memory_confirmation.py
 .venv/bin/python scripts/run_memory_confirmation.py plan
 # 等全部搜索冻结后，原始测试与确认评估才能启动
-.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-suite-v4
+.venv/bin/python scripts/run_memory.py finalize --config configs/memory_s2d.json --data data/memory-s2d --output runs/memory-s2d-suite-v4
 .venv/bin/python scripts/run_memory_confirmation.py evaluate
 .venv/bin/python scripts/run_memory_confirmation.py summarize
-.venv/bin/python scripts/audit_memory_ablations.py
-.venv/bin/python scripts/verify_memory_resume.py --suite runs/memory-s2d-suite-v4
-.venv/bin/python scripts/export_memory.py
+.venv/bin/python scripts/audit_memory_ablations.py --suite runs/memory-s2d-suite-v4 --data data/memory-s2d
+.venv/bin/python scripts/verify_memory_resume.py --suite runs/memory-s2d-suite-v4 --data data/memory-s2d
+.venv/bin/python scripts/export_memory.py --suite runs/memory-s2d-suite-v4 --data data/memory-s2d
 ```
 
 确认评估有单独调用账本与预算；不将重复评测视为新增独立题目。候选效果与搜索成功率分别报告。

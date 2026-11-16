@@ -2,9 +2,9 @@
 
 独立实现的最小 RSI 实验框架，按阶段扩展，面向 evaluator、效率和泛化研究。
 
-**v0.0/v0.1 已实现，完成真实 API 与本地单卡 GPU 推理验证。** 当前支持固定权重的 prompt/harness 配置改进；LoRA SFT、代码级 harness 编辑和多任务训练尚未实现。
+**当前优先做固定权重的 harness evolution。** 已实现真实 Meta/Task 调用、记忆检索与上下文策略演化、重复选择、随机搜索对照和冻结后的独立测试；LoRA 后置。
 
-当前集中验证[记忆harness演化](docs/memory-evolution.md)：已实现检索/上下文/两次调用流程搜索、重复选择、随机对照及测试封存；正在运行三次独立搜索。稳定性结果完成后据实更新，LoRA后置。
+首个 backbone 使用 Qwen3-4B-Instruct-2507 + S2D 记忆分类：200 条训练记忆、300 道选择题、291 道测试题；三次独立搜索，每次 5 轮 × 2 候选，每候选重复验证 3 次。三张 A100 分别运行同权重的推理服务，第四张卡不占用。
 
 50题选择集上的三次开发增长未通过211题独立测试；完整保留负结果。当前按[扩大选择集协议](docs/memory-evolution-expanded.md)使用200记忆/300选择/291全新测试，继续只做harness。
 
@@ -13,20 +13,33 @@
 ## 当前闭环
 
 ~~~text
-Task 执行开发样本 → 固定规则评分
-→ Meta 提出一个新 system prompt
-→ 子代在相同样本与协议下执行
-→ 严格改善则接受，否则保留父代
-→ 下一轮；最后冻结选择并独立评估
+Task 执行训练诊断与候选选择样本 → 固定规则评分
+→ Meta 提案 + 局部结构候选
+→ 重复评估；每次不退步且平均净增至少一题才接受
+→ 下一轮；全部搜索冻结后统一评估独立测试集
 ~~~
 
 - Meta：Claude Code CLI + 可配置底层模型；本次接通 deepseek-v4.1-flash。
-- Task：自研单次模型调用 harness，通过 OpenAI 兼容接口执行。
-- 默认每轮一个候选，三轮串行运行；评分、模型、生成预算和数据划分固定。
+- Task：自研薄 harness，通过 OpenAI 兼容接口调用本地模型；支持直接回答或最多两次调用的复核/改写。
+- 可演化字段：示例检索/数量/类别分配、上下文顺序、覆盖与对比布局、复核流程和 system prompt。当前是配置演化，代码编辑后续单独接入。
+- 评分、模型、生成预算和数据划分由宿主固定；Meta 只接收训练诊断和选择集汇总。
 - 保存配置、源代码/依赖锁哈希、逐题记录、提案、决策、调用账本和校验后的轮次 checkpoint。
 - 支持完成轮次与部分逐题结果恢复；拒绝输入变更和已封存产物损坏。
 
-## 快速开始
+## 运行记忆 harness backbone
+
+完整的环境、固定数据重建、模型下载、三卡服务、搜索与导出命令见[复现指南](docs/harness-backbone.md)。所有安装与运行脚本保存在仓库，项目环境不修改系统 Python 或全局 Claude 配置。
+
+服务和数据准备完成后，记忆 CLI 默认使用标准 few-shot 起点配置：
+
+~~~sh
+.venv/bin/python scripts/run_memory.py suite --parallel \
+  --task-base-urls http://127.0.0.1:18000/v1 http://127.0.0.1:18001/v1 http://127.0.0.1:18002/v1
+.venv/bin/python scripts/run_memory.py finalize
+.venv/bin/python scripts/export_memory.py
+~~~
+
+## 最小 API 连通性检查
 
 需要 uv；Meta 还需已有的 Claude Code CLI。本机验证版本为 Python 3.11.15、uv 0.11.17、Claude Code 2.1.169。所有 Python 依赖安装到项目 .venv。
 
@@ -54,6 +67,7 @@ sh scripts/run_smoke.sh
 | configs/qwen_1_7b_boxed_growth.json | 当前增长试验：固定格式后缀、600字符策略、八轮搜索 |
 | configs/memory_s2d.json | 记忆分类harness：固定4B模型、5轮×2候选、重复验证、独立搜索与随机对照 |
 | configs/memory_s2d_expanded.json | 扩大选择集协议；三张卡分别运行独立搜索，训练记忆和模型权重固定 |
+| configs/memory_s2d_starter.json | 当前默认：从固定 few-shot 演化，与强固定基线、随机搜索分别比较 |
 | configs/calibration/ | 失败和中间校准配置，供核查，不作为增长成绩 |
 | configs/design/ | 后续 benchmark / 训练方案设计，不能执行当前 CLI |
 
@@ -76,7 +90,7 @@ sh scripts/check.sh
 ## 代码与文档
 
 ~~~text
-src/rsi_base/        # 类型、Task、Meta、评分、串行循环、文件记录与 CLI
+src/rsi_base/        # Meta/Task、评分、记忆执行、选择/搜索、冻结审计与 checkpoint
 scripts/            # 环境创建、凭据输入、数据准备、接入探测、检查与运行
 tests/              # 无网络的契约和故障路径测试
 configs/            # 当前可运行配置与独立的 design-only 目录

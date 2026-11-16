@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -14,8 +15,12 @@ def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", type=Path, required=True)
-    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d")
+    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
+    parser.add_argument(
+        "--project-root", type=Path, default=root, help="Checkout of the exact experiment source"
+    )
     args = parser.parse_args()
+    runner_root = args.project_root.resolve()
     directories = sorted(args.suite.glob("seed*"))
     if len(directories) != 3 or any(not (d / "frozen.json").exists() for d in directories):
         raise ValueError("Requires three completed searches")
@@ -39,16 +44,18 @@ def main():
     write_json(config_path, protocol["config"])
     subprocess.run(
         [
-            str(root / ".venv/bin/python"),
-            str(root / "scripts/run_memory.py"),
+            str(runner_root / ".venv/bin/python"),
+            str(runner_root / "scripts/run_memory.py"),
             "suite",
             "--config",
-            str(config_path),
+            str(config_path.resolve()),
             "--data",
-            str(args.data),
+            str(args.data.resolve()),
             "--output",
-            str(args.suite),
+            str(args.suite.resolve()),
         ],
+        cwd=runner_root,
+        env={**os.environ, "PYTHONPATH": str(runner_root / "src")},
         check=True,
         capture_output=True,
         text=True,

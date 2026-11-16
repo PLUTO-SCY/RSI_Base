@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Repartition the still-unqueried reserve into 300 selection / 291 fresh-test queries."""
 
+import argparse
 import hashlib
 import json
 import random
@@ -16,13 +17,22 @@ from rsi_base.storage import read_json, write_json
 
 def main():
     root = Path(__file__).resolve().parents[1]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=root / "data/memory-s2d-expanded")
+    parser.add_argument(
+        "--rebuild-published-split",
+        action="store_true",
+        help="Reconstruct and verify the published split without private historical run files",
+    )
+    args = parser.parse_args()
     old = root / "runs/memory-s2d-suite-v4"
-    status = read_json(old / "confirmation.json")
-    if status["status"] != "cancelled_unevaluated" or list(
-        old.glob("seed*/confirmation/calls.jsonl")
-    ):
-        raise ValueError("Reserve must have zero prior model evaluations")
-    destination = root / "data/memory-s2d-expanded"
+    if not args.rebuild_published_split:
+        status = read_json(old / "confirmation.json")
+        if status["status"] != "cancelled_unevaluated" or list(
+            old.glob("seed*/confirmation/calls.jsonl")
+        ):
+            raise ValueError("Reserve must have zero prior model evaluations")
+    destination = args.output
     if destination.exists():
         raise ValueError("Refusing to overwrite a locked partition")
     reserve = root / "data/memory-confirmation"
@@ -86,13 +96,19 @@ def main():
             ).hexdigest(),
         },
     )
+    if args.rebuild_published_split:
+        expected = read_json(root / "docs/validation/memory-expanded-manifest.json")
+        if read_json(destination / "manifest.json") != expected:
+            raise ValueError("Reconstructed split differs from the published manifest")
     print(
         json.dumps(
             {
                 "train": 200,
                 "validation": len(validation),
                 "fresh_test": len(test),
-                "reserve_previously_evaluated": False,
+                "reserve_previously_evaluated": None if args.rebuild_published_split else False,
+                "published_rebuild": args.rebuild_published_split,
+                "new_unseen_holdout_claim": not args.rebuild_published_split,
             }
         )
     )

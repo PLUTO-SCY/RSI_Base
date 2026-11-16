@@ -22,6 +22,8 @@
 
 ## 运行
 
+此强起点实验使用源码`de1adf0`。恢复其本地运行需检出该版本；新clone的数据准备见[完整环境与划分重建](harness-backbone.md)，不依赖历史日志。
+
 ```sh
 .venv/bin/python scripts/prepare_memory_expanded.py
 # 三个终端，各运行一个相同权重的服务；没有权重训练
@@ -38,10 +40,10 @@ RSI_GPU=2 RSI_TASK_PORT=18002 sh scripts/serve_task.sh
 .venv/bin/python scripts/run_memory.py finalize \
   --config configs/memory_s2d_expanded.json --data data/memory-s2d-expanded \
   --output runs/memory-s2d-expanded-v2
-.venv/bin/python scripts/audit_memory_ablations.py
+.venv/bin/python scripts/audit_memory_ablations.py --suite runs/memory-s2d-expanded-v2 --data data/memory-s2d-expanded
 .venv/bin/python scripts/verify_memory_resume.py \
   --suite runs/memory-s2d-expanded-v2 --data data/memory-s2d-expanded
-.venv/bin/python scripts/export_memory.py
+.venv/bin/python scripts/export_memory.py --suite runs/memory-s2d-expanded-v2 --data data/memory-s2d-expanded --name memory-evolution-expanded
 ```
 
 原始日志、数据和模型继续位于Git忽略目录；脚本、配置、指纹、曲线及正负结果进入Git。历史实验需检出对应源码提交恢复。

@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 from rsi_base.loop import file_hash
+from rsi_base.memory_audit import cluster_interval
 from rsi_base.storage import read_json, write_json
 from rsi_base.types import digest
 
@@ -38,6 +39,14 @@ def plot(report, destination, name):
             label=f"Search {row['seed']}",
         )
         axes[2].scatter(1.12, 100 * row["random_control"]["accuracy"], marker="x", color=color)
+        if "strong_fixed_baseline" in row:
+            axes[2].scatter(
+                1.24,
+                100 * row["strong_fixed_baseline"]["accuracy"],
+                marker="D",
+                facecolors="none",
+                edgecolors=color,
+            )
     for ax in axes:
         ax.set_ylim(0, 100)
         ax.grid(alpha=0.25)
@@ -47,7 +56,7 @@ def plot(report, destination, name):
     test_size = report["runs"][0]["baseline"]["examples"]
     axes[0].set_title(f"Search validation ({validation_size} queries × 3)")
     axes[1].set_title(f"Frozen test replay ({test_size} queries × 3)")
-    axes[2].set_title("Final test; × = random-search control")
+    axes[2].set_title("Final test; × random, ◇ strongest fixed")
     axes[0].set_xlabel("Evolution iteration")
     axes[1].set_xlabel("Evolution iteration")
     axes[2].set_xticks([0, 1], ["Seed harness", "Evolved harness"])
@@ -74,7 +83,7 @@ def plot(report, destination, name):
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-expanded-v2")
+    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-starter-v1")
     parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
     parser.add_argument(
         "--name",
@@ -84,6 +93,29 @@ def main():
     args = parser.parse_args()
     report = read_json(args.suite / "report.json")
     report["suite_protocol"] = read_json(args.suite / "suite.json")
+    report["comparison_definition"] = {
+        "primary": "Selected vs configured initial baseline, identified by each run's baseline_name",
+        "strong_fixed": "Selected vs strongest fixed validation baseline, reported separately",
+        "legacy_protocol_label": "The sealed final_protocol.comparison text predates explicit starter selection; actual baseline policies and paired records determine the comparison",
+    }
+    # Descriptive control comparisons; these do not alter the predeclared acceptance gate.
+    for comparison in ["strong_fixed", "random"]:
+        combined = {}
+        for row in report["runs"]:
+            selected = row["paired"]["question_deltas"]
+            deltas = (
+                row["selected_vs_strong_fixed"]["question_deltas"]
+                if comparison == "strong_fixed"
+                else {
+                    key: value - row["random_paired"]["question_deltas"][key]
+                    for key, value in selected.items()
+                }
+            )
+            for key, value in deltas.items():
+                combined.setdefault(key, []).append(value)
+        report[f"selected_vs_{comparison}_question_cluster_bootstrap"] = cluster_interval(
+            {key: sum(values) / len(values) for key, values in combined.items()}
+        )
     report["data_manifest"] = read_json(args.data / "manifest.json")
     report["task_runtime"] = read_json(root / ".local/task-runtime-memory.json")
     runtimes = {

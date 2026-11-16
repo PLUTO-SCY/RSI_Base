@@ -18,7 +18,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("phase", choices=["calibrate", "search", "suite", "finalize"])
-    parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d.json")
+    parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d_starter.json")
     parser.add_argument(
         "--task-base-url", help="Endpoint for one independent calibration/search worker"
     )
@@ -33,8 +33,8 @@ def main():
         action="store_true",
         help="Run the three independent suite workers concurrently",
     )
-    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d")
-    parser.add_argument("--output", type=Path, default=root / "runs/memory-s2d-seed42")
+    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
+    parser.add_argument("--output", type=Path, default=root / "runs/memory-s2d-starter-v1")
     args = parser.parse_args()
     os.environ.setdefault("RSI_LOCAL_API_KEY", "EMPTY")
     config = MemoryConfig.model_validate_json(args.config.read_text())
