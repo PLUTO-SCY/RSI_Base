@@ -53,7 +53,7 @@ def main():
             update={
                 "seed": args.seed,
                 "meta": config.meta.model_copy(
-                    update={"state_dir": f".local/claude-memory/seed{args.seed}"}
+                    update={"state_dir": f"{config.meta.state_dir}/seed{args.seed}"}
                 ),
             }
         )
@@ -129,7 +129,7 @@ def main():
                                 }
                             ),
                             "meta": config.meta.model_copy(
-                                update={"state_dir": f".local/claude-memory/seed{seed}"}
+                                update={"state_dir": f"{config.meta.state_dir}/seed{seed}"}
                             ),
                         }
                     )

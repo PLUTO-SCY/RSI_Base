@@ -8,6 +8,8 @@
 
 50题选择集上的三次开发增长未通过211题独立测试；完整保留负结果。当前按[扩大选择集协议](docs/memory-evolution-expanded.md)使用200记忆/300选择/291全新测试，继续只做harness。
 
+验收区分[标准起点的基础backbone与强固定基线挑战](docs/harness-backbone.md)，两类对照与结果分别保留。
+
 ## 当前闭环
 
 ~~~text

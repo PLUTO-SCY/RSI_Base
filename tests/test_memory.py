@@ -11,7 +11,7 @@ from rsi_base.classification import (
     effective_policy,
     label_score,
 )
-from rsi_base.improve import parse_proposal
+from rsi_base.improve import MetaCallFailure, parse_proposal
 from rsi_base.memory_audit import cluster_interval, finalize, paired_records
 from rsi_base.memory_loop import MemoryConfig, evaluate_policy, stable_improvement
 from rsi_base.memory_search import local_neighbor, search, training_feedback
@@ -141,7 +141,8 @@ def test_paired_uncertainty_clusters_repeats_by_question():
 
 
 @pytest.mark.parametrize(
-    ("strategy", "fail_meta"), [("meta", False), ("mixed", False), ("mixed", True)]
+    ("strategy", "fail_meta"),
+    [("meta", False), ("mixed", False), ("mixed", True), ("mixed", "transport")],
 )
 def test_memory_search_feedback_boundary_selection_and_frozen_resume(
     tmp_path, monkeypatch, strategy, fail_meta
@@ -178,6 +179,9 @@ def test_memory_search_feedback_boundary_selection_and_frozen_resume(
             text = json.dumps(evidence)
             assert "VAL_PRIVATE" not in text and "TEST_PRIVATE" not in text
             assert "TRAIN_PRIVATE" in text
+            assert set(evidence["baseline_summaries"]) == {"fixed_fewshot"}
+            if fail_meta == "transport":
+                raise MetaCallFailure("Provider timed out; usage unconfirmed")
             if fail_meta:
                 raise ValueError("Meta proposal exceeded its output token budget")
             items = [
@@ -203,6 +207,8 @@ def test_memory_search_feedback_boundary_selection_and_frozen_resume(
         diagnostic_queries=4,
         max_task_calls=200,
         proposal_strategy=strategy,
+        initial_baseline="fixed_fewshot",
+        show_control_scores_to_meta=False,
     )
     meta = Meta()
     first = search(config, data, tmp_path / "run", tmp_path, meta=meta)
@@ -275,6 +281,19 @@ def test_class_caps_above_example_count_are_one_execution_policy(training):
     assert effective_policy(MemoryPolicy(examples=32, max_per_label=3)) != effective_policy(
         MemoryPolicy(examples=32, max_per_label=4)
     )
+
+
+def test_unknown_seed_is_rejected_before_model_or_data_access(tmp_path):
+    from rsi_base.memory_loop import calibrate
+
+    config = MemoryConfig(
+        task={"model": "fixture", "base_url": "http://localhost:8000"},
+        meta={"model": "fixture", "base_url": "http://localhost:8000"},
+        initial_baseline="not_a_baseline",
+    )
+    with pytest.raises(ValueError, match="Unknown initial baseline"):
+        calibrate(config, tmp_path / "missing", tmp_path / "out", tmp_path)
+    assert not (tmp_path / "out").exists()
 
 
 def test_local_neighbor_is_bounded_structural_and_label_independent():

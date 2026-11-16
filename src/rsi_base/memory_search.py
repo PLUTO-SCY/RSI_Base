@@ -216,7 +216,9 @@ def search(config, data, output, root, *, meta=None):
                 "diagnostic_summary": diagnostic_summary,
                 "validation_incumbent": current_summary,
                 "baseline_summaries": {
-                    k: v["summary"] for k, v in calibration["baselines"].items()
+                    k: v["summary"]
+                    for k, v in calibration["baselines"].items()
+                    if config.show_control_scores_to_meta or k == seed_name
                 },
                 "previous_candidates": tried,
                 "previous_invalid_proposals": [

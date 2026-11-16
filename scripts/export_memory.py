@@ -50,7 +50,7 @@ def plot(report, destination, name):
     axes[2].set_title("Final test; × = random-search control")
     axes[0].set_xlabel("Evolution iteration")
     axes[1].set_xlabel("Evolution iteration")
-    axes[2].set_xticks([0, 1], ["Strong fixed baseline", "Evolved harness"])
+    axes[2].set_xticks([0, 1], ["Seed harness", "Evolved harness"])
     fig.suptitle("S2D memory-harness evolution — Qwen3-4B, weights fixed")
     interval = report["paired_question_cluster_bootstrap"]
     fig.text(
@@ -126,6 +126,8 @@ def main():
         directory = args.suite / f"seed{row['seed']}"
         frozen = read_json(directory / "frozen.json")
         histories.append(frozen)
+        if (directory / "baseline_import.json").exists():
+            row["imported_controls"] = read_json(directory / "baseline_import.json")
     report["frozen_searches"] = histories
     if (args.suite / "ablations.json").exists():
         report["diagnostic_ablations"] = read_json(args.suite / "ablations.json")

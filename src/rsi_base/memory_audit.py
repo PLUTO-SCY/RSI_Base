@@ -104,6 +104,9 @@ def finalize(run_directories, data, output, root):
 
             baseline_rows, baseline_summary = evaluate(frozen["baseline"]["policy"])
             selected_rows, selected_summary = evaluate(frozen["selected"]["policy"])
+            calibration = read_json(directory / "calibration.json")
+            strong_name = calibration.get("strongest_fixed_baseline", frozen["selected_baseline"])
+            strong_rows, strong_summary = evaluate(calibration["baselines"][strong_name]["policy"])
             random_rows, random_summary = evaluate(frozen["random_control"]["policy"])
             no_memory_policy = read_json(directory / "calibration.json")["baselines"]["no_memory"][
                 "policy"
@@ -131,6 +134,9 @@ def finalize(run_directories, data, output, root):
                 "baseline_name": frozen["selected_baseline"],
                 "baseline": baseline_summary,
                 "selected": selected_summary,
+                "strong_fixed_baseline_name": strong_name,
+                "strong_fixed_baseline": strong_summary,
+                "selected_vs_strong_fixed": paired_records(strong_rows, selected_rows),
                 "random_control": random_summary,
                 "no_memory": no_memory_summary,
                 "paired": pair,

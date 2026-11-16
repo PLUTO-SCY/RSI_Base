@@ -24,6 +24,8 @@ class MemoryConfig(StrictModel):
     seed: int = 42
     prior_policy: MemoryPolicy | None = None
     proposal_strategy: Literal["meta", "mixed"] = "meta"
+    initial_baseline: str | None = None
+    show_control_scores_to_meta: bool = True
     rounds: int = Field(default=5, ge=1, le=20)
     validation_repeats: int = Field(default=3, ge=2, le=5)
     diagnostic_queries: int = Field(default=32, ge=4, le=64)
@@ -284,11 +286,14 @@ def rank_policy(item):
 
 
 def calibrate(config, data, output, root):
+    policies = baseline_policies(config.prior_policy)
+    if config.initial_baseline is not None and config.initial_baseline not in policies:
+        raise ValueError("Unknown initial baseline")
     if (Path(output) / "frozen.json").exists():
         raise ValueError("Search is finalized")
     with experiment(config, data, output, root) as (harness, _, validation, _, ledger, task):
         results = []
-        for name, policy in baseline_policies(config.prior_policy).items():
+        for name, policy in policies.items():
             policy = effective_policy(policy)
             _, summary = evaluate_policy(
                 Path(output) / "baselines" / name,
@@ -303,10 +308,18 @@ def calibrate(config, data, output, root):
             results.append((name, policy, summary))
             print(json.dumps({"baseline": name, "summary": summary}), flush=True)
         best = max(results, key=rank_policy)
+        initial = (
+            next(row for row in results if row[0] == config.initial_baseline)
+            if config.initial_baseline is not None
+            else best
+        )
         report = {
             "baselines": {name: {"policy": p.model_dump(), "summary": s} for name, p, s in results},
-            "selected_baseline": best[0],
-            "selection": "Best repeated validation accuracy, then lower calls/tokens",
+            "selected_baseline": initial[0],
+            "strongest_fixed_baseline": best[0],
+            "selection": "Explicit standard seed; stronger fixed controls retained separately"
+            if config.initial_baseline
+            else "Best repeated validation accuracy, then lower calls/tokens",
             "test_opened": False,
         }
         write_json(Path(output) / "calibration.json", report)
