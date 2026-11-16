@@ -28,7 +28,9 @@ for encoded in paths:
         continue
     name = encoded.decode()
     path = root / name
-    if name == ".env.local" or name.startswith((".local/", ".venv/", "runs/", "data/")):
+    if name == ".env.local" or name.startswith(
+        (".local/", ".venv/", ".venv-task/", "runs/", "data/")
+    ):
         failures.add(name)
         continue
     if not path.is_file():

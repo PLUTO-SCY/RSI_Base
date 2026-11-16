@@ -56,6 +56,7 @@ class Proposal(AgentSpec):
 
 
 class Limits(StrictModel):
+    task_concurrency: int = Field(default=1, ge=1, le=32)
     rounds: int = Field(default=3, ge=0, le=100)
     max_task_calls: int = Field(default=200, ge=1)
     max_meta_calls: int = Field(default=3, ge=0)

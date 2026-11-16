@@ -43,6 +43,7 @@ sh scripts/run_smoke.sh
 | --- | --- |
 | configs/deepseek_smoke.json | 实测：Meta 和 Task 分别通过 Claude Code / OpenAI SDK 调用同一 DeepSeek 服务，验证软件闭环 |
 | configs/local_qwen.json | 本地 Task endpoint 模板，尚未在 Qwen 服务上实测；Meta 仍使用 DeepSeek |
+| configs/qwen_math_growth.json | 4B 本地 Task、六轮 prompt 搜索、独立监测与最终验收协议 |
 | configs/design/ | 后续训练方案示例，不能执行当前 CLI |
 
 Meta 的凭据、状态和调用参数仅设置在子进程中。使用项目 .local/claude、bare 模式、关闭模型工具/MCP，并监测全局 Claude/shell 配置哈希。Meta 不直接操作实验仓库或评分器。
@@ -56,6 +57,8 @@ sh scripts/check.sh
 离线测试覆盖评分、数据隔离、选择/回退、非法提案、恢复、产物校验、预算保留和 Claude 配置隔离，不使用真实凭据或模型服务。
 
 真实运行结果与复现范围见[验证记录](docs/validation-v0.1.md)。小集合上跑通循环不代表获得了能力提升，当前版本也没有更新模型权重。
+
+增长实验的难度校准、数据隔离、曲线解释和重跑命令见[增长诊断](docs/growth-diagnosis.md)。
 
 ## 代码与文档
 

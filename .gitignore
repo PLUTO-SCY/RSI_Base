@@ -10,6 +10,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.venv-task/
 .venvs/
 *.egg-info/
 .pytest_cache/

@@ -3,6 +3,7 @@
 import fcntl
 import hashlib
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from .agent import TaskAgent
@@ -38,7 +39,8 @@ def completed(directory):
     return value["state"]
 
 
-def evaluate(directory, problems, spec, task, ledger):
+def evaluate(directory, problems, spec, task, ledger, concurrency=1):
+    """Settle every admitted call; resume successes even across an interrupted batch."""
     directory.mkdir(parents=True, exist_ok=True)
     identity = {"agent": spec.model_dump(), "tasks": digest(problems)}
     manifest = directory / "evaluation.json"
@@ -50,45 +52,110 @@ def evaluate(directory, problems, spec, task, ledger):
     path = directory / "results.jsonl"
     records = [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
     expected_ids = [x["id"] for x in problems]
-    if [x["id"] for x in records] != expected_ids[: len(records)]:
-        raise ValueError("Evaluation checkpoint order or IDs are invalid")
-    for problem in problems[len(records) :]:
-        call_id = ledger.start("task", task_id=problem["id"], evaluation=str(directory))
-        try:
-            # Only the question is passed to the task agent.
-            result = task.run(spec, problem["question"])
-        except Exception as exc:
-            ledger.finish(
-                call_id,
-                "task",
-                error_type=type(exc).__name__,
-                status=getattr(exc, "status_code", None),
-                usage_unconfirmed=True,
-            )
-            raise
-        row = {
-            "id": problem["id"],
-            "question": problem["question"],
-            **result,
-            **score(result["response"], problem["answer"]),
-        }
-        append_json(path, row)
-        records.append(row)
-        ledger.finish(
-            call_id,
-            "task",
-            usage=result.get("usage"),
-            elapsed_seconds=result.get("elapsed_seconds"),
-        )
+    ids = [x["id"] for x in records]
+    if len(set(ids)) != len(ids) or not set(ids).issubset(expected_ids):
+        raise ValueError("Evaluation checkpoint contains duplicate or unknown IDs")
+    done = {row["id"]: row for row in records}
+    pending = [p for p in problems if p["id"] not in done]
+    with ThreadPoolExecutor(max_workers=concurrency) as pool:
+        for offset in range(0, len(pending), concurrency):
+            jobs, first_error = [], None
+            for problem in pending[offset : offset + concurrency]:
+                try:
+                    call_id = ledger.start("task", task_id=problem["id"], evaluation=str(directory))
+                except Exception as exc:
+                    first_error = exc
+                    break
+                jobs.append((problem, call_id, pool.submit(task.run, spec, problem["question"])))
+            for problem, call_id, future in jobs:
+                try:
+                    result = future.result()
+                except Exception as exc:
+                    ledger.finish(
+                        call_id,
+                        "task",
+                        error_type=type(exc).__name__,
+                        status=getattr(exc, "status_code", None),
+                        usage_unconfirmed=True,
+                    )
+                    first_error = first_error or exc
+                    continue
+                row = {
+                    "id": problem["id"],
+                    "question": problem["question"],
+                    **result,
+                    **score(result["response"], problem["answer"]),
+                }
+                append_json(path, row)
+                done[row["id"]] = row
+                ledger.finish(
+                    call_id,
+                    "task",
+                    usage=result.get("usage"),
+                    elapsed_seconds=result.get("elapsed_seconds"),
+                )
+            if first_error:
+                raise first_error
+    records = [done[identifier] for identifier in expected_ids]
     summary = {
         "assigned": len(problems),
         "completed": len(records),
         "correct": sum(r["score"] for r in records),
         "accuracy": sum(r["score"] for r in records) / len(problems),
         "format_errors": sum(r["status"] == "format_error" for r in records),
+        "truncated": sum(r.get("finish_reason") == "length" for r in records),
+        "output_tokens": sum((r.get("usage") or {}).get("completion_tokens", 0) for r in records),
     }
     write_json(directory / "summary.json", summary)
     return records, summary
+
+
+def build_evidence(parent_records, problems, history, rounds_dir):
+    """Prioritize mistakes rather than the first dataset rows; retain rejected attempts."""
+    references = {p["id"]: p["answer"] for p in problems}
+
+    def examples(rows):
+        failures = [r for r in rows if not r["score"]]
+        successes = [r for r in rows if r["score"]]
+        selected = failures[:8] + successes[:2]
+        return [
+            {
+                "id": r["id"],
+                "question": r["question"],
+                "response": r["response"][:5000],
+                "score": r["score"],
+                "status": r["status"],
+                "reference_answer": references[r["id"]],
+                "finish_reason": r.get("finish_reason"),
+            }
+            for r in selected
+        ]
+
+    feedback = []
+    for directory in sorted(rounds_dir.iterdir()):
+        if (directory / "proposal.json").exists() and (directory / "decision.json").exists():
+            decision = read_json(directory / "decision.json")
+            rows_path = directory / "results.jsonl"
+            rows = (
+                [json.loads(line) for line in rows_path.read_text().splitlines()]
+                if rows_path.exists()
+                else []
+            )
+            feedback.append(
+                {
+                    "round": directory.name,
+                    "proposal": read_json(directory / "proposal.json"),
+                    "decision": decision["decision"],
+                    "candidate_accuracy": decision.get("candidate_accuracy"),
+                    "examples": examples(rows),
+                }
+            )
+    return {
+        "examples": examples(parent_records),
+        "history": history,
+        "previous_candidates": feedback[-3:],
+        "development_reference_answers_provided": True,
+    }
 
 
 def run(
@@ -149,7 +216,9 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
     parent_dir.mkdir(parents=True, exist_ok=True)
     state = completed(parent_dir)
     if state is None:
-        records, summary = evaluate(parent_dir, dev, current, task, ledger)
+        records, summary = evaluate(
+            parent_dir, dev, current, task, ledger, config.limits.task_concurrency
+        )
         state = {
             "agent": current.model_dump(),
             "selected_round": 0,
@@ -171,11 +240,7 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
         parent_records = [
             json.loads(line) for line in (parent_dir / "results.jsonl").read_text().splitlines()
         ]
-        public_records = [
-            {k: row[k] for k in ("id", "question", "response", "score", "status")}
-            for row in parent_records
-        ]
-        evidence = {"examples": public_records[:8], "history": history}
+        evidence = build_evidence(parent_records, dev, history, output / "rounds")
         proposal_path = directory / "proposal.json"
         invalid_path = directory / "invalid_proposal.json"
         if not proposal_path.exists() and not invalid_path.exists():
@@ -204,7 +269,9 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
         else:
             proposal = Proposal.model_validate(read_json(proposal_path))
             child = AgentSpec(system_prompt=proposal.system_prompt)
-            _records, summary = evaluate(directory, dev, child, task, ledger)
+            _records, summary = evaluate(
+                directory, dev, child, task, ledger, config.limits.task_concurrency
+            )
             next_state["candidate_accuracy"] = summary["accuracy"]
             if summary["accuracy"] > state["dev_accuracy"]:
                 next_state.update(
@@ -226,7 +293,9 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
     final_dir.mkdir(parents=True, exist_ok=True)
     final_state = completed(final_dir)
     if final_state is None:
-        _, final_summary = evaluate(final_dir, test, frozen, task, ledger)
+        _, final_summary = evaluate(
+            final_dir, test, frozen, task, ledger, config.limits.task_concurrency
+        )
         final_state = {"agent": frozen.model_dump(), "metrics": final_summary}
         seal(final_dir, final_state)
     result = {

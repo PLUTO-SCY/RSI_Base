@@ -5,7 +5,7 @@ import pytest
 
 from rsi_base.benchmark import check_disjoint, parse_number, score
 from rsi_base.improve import ClaudeMeta, parse_proposal
-from rsi_base.loop import run
+from rsi_base.loop import build_evidence, evaluate, run
 from rsi_base.storage import BudgetExceeded, Ledger
 from rsi_base.types import AgentSpec, Limits, Proposal, RunConfig
 
@@ -206,6 +206,64 @@ def test_development_cannot_spend_final_evaluation_reservation(tmp_path):
     ledger.reserved_task_calls = 0
     ledger.start("task")
     ledger.start("task")
+
+
+def test_feedback_prioritizes_late_errors_and_remembers_rejected_proposal(tmp_path):
+    rows = [
+        {
+            "id": str(i),
+            "question": f"dev {i}",
+            "response": "#### 1",
+            "score": int(i != 10),
+            "status": "correct" if i != 10 else "wrong",
+        }
+        for i in range(12)
+    ]
+    problems = [{"id": r["id"], "answer": "2"} for r in rows]
+    candidate = tmp_path / "001"
+    candidate.mkdir()
+    (candidate / "proposal.json").write_text(json.dumps({"system_prompt": "tried", "reason": "x"}))
+    (candidate / "decision.json").write_text(
+        json.dumps({"decision": "retained_parent", "candidate_accuracy": 0.5})
+    )
+    (candidate / "results.jsonl").write_text(json.dumps(rows[10]) + "\n")
+    evidence = build_evidence(rows, problems, [], tmp_path)
+    assert evidence["examples"][0]["id"] == "10"
+    assert evidence["examples"][0]["reference_answer"] == "2"
+    assert evidence["previous_candidates"][0]["proposal"]["system_prompt"] == "tried"
+    assert evidence["previous_candidates"][0]["decision"] == "retained_parent"
+
+
+def test_concurrent_batch_settles_successes_and_resumes_missing_rows(tmp_path):
+    problems = [{"id": str(i), "question": str(i), "answer": "2"} for i in range(4)]
+
+    class Partial:
+        fail = True
+
+        def run(self, spec, question):
+            if question == "1" and self.fail:
+                self.fail = False
+                raise ConnectionError("one failed call")
+            return {"response": "#### 2"}
+
+    ledger = Ledger(tmp_path / "calls.jsonl", Limits(max_task_calls=10))
+    task = Partial()
+    with pytest.raises(ConnectionError):
+        evaluate(tmp_path / "eval", problems, AgentSpec(system_prompt="x"), task, ledger, 3)
+    assert [
+        json.loads(line)["id"]
+        for line in (tmp_path / "eval/results.jsonl").read_text().splitlines()
+    ] == ["0", "2"]
+    records, summary = evaluate(
+        tmp_path / "eval", problems, AgentSpec(system_prompt="x"), task, ledger, 3
+    )
+    assert [r["id"] for r in records] == ["0", "1", "2", "3"]
+    assert summary["accuracy"] == 1
+    assert ledger.used["task"] == 5
+    events = ledger.records()
+    assert sum(r["event"] == "started" for r in events) == sum(
+        r["event"] == "finished" for r in events
+    )
 
 
 def test_claude_uses_project_state_and_process_local_provider(tmp_path, monkeypatch):

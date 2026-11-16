@@ -13,7 +13,11 @@ dependencies = ["openai>=2,<3", "httpx[socks]>=0.28,<1", "python-dotenv>=1,<2", 
 rsi = "rsi_base.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8,<10", "ruff>=0.12,<1"]
+dev = [
+    "matplotlib>=3.10,<3.11",
+    "pytest>=8,<10",
+    "ruff>=0.12,<1",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
