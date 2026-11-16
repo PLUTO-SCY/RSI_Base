@@ -26,7 +26,7 @@
 - 论文结果复现或框架有效性的实验结论。
 - 依赖版本锁定与本机显存/吞吐测量。
 
-### 环境与同步记录
+### 环境与同步记录（首次交付时）
 
 - 远端检查：仓库为空，默认分支为 main；当前 GitHub 连接报告 pull=true、push=false。
 - 本机 Git HTTPS 读取失败：Couldn't connect to server。
@@ -40,6 +40,15 @@
 ### 下一步
 
 按 roadmap 的 M1/P0 开始核心协议、artifact、事件与预算状态机；并先在具备 GPU 可见性的真实运行上下文完成环境诊断。M0 文档完成不表示 M1 软件能力完成。
+
+## 2026-11-16｜SSH 通道恢复与首次同步
+
+- 用户将新建的专用公钥加入 GitHub 后，SSH 成功认证为 PLUTO-SCY。
+- 工作区 Git 元数据已可写；从已验证的 Git bundle 恢复原始设计提交，保留其历史。
+- 初始设计提交 [bd0c1a2](https://github.com/PLUTO-SCY/RSI_Base/commit/bd0c1a2fcc762ef61a8faa2a0e9685a3b2d53ecc) 已推送到 main；git ls-remote 核对远端提交 SHA 一致。
+- 远端共有 13 个设计与协作文件，包括调研、架构、实验协议、开发计划和 design-only 配置。
+- 仓库的 origin 使用 SSH，并在仓库局部配置中指定专用密钥，供后续进度同步使用。
+- 项目仍处于 M0 设计交付阶段；本次同步未新增训练运行时，也未运行模型训练。
 
 ## 状态用语
 
