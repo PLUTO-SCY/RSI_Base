@@ -42,16 +42,17 @@ def global_config_fingerprints():
     }
 
 
-def parse_proposal(text):
+def parse_proposal(text, proposal_type=Proposal):
     stripped = text.strip()
     if stripped.startswith("```") and stripped.endswith("```"):
         stripped = stripped.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-    return Proposal.model_validate_json(stripped)
+    return proposal_type.model_validate_json(stripped)
 
 
 class ClaudeMeta:
-    def __init__(self, settings, root):
+    def __init__(self, settings, root, *, system_prompt=META_SYSTEM, proposal_type=Proposal):
         self.settings, self.root = settings, Path(root).resolve()
+        self.system_prompt, self.proposal_type = system_prompt, proposal_type
 
     def propose(self, current, evidence, output):
         executable = shutil.which(self.settings.command)
@@ -107,14 +108,14 @@ class ClaudeMeta:
             "--permission-mode",
             "dontAsk",
             "--system-prompt",
-            META_SYSTEM
+            self.system_prompt
             + f" The system_prompt must be at most {self.settings.prompt_char_budget} characters.",
         ]
         request = {"current": current.model_dump(), "development_evidence": evidence}
         write_json(
             Path(output) / "meta_runtime.json",
             {
-                "system_prompt": META_SYSTEM,
+                "system_prompt": self.system_prompt,
                 "arguments": command[1:],
                 "state_dir": self.settings.state_dir,
                 "sampling_control": "Claude Code; no temperature override is applied",
@@ -150,7 +151,7 @@ class ClaudeMeta:
         write_json(Path(output) / "meta_result.json", result)
         if process.returncode or result.get("is_error") or result.get("type") != "result":
             raise RuntimeError("Claude returned an error; inspect the redacted meta_result.json")
-        proposal = parse_proposal(result.get("result", ""))
+        proposal = parse_proposal(result.get("result", ""), self.proposal_type)
         return proposal, {
             "usage": result.get("usage"),
             "model_usage": result.get("modelUsage"),
