@@ -18,8 +18,19 @@
   "seed": 42,
   "rounds": 5,
   "validation_repeats": 3,
-  "diagnostic_queries": 32,
+  "diagnostic_queries": 64,
   "context_chars": 12000,
   "max_task_calls": 24000,
-  "wall_seconds": 21600
+  "wall_seconds": 21600,
+  "prior_policy": {
+    "retrieval": "bm25",
+    "examples": 32,
+    "selection": "top",
+    "max_per_label": 4,
+    "deduplicate": true,
+    "label_hints": true,
+    "order": "best_last",
+    "workflow": "verify",
+    "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+  }
 }

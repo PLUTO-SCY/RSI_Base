@@ -27,6 +27,10 @@ def random_policy(rng):
         label_hints=rng.choice([False, True]),
         order=rng.choice(["best_first", "best_last"]),
         workflow=rng.choice(["direct", "verify", "rewrite"]),
+        layout=rng.choice(["examples", "coverage", "contrast_pairs"]),
+        review_retrieval=rng.choice(["same", "draft_contrast"]),
+        confirmers=rng.choice([3, 5, 8]),
+        challengers=rng.choice([3, 5, 8]),
     )
 
 
@@ -152,6 +156,18 @@ def search(config, data, output, root, *, meta=None):
                 try:
                     proposal, metadata = meta.propose(current, evidence, directory)
                     proposal = MemoryBatch.model_validate(proposal.model_dump())
+                    first = proposal.candidates[0].policy
+                    if (
+                        first.system_prompt != current.system_prompt
+                        or sum(
+                            value != current.model_dump()[key]
+                            for key, value in first.model_dump().items()
+                        )
+                        > 3
+                    ):
+                        raise ValueError(
+                            "First candidate must preserve prompt and change at most three structural fields"
+                        )
                     for item in proposal.candidates:
                         text = normalize(item.policy.system_prompt)
                         if any(normalize(row["question"]) in text for row in training + validation):

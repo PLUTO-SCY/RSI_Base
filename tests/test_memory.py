@@ -170,10 +170,13 @@ def test_memory_search_feedback_boundary_selection_and_frozen_resume(tmp_path, m
                 {
                     "candidates": [
                         {
+                            "policy": current.model_copy(update={"examples": 9}).model_dump(),
+                            "reason": "fixture",
+                        },
+                        {
                             "policy": {"system_prompt": "improved generic classification"},
                             "reason": "fixture",
                         },
-                        {"policy": {"system_prompt": "unchanged"}, "reason": "fixture"},
                     ]
                 }
             ), {}
@@ -193,3 +196,35 @@ def test_memory_search_feedback_boundary_selection_and_frozen_resume(tmp_path, m
     before = task.calls
     again = search(config, data, tmp_path / "run", tmp_path, meta=meta)
     assert again == first and task.calls == before and meta.calls == 1
+
+
+def test_draft_label_changes_second_retrieval_and_preserves_leave_one_out(training):
+    harness = MemoryHarness(training, ["fruit", "machine"])
+    calls = []
+
+    def call(stage, spec, question):
+        calls.append((stage, question))
+        return {"response": "fruit"}
+
+    result = harness.run(
+        MemoryPolicy(examples=1, workflow="verify", review_retrieval="draft_contrast"),
+        training[0],
+        call,
+        leave_one_out=True,
+    )
+    assert result["model_calls"] == 2
+    assert len(result["memory_by_stage"]["predict"]) == 1
+    assert set(result["memory_by_stage"]["verify"]) == {"train-b", "train-c"}
+    assert "train-a" not in result["memory_ids"]
+    assert "DIFFERENT labels" in calls[1][1]
+
+
+@pytest.mark.parametrize("layout", ["coverage", "contrast_pairs"])
+def test_coverage_and_comparison_contexts_stay_within_budget(training, layout):
+    harness = MemoryHarness(training, ["fruit", "machine"], context_chars=2000)
+    context, used = harness.context("apple machine", MemoryPolicy(examples=2, layout=layout))
+    assert len(context) <= 2000
+    assert "Label: fruit" in context and "Label: machine" in context
+    assert set(used) <= {row["id"] for row in training}
+    if layout == "contrast_pairs":
+        assert "Contrast:" in context

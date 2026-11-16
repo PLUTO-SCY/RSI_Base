@@ -38,8 +38,8 @@ RSI_GPU=0 sh scripts/serve_task.sh
 另一个终端运行：
 
 ```sh
-.venv/bin/python scripts/run_memory.py suite --output runs/memory-s2d-suite-v2
-.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-suite-v2
+.venv/bin/python scripts/run_memory.py suite --output runs/memory-s2d-suite-v3
+.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-suite-v3
 ```
 
 当前配置 `configs/memory_s2d.json`；Task每次输出128token、temperature0，记忆上下文12000字符、单题至多两次调用。搜索中断后同命令恢复，源代码/依赖/输入变化则拒绝恢复。正式搜索时不修改实现。凭据仍为忽略的`.env.local`，本地无鉴权Task端点使用`EMPTY`。
@@ -53,3 +53,11 @@ RSI_GPU=0 sh scripts/serve_task.sh
 首次正式运行在第一个Meta提案时遭遇CLI输出4096token上限，未产生任何候选或测试评估。保留`runs/memory-s2d-suite-v1`，Meta预算改为8192、要求紧凑JSON后另开v2。Task预算、评分与数据不变；这属于接入修正，不算演化收益。
 
 预先安排机制消融：冻结后分别评“仅采用演化结构、保留父代prompt”和“仅采用演化prompt、保留父代结构”。消融只解释收益来源，不参与策略选择或后续演化。
+
+## 第一组完整搜索：静态取证空间未见稳定收益
+
+实现见源码提交`fced99f`。三次Meta搜索均保留原父代；随机配置搜索仅seed42从验证39/40/40提升到41/41/41，其余两次未接受新配置。全部候选和负结果见[搜索记录](validation/memory-search-v2.json)。真实恢复保持相同冻结选择，新增Task/Meta调用均为0。没有打开测试标签。
+
+这组验证的二次调用仍复用同一批记忆。按论文附录B.1补充两种实际流程：根据草稿标签检索同标签支持例和不同标签反例；覆盖全部标签的代表例并呈现局部对比示例。独立实现，不复制论文代码。
+
+第二组v3把这两种文献机制也列入固定基线，并将此前已知最优的32示例BM25策略（41/50）列为`prior_search_best`，避免重新从较弱起点展示增长。训练LOO诊断增至64题；每轮第一个候选必须保留父代prompt原文、最多改变三个结构字段，第二个候选可同时改prompt。其余搜索、测试与稳定性门槛不变。所有这些调整只参考训练/验证结果；最终测试继续封存。

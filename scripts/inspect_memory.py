@@ -11,7 +11,7 @@ from pathlib import Path
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", type=Path, nargs="?", default=root / "runs/memory-s2d-suite-v2")
+    parser.add_argument("suite", type=Path, nargs="?", default=root / "runs/memory-s2d-suite-v3")
     args = parser.parse_args()
     reports = []
     for directory in sorted(args.suite.glob("seed*")):

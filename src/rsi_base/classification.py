@@ -19,6 +19,10 @@ class MemoryPolicy(StrictModel):
     label_hints: bool = False
     order: Literal["best_first", "best_last"] = "best_first"
     workflow: Literal["direct", "verify", "rewrite"] = "direct"
+    layout: Literal["examples", "coverage", "contrast_pairs"] = "examples"
+    review_retrieval: Literal["same", "draft_contrast"] = "same"
+    confirmers: int = Field(default=5, ge=1, le=16)
+    challengers: int = Field(default=5, ge=1, le=16)
     system_prompt: str = Field(
         default="Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description.",
         min_length=1,
@@ -151,8 +155,7 @@ class MemoryHarness:
             context_chars,
         )
 
-    def context(self, question, policy, *, query=None, exclude_id=None):
-        selected, hints = self.index.retrieve(query or question, policy, exclude_id=exclude_id)
+    def render(self, question, blocks, *, hint=""):
         header = "Allowed labels: " + "; ".join(self.labels) + "\n\nLabeled training examples:\n"
         tail = (
             "\nQuery:\n"
@@ -162,20 +165,109 @@ class MemoryHarness:
         if len(header + tail) > self.context_chars:
             raise ValueError("Query and label contract exceed fixed context budget")
         examples, used = "", []
-        for row in selected:
-            piece = f"Description: {row['question']}\nLabel: {row['answer']}\n\n"
+        for title, rows in blocks:
+            piece = (title + "\n" if title else "") + "".join(
+                f"Description: {row['question']}\nLabel: {row['answer']}\n\n" for row in rows
+            )
+            # Keep a contrast pair intact rather than cutting off one side.
             if len(header + examples + piece + tail) <= self.context_chars:
                 examples += piece
-                used.append(row["id"])
+                used.extend(row["id"] for row in rows)
+        if len(header + examples + hint + tail) > self.context_chars:
+            hint = ""
+        return header + examples + hint + tail, used
+
+    def context(self, question, policy, *, query=None, exclude_id=None):
+        query = query or question
+        selected, hints = self.index.retrieve(query, policy, exclude_id=exclude_id)
+        if policy.layout == "examples":
+            blocks = [("", [row]) for row in selected]
+        else:
+            coverage, _ = self.index.retrieve(
+                query,
+                policy.model_copy(
+                    update={"selection": "diverse", "examples": 32, "max_per_label": 1}
+                ),
+                exclude_id=exclude_id,
+            )
+            blocks = [("Label coverage example:", [row]) for row in coverage]
+            if policy.layout == "coverage":
+                blocks.extend(
+                    ("Query-neighbor example:", [row])
+                    for row in selected
+                    if row["id"] not in {r["id"] for r in coverage}
+                )
+            else:
+                neighbors, _ = self.index.retrieve(
+                    query,
+                    policy.model_copy(
+                        update={"selection": "top", "examples": 32, "max_per_label": 32}
+                    ),
+                    exclude_id=exclude_id,
+                )
+                paired = set()
+                for anchor in neighbors if policy.examples else []:
+                    if anchor["id"] in paired:
+                        continue
+                    alternatives = [
+                        row
+                        for row in neighbors[:16]
+                        if row["answer"] != anchor["answer"] and row["id"] not in paired
+                    ]
+                    if not alternatives:
+                        continue
+                    anchor_words = set(words(anchor["question"]))
+
+                    def overlap(row, anchor_words=anchor_words):
+                        tokens = set(words(row["question"]))
+                        return len(tokens & anchor_words) / max(1, len(tokens | anchor_words)), row[
+                            "retrieval_score"
+                        ]
+
+                    challenger = max(alternatives, key=overlap)
+                    paired.update([anchor["id"], challenger["id"]])
+                    blocks.append(
+                        (
+                            "Contrast: similar descriptions can have different labels. Compare distinguishing details:",
+                            [anchor, challenger],
+                        )
+                    )
+                    if len(paired) >= policy.examples:
+                        break
         hint = (
             "\nRetrieval suggestions (noisy; verify against the query): "
             + "; ".join(k for k, _ in hints)
             if policy.label_hints
             else ""
         )
-        if len(header + examples + hint + tail) > self.context_chars:
-            hint = ""
-        return header + examples + hint + tail, used
+        return self.render(question, blocks, hint=hint)
+
+    def contrast_review(self, question, draft, policy, *, exclude_id=None):
+        label = normalize(draft)
+        if label not in self.labels:
+            return self.context(question, policy, exclude_id=exclude_id)
+        confirm_index = MemoryIndex([r for r in self.index.training if r["answer"] == label])
+        challenge_index = MemoryIndex([r for r in self.index.training if r["answer"] != label])
+        confirm, _ = confirm_index.retrieve(
+            question,
+            policy.model_copy(
+                update={"examples": policy.confirmers, "selection": "top", "max_per_label": 32}
+            ),
+            exclude_id=exclude_id,
+        )
+        challenge, _ = challenge_index.retrieve(
+            question,
+            policy.model_copy(
+                update={"examples": policy.challengers, "selection": "top", "max_per_label": 32}
+            ),
+            exclude_id=exclude_id,
+        )
+        blocks = [
+            ("Retrieved examples with the draft label (not proof that the draft is correct):", [r])
+            for r in confirm
+        ]
+        blocks += [("Retrieved counterexamples with DIFFERENT labels:", [r]) for r in challenge]
+        return self.render(question, blocks)
 
     def run(self, policy, problem, call, *, leave_one_out=False):
         question, query, traces = problem["question"], None, []
@@ -195,7 +287,19 @@ class MemoryHarness:
         )
         result = call("predict", spec, prompt)
         traces.append(result)
+        memory_by_stage = {"predict": used}
         if policy.workflow == "verify":
+            if policy.review_retrieval == "draft_contrast":
+                prompt, review_used = self.contrast_review(
+                    question,
+                    result["response"],
+                    policy,
+                    exclude_id=problem["id"] if leave_one_out else None,
+                )
+            else:
+                review_used = used
+            memory_by_stage["verify"] = review_used
+            used = list(dict.fromkeys(used + review_used))
             review = (
                 prompt
                 + "\n\nDraft label (may be wrong):\n"
@@ -209,6 +313,7 @@ class MemoryHarness:
         return {
             "response": result["response"],
             "memory_ids": used,
+            "memory_by_stage": memory_by_stage,
             "traces": traces,
             "model_calls": len(traces),
         }
