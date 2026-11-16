@@ -25,6 +25,17 @@ def main():
         }
         for d in directories
     ]
+    for directory, report in zip(directories, reports, strict=True):
+        report["invalid_rounds"] = [
+            {
+                "round": path.parent.name,
+                "rejection": read_json(path),
+                "raw_usage": read_json(path.parent / "meta_result.json").get("usage")
+                if (path.parent / "meta_result.json").exists()
+                else None,
+            }
+            for path in sorted((directory / "evolution").glob("*/invalid.json"))
+        ]
     failures = []
     path = root / "runs/memory-s2d-suite-v1/seed42/evolution/001/meta_result.json"
     if path.exists():

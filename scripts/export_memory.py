@@ -72,7 +72,7 @@ def plot(report, destination):
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-suite-v3")
+    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-suite-v4")
     args = parser.parse_args()
     report = read_json(args.suite / "report.json")
     report["suite_protocol"] = read_json(args.suite / "suite.json")

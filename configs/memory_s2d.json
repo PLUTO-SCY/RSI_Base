@@ -32,5 +32,6 @@
     "order": "best_last",
     "workflow": "verify",
     "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
-  }
+  },
+  "proposal_strategy": "mixed"
 }

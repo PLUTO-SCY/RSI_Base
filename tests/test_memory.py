@@ -3,11 +3,18 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from rsi_base.classification import MemoryBatch, MemoryHarness, MemoryPolicy, label_score
+from rsi_base.classification import (
+    MemoryBatch,
+    MemoryHarness,
+    MemoryPolicy,
+    SingleMemoryBatch,
+    effective_policy,
+    label_score,
+)
 from rsi_base.improve import parse_proposal
 from rsi_base.memory_audit import cluster_interval, finalize, paired_records
 from rsi_base.memory_loop import MemoryConfig, evaluate_policy, stable_improvement
-from rsi_base.memory_search import search
+from rsi_base.memory_search import local_neighbor, search, training_feedback
 from rsi_base.storage import Ledger
 from rsi_base.types import Limits
 
@@ -133,7 +140,12 @@ def test_paired_uncertainty_clusters_repeats_by_question():
     assert interval["low"] == 0 and interval["high"] == 1
 
 
-def test_memory_search_feedback_boundary_selection_and_frozen_resume(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    ("strategy", "fail_meta"), [("meta", False), ("mixed", False), ("mixed", True)]
+)
+def test_memory_search_feedback_boundary_selection_and_frozen_resume(
+    tmp_path, monkeypatch, strategy, fail_meta
+):
     from rsi_base.storage import write_json
 
     data = tmp_path / "data"
@@ -166,19 +178,21 @@ def test_memory_search_feedback_boundary_selection_and_frozen_resume(tmp_path, m
             text = json.dumps(evidence)
             assert "VAL_PRIVATE" not in text and "TEST_PRIVATE" not in text
             assert "TRAIN_PRIVATE" in text
-            return MemoryBatch.model_validate(
+            if fail_meta:
+                raise ValueError("Meta proposal exceeded its output token budget")
+            items = [
                 {
-                    "candidates": [
-                        {
-                            "policy": current.model_copy(update={"examples": 9}).model_dump(),
-                            "reason": "fixture",
-                        },
-                        {
-                            "policy": {"system_prompt": "improved generic classification"},
-                            "reason": "fixture",
-                        },
-                    ]
-                }
+                    "policy": current.model_copy(update={"examples": 9}).model_dump(),
+                    "reason": "fixture",
+                },
+                {
+                    "policy": {"system_prompt": "improved generic classification"},
+                    "reason": "fixture",
+                },
+            ]
+            cls = SingleMemoryBatch if strategy == "mixed" else MemoryBatch
+            return cls.model_validate(
+                {"candidates": items[-1:] if strategy == "mixed" else items}
             ), {}
 
     config = MemoryConfig(
@@ -188,10 +202,19 @@ def test_memory_search_feedback_boundary_selection_and_frozen_resume(tmp_path, m
         validation_repeats=2,
         diagnostic_queries=4,
         max_task_calls=200,
+        proposal_strategy=strategy,
     )
     meta = Meta()
     first = search(config, data, tmp_path / "run", tmp_path, meta=meta)
-    assert first["selected"]["summary"]["accuracy"] == 1
+    assert first["selected"]["summary"]["accuracy"] == (0 if fail_meta else 1)
+    if fail_meta:
+        assert (
+            len(
+                json.loads((tmp_path / "run/evolution/001/proposal.json").read_text())["candidates"]
+            )
+            == 1
+        )
+        assert (tmp_path / "run/evolution/001/invalid.json").exists()
     assert not first["test_opened"] and not first["weights_updated"]
     before = task.calls
     again = search(config, data, tmp_path / "run", tmp_path, meta=meta)
@@ -228,3 +251,46 @@ def test_coverage_and_comparison_contexts_stay_within_budget(training, layout):
     assert set(used) <= {row["id"] for row in training}
     if layout == "contrast_pairs":
         assert "Contrast:" in context
+
+
+def test_effective_policy_ignores_unused_review_knobs():
+    first = MemoryPolicy(
+        workflow="direct", confirmers=3, challengers=16, review_retrieval="draft_contrast"
+    )
+    second = MemoryPolicy(workflow="direct")
+    assert effective_policy(first) == effective_policy(second)
+    assert effective_policy(
+        MemoryPolicy(workflow="verify", review_retrieval="draft_contrast", confirmers=3)
+    ) != effective_policy(
+        MemoryPolicy(workflow="verify", review_retrieval="draft_contrast", confirmers=5)
+    )
+
+
+def test_local_neighbor_is_bounded_structural_and_label_independent():
+    parent = MemoryPolicy(examples=32, max_per_label=4, workflow="verify")
+    candidate = local_neighbor(parent, 1, {})
+    assert candidate.policy.max_per_label == 3
+    assert candidate.policy.system_prompt == parent.system_prompt
+    assert (
+        sum(a != parent.model_dump()[key] for key, a in candidate.policy.model_dump().items()) == 1
+    )
+
+
+def test_training_feedback_preserves_both_predictions_and_shared_memory(training):
+    records = [
+        {
+            "problem_id": "train-a",
+            "score": 0,
+            "response": "machine",
+            "memory_ids": ["train-b", "train-c"],
+            "memory_by_stage": {"predict": ["train-b"], "verify": ["train-c", "train-b"]},
+            "traces": [{"response": "fruit"}, {"response": "machine"}],
+        }
+    ]
+    feedback = training_feedback(records, {r["id"]: r for r in training}, training, "verify")
+    assert feedback["examples"][0]["steps"] == [
+        {"stage": "predict", "response": "fruit", "finish_reason": None},
+        {"stage": "verify", "response": "machine", "finish_reason": None},
+    ]
+    assert feedback["examples"][0]["memory_by_stage"]["verify"] == ["train-c", "train-b"]
+    assert set(feedback["shared_training_memory"]) == {"train-b", "train-c"}

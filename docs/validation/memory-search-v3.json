@@ -1,0 +1,4969 @@
+{
+  "suite_protocol": {
+    "config": {
+      "task": {
+        "model": "Qwen/Qwen3-4B-Instruct-2507",
+        "base_url": "http://127.0.0.1:18000/v1",
+        "api_key_env": "RSI_LOCAL_API_KEY",
+        "max_tokens": 128,
+        "timeout": 120.0,
+        "temperature": 0.0,
+        "extra_body": {},
+        "user_suffix": ""
+      },
+      "meta": {
+        "model": "deepseek-v4.1-flash",
+        "base_url": "https://zgc.apihy.com",
+        "api_key_env": "RSI_API_KEY",
+        "max_tokens": 8192,
+        "timeout": 600.0,
+        "command": "claude",
+        "state_dir": ".local/claude-memory",
+        "prompt_char_budget": 1200
+      },
+      "seed": 42,
+      "prior_policy": {
+        "retrieval": "bm25",
+        "examples": 32,
+        "selection": "top",
+        "max_per_label": 4,
+        "deduplicate": true,
+        "label_hints": true,
+        "order": "best_last",
+        "workflow": "verify",
+        "layout": "examples",
+        "review_retrieval": "same",
+        "confirmers": 5,
+        "challengers": 5,
+        "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+      },
+      "rounds": 5,
+      "validation_repeats": 3,
+      "diagnostic_queries": 64,
+      "context_chars": 12000,
+      "max_task_calls": 24000,
+      "wall_seconds": 21600.0
+    },
+    "seeds": [
+      42,
+      123,
+      2026
+    ],
+    "test_gate": "Freeze all three searches before any final evaluation",
+    "stability_gate": "Positive test delta in every search seed and question-cluster bootstrap lower bound > 0; repeats averaged within each question"
+  },
+  "runs": [
+    {
+      "source": {
+        "config": {
+          "task": {
+            "model": "Qwen/Qwen3-4B-Instruct-2507",
+            "base_url": "http://127.0.0.1:18000/v1",
+            "api_key_env": "RSI_LOCAL_API_KEY",
+            "max_tokens": 128,
+            "timeout": 120.0,
+            "temperature": 0.0,
+            "extra_body": {},
+            "user_suffix": ""
+          },
+          "meta": {
+            "model": "deepseek-v4.1-flash",
+            "base_url": "https://zgc.apihy.com",
+            "api_key_env": "RSI_API_KEY",
+            "max_tokens": 8192,
+            "timeout": 600.0,
+            "command": "claude",
+            "state_dir": ".local/claude-memory/seed123",
+            "prompt_char_budget": 1200
+          },
+          "seed": 123,
+          "prior_policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "rounds": 5,
+          "validation_repeats": 3,
+          "diagnostic_queries": 64,
+          "context_chars": 12000,
+          "max_task_calls": 24000,
+          "wall_seconds": 21600.0
+        },
+        "source_sha256": "9acd840e4d6136eefcb6cbf4c8a347c51b8889ccda572ee2e2bf19ab377b1cef",
+        "lock_sha256": "fb5b6fc4bbf71733688c25c0f6f4462090910b5abcd81f44ef3303b27f6f4ea9",
+        "data_manifest_sha256": "68048ea10b4154c91cf40f9e7be52a973c8fe6b72ca053c1e806e3a6b5b91622",
+        "split_sha256": {
+          "train": "635260eee78f826fe25ea0b539bafb3dcd62379650262d5675865525d7d78466",
+          "val": "445c9c36ca6a2e9cce8ef0cfb49fa17912ddb03351401b5a1ff6164103fcc3ef",
+          "test": "ccdcde751c9529dd110abbc67fccae2e8af237b10cf10f692fa00318d9c9b3da"
+        },
+        "labels_sha256": "ea1407ad20f0f6237e985ce3062e8472b0012a3f528f0b1d482679ae206ebabc",
+        "weights_updated": false,
+        "protocol": "memory-v2; dynamic counterevidence; three-repeat nonregression selection; finalization freezes all search"
+      },
+      "calibration": {
+        "baselines": {
+          "no_memory": {
+            "policy": {
+              "retrieval": "none",
+              "examples": 0,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 81,
+              "accuracy": 0.54,
+              "correct_by_repeat": [
+                27,
+                27,
+                27
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 27822,
+              "output_tokens": 711,
+              "summed_request_seconds": 49.5542262699455
+            }
+          },
+          "fixed_fewshot": {
+            "policy": {
+              "retrieval": "fixed",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 90,
+              "accuracy": 0.6,
+              "correct_by_repeat": [
+                30,
+                30,
+                30
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 77022,
+              "output_tokens": 678,
+              "summed_request_seconds": 54.32074979878962
+            }
+          },
+          "bm25": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 81360,
+              "output_tokens": 660,
+              "summed_request_seconds": 42.33239213749766
+            }
+          },
+          "fixed_verify": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 120,
+              "accuracy": 0.8,
+              "correct_by_repeat": [
+                40,
+                40,
+                40
+              ],
+              "format_errors": 3,
+              "truncated": 3,
+              "model_calls": 300,
+              "input_tokens": 167430,
+              "output_tokens": 1689,
+              "summed_request_seconds": 100.24791426770389
+            }
+          },
+          "paper_draft_contrast": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 5,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "draft_contrast",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 114,
+              "accuracy": 0.76,
+              "correct_by_repeat": [
+                38,
+                38,
+                38
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 179589,
+              "output_tokens": 1329,
+              "summed_request_seconds": 109.12270709499717
+            }
+          },
+          "paper_label_coverage": {
+            "policy": {
+              "retrieval": "tfidf",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "contrast_pairs",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 246018,
+              "output_tokens": 657,
+              "summed_request_seconds": 76.22286864742637
+            }
+          },
+          "prior_search_best": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 82.93045832589269
+            }
+          }
+        },
+        "selected_baseline": "prior_search_best",
+        "selection": "Best repeated validation accuracy, then lower calls/tokens",
+        "test_opened": false
+      },
+      "search": {
+        "seed": 123,
+        "rounds": 5,
+        "selected_baseline": "prior_search_best",
+        "baseline": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 123,
+            "accuracy": 0.82,
+            "correct_by_repeat": [
+              41,
+              41,
+              41
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 300,
+            "input_tokens": 491376,
+            "output_tokens": 1308,
+            "summed_request_seconds": 82.93045832589269
+          }
+        },
+        "selected": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 123,
+            "accuracy": 0.82,
+            "correct_by_repeat": [
+              41,
+              41,
+              41
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 300,
+            "input_tokens": 491376,
+            "output_tokens": 1308,
+            "summed_request_seconds": 82.93045832589269
+          },
+          "evaluation": "baselines/prior_search_best"
+        },
+        "history": [
+          {
+            "round": 0,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 82.93045832589269
+            },
+            "evaluation": "baselines/prior_search_best"
+          },
+          {
+            "round": 1,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 82.93045832589269
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 2,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 82.93045832589269
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 3,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 82.93045832589269
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 4,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 82.93045832589269
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 5,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 82.93045832589269
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          }
+        ],
+        "proposals": [
+          {
+            "id": "round1-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "draft_contrast",
+              "confirmers": 4,
+              "challengers": 8,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Call two currently replays identical context; draft-based re-query retrieves confirmers and eight different-label challengers, exposing near misses like dengue/chicken pox and asthma/pneumonia.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 120,
+              "accuracy": 0.8,
+              "correct_by_repeat": [
+                40,
+                40,
+                40
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 377313,
+              "output_tokens": 1317,
+              "summed_request_seconds": 105.57423809543252
+            },
+            "eligible": false,
+            "evaluation": "evolution/001/candidate1"
+          },
+          {
+            "id": "round1-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "diverse",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "draft_contrast",
+              "confirmers": 4,
+              "challengers": 6,
+              "system_prompt": "Classify the query using the allowed labels and the most relevant labeled examples. Generic symptoms such as fatigue, weakness, poor appetite, nausea, and fever appear across many labels, so do not let them dominate. Base the choice on the most specific discriminative findings and explicitly compare the closest competing labels before answering."
+            },
+            "reason": "Diverse capped retrieval spreads examples across labels so alternatives appear; draft challengers test the draft; prompt shifts weight from shared generic symptoms to discriminative findings.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 114,
+              "accuracy": 0.76,
+              "correct_by_repeat": [
+                38,
+                38,
+                38
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 372453,
+              "output_tokens": 1323,
+              "summed_request_seconds": 147.09432199969888
+            },
+            "eligible": false,
+            "evaluation": "evolution/001/candidate2"
+          },
+          {
+            "id": "round2-candidate1",
+            "policy": {
+              "retrieval": "hybrid",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Caps each label at 2 so near-duplicate examples stop crowding out the correct label; hybrid BM25/TF-IDF upweights rare discriminative terms that separate confusable classes.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 114,
+              "accuracy": 0.76,
+              "correct_by_repeat": [
+                38,
+                38,
+                38
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 494124,
+              "output_tokens": 1299,
+              "summed_request_seconds": 50.80351522192359
+            },
+            "eligible": false,
+            "evaluation": "evolution/002/candidate1"
+          },
+          {
+            "id": "round2-candidate2",
+            "policy": {
+              "retrieval": "hybrid",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "contrast_pairs",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query into exactly one allowed label using the labeled examples as evidence, not rules. Shared constitutional symptoms (fatigue, weakness, poor appetite, nausea, fever, itching) appear in many labels and are weak evidence. Decide mainly from the most specific findings: lesion type and distribution, affected sites, temporal course, and distinctive local or systemic features. When two labels seem plausible, identify the finding that separates them and check whether the query actually states it. Prefer the label whose characteristic findings are present over one that only shares common symptoms. Answer with the label only."
+            },
+            "reason": "Contrast-pair layout puts a different-label neighbor beside each example for direct comparison; prompt shifts weight from shared fatigue/fever/nausea to specific lesion, site and course findings.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 102,
+              "accuracy": 0.68,
+              "correct_by_repeat": [
+                34,
+                34,
+                34
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 671727,
+              "output_tokens": 1311,
+              "summed_request_seconds": 103.34648818895221
+            },
+            "eligible": false,
+            "evaluation": "evolution/002/candidate2"
+          },
+          {
+            "id": "round3-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Caps each label at two examples so repeated near-identical dengue/GERD/impetigo neighbors cannot outvote one close correct-label example, while preserving BM25 top-32.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 492426,
+              "output_tokens": 1293,
+              "summed_request_seconds": 167.95554997213185
+            },
+            "eligible": false,
+            "evaluation": "evolution/003/candidate1"
+          },
+          {
+            "id": "round3-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query into exactly one allowed label using the labeled examples as evidence. Anchor on the single labeled example that most closely matches the query, especially when it nearly restates it. Weigh specific findings—lesion type and site, taste or smell change, nail changes, temporal course—over generic fatigue, weakness, poor appetite, nausea, or fever shared by many labels. Answer with the label only."
+            },
+            "reason": "Prompt anchors on the closest labeled example, especially near-restatements, and prioritizes specific findings over generic fatigue, appetite, or fever that many labels share.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 509676,
+              "output_tokens": 1308,
+              "summed_request_seconds": 147.17089977301657
+            },
+            "eligible": false,
+            "evaluation": "evolution/003/candidate2"
+          },
+          {
+            "id": "round4-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 20,
+              "selection": "top",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Shrinks context from 32 to 20 examples and caps 2 per label so strong non-dengue/chicken-pox matches are not buried by duplicates sharing rash, fatigue and appetite cues.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 332535,
+              "output_tokens": 1293,
+              "summed_request_seconds": 70.67925147898495
+            },
+            "eligible": false,
+            "evaluation": "evolution/004/candidate1"
+          },
+          {
+            "id": "round4-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 24,
+              "selection": "top",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query into exactly one allowed label using the labeled examples as evidence. Shared symptoms such as fatigue, weakness, poor appetite, nausea, itching, and fever occur in many labels, so treat them as weak evidence. Choose the label whose most specific findings match: lesion type and distribution, affected sites, taste or smell and nail changes, and temporal course. Check that the query actually states the discriminating finding before relying on it. Answer with the label only."
+            },
+            "reason": "Trims to 24 examples and caps 3 per label; prompt makes shared fatigue/appetite/fever/itch cues weak evidence and requires discriminating findings to actually appear in the query.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 120,
+              "accuracy": 0.8,
+              "correct_by_repeat": [
+                40,
+                40,
+                40
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 408402,
+              "output_tokens": 1296,
+              "summed_request_seconds": 73.56137871928513
+            },
+            "eligible": false,
+            "evaluation": "evolution/004/candidate2"
+          },
+          {
+            "id": "round5-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "coverage",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Cap two per label and add coverage so each label gets a query-relevant example; this limits repeated dengue, pneumonia, and impetigo neighbors while preserving the successful prompt and verify flow.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 592521,
+              "output_tokens": 1314,
+              "summed_request_seconds": 131.3635275363922
+            },
+            "eligible": false,
+            "evaluation": "evolution/005/candidate1"
+          },
+          {
+            "id": "round5-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_first",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query into one allowed label using the labeled examples as evidence, not votes. Repeated examples of the same label do not raise its probability. If one example restates the query almost word-for-word, strongly prefer its label. Otherwise choose by specific findings—lesion type and distribution, affected site, taste/smell or nail change, temporal course, focal pain—not by fatigue, weakness, poor appetite, nausea, itching, or fever shared across labels. Answer with the label only."
+            },
+            "reason": "Prompt treats repeated same-label examples as non-evidence and gives near-verbatim matches priority; best_first surfaces the strongest match that tail placement let the model ignore.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 109,
+              "accuracy": 0.7266666666666667,
+              "correct_by_repeat": [
+                36,
+                36,
+                37
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 515841,
+              "output_tokens": 1300,
+              "summed_request_seconds": 108.84037233702838
+            },
+            "eligible": false,
+            "evaluation": "evolution/005/candidate2"
+          }
+        ],
+        "random_control": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 123,
+            "accuracy": 0.82,
+            "correct_by_repeat": [
+              41,
+              41,
+              41
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 300,
+            "input_tokens": 491376,
+            "output_tokens": 1308,
+            "summed_request_seconds": 82.93045832589269
+          },
+          "evaluation": "baselines/prior_search_best",
+          "candidates": [
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 32,
+                "selection": "top",
+                "max_per_label": 2,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_last",
+                "workflow": "verify",
+                "layout": "examples",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 3,
+                "challengers": 8,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 116,
+                "accuracy": 0.7733333333333333,
+                "correct_by_repeat": [
+                  39,
+                  39,
+                  38
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 364912,
+                "output_tokens": 1315,
+                "summed_request_seconds": 142.2335220426321
+              },
+              "evaluation": "random/001-1"
+            },
+            {
+              "policy": {
+                "retrieval": "bm25",
+                "examples": 24,
+                "selection": "diverse",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_last",
+                "workflow": "direct",
+                "layout": "contrast_pairs",
+                "review_retrieval": "same",
+                "confirmers": 3,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 114,
+                "accuracy": 0.76,
+                "correct_by_repeat": [
+                  38,
+                  38,
+                  38
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 311766,
+                "output_tokens": 660,
+                "summed_request_seconds": 100.39413113333285
+              },
+              "evaluation": "random/001-2"
+            },
+            {
+              "policy": {
+                "retrieval": "fixed",
+                "examples": 8,
+                "selection": "top",
+                "max_per_label": 1,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_first",
+                "workflow": "direct",
+                "layout": "contrast_pairs",
+                "review_retrieval": "same",
+                "confirmers": 3,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 99,
+                "accuracy": 0.66,
+                "correct_by_repeat": [
+                  33,
+                  33,
+                  33
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 252072,
+                "output_tokens": 666,
+                "summed_request_seconds": 41.03491707704961
+              },
+              "evaluation": "random/002-1"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 8,
+                "selection": "diverse",
+                "max_per_label": 1,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_first",
+                "workflow": "verify",
+                "layout": "coverage",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 8,
+                "challengers": 8,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 114,
+                "accuracy": 0.76,
+                "correct_by_repeat": [
+                  38,
+                  38,
+                  38
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 362550,
+                "output_tokens": 1329,
+                "summed_request_seconds": 117.81512089073658
+              },
+              "evaluation": "random/002-2"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 4,
+                "selection": "diverse",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_first",
+                "workflow": "rewrite",
+                "layout": "contrast_pairs",
+                "review_retrieval": "same",
+                "confirmers": 8,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 119,
+                "accuracy": 0.7933333333333333,
+                "correct_by_repeat": [
+                  40,
+                  39,
+                  40
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 232591,
+                "output_tokens": 3414,
+                "summed_request_seconds": 138.5670284908265
+              },
+              "evaluation": "random/003-1"
+            },
+            {
+              "policy": {
+                "retrieval": "fixed",
+                "examples": 32,
+                "selection": "top",
+                "max_per_label": 1,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "direct",
+                "layout": "coverage",
+                "review_retrieval": "same",
+                "confirmers": 3,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 93,
+                "accuracy": 0.62,
+                "correct_by_repeat": [
+                  31,
+                  31,
+                  31
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 194922,
+                "output_tokens": 708,
+                "summed_request_seconds": 55.03525474667549
+              },
+              "evaluation": "random/003-2"
+            },
+            {
+              "policy": {
+                "retrieval": "tfidf",
+                "examples": 16,
+                "selection": "top",
+                "max_per_label": 2,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "rewrite",
+                "layout": "coverage",
+                "review_retrieval": "same",
+                "confirmers": 8,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 119,
+                "accuracy": 0.7933333333333333,
+                "correct_by_repeat": [
+                  40,
+                  39,
+                  40
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 242589,
+                "output_tokens": 3420,
+                "summed_request_seconds": 82.61216022074223
+              },
+              "evaluation": "random/004-1"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 32,
+                "selection": "top",
+                "max_per_label": 2,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "verify",
+                "layout": "coverage",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 5,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 114,
+                "accuracy": 0.76,
+                "correct_by_repeat": [
+                  38,
+                  38,
+                  38
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 396935,
+                "output_tokens": 1318,
+                "summed_request_seconds": 102.33526279591024
+              },
+              "evaluation": "random/004-2"
+            },
+            {
+              "policy": {
+                "retrieval": "bm25",
+                "examples": 32,
+                "selection": "diverse",
+                "max_per_label": 2,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_last",
+                "workflow": "direct",
+                "layout": "coverage",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 5,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 120,
+                "accuracy": 0.8,
+                "correct_by_repeat": [
+                  40,
+                  40,
+                  40
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 258759,
+                "output_tokens": 666,
+                "summed_request_seconds": 39.364288507029414
+              },
+              "evaluation": "random/005-1"
+            },
+            {
+              "policy": {
+                "retrieval": "fixed",
+                "examples": 32,
+                "selection": "top",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "verify",
+                "layout": "examples",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 3,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 87,
+                "accuracy": 0.58,
+                "correct_by_repeat": [
+                  29,
+                  29,
+                  29
+                ],
+                "format_errors": 0,
+                "truncated": 3,
+                "model_calls": 300,
+                "input_tokens": 341900,
+                "output_tokens": 1677,
+                "summed_request_seconds": 52.31167175993323
+              },
+              "evaluation": "random/005-2"
+            }
+          ]
+        },
+        "application_calls_at_freeze": {
+          "task": 7028,
+          "meta": 5
+        },
+        "test_opened": false,
+        "weights_updated": false,
+        "controls": "Equal candidate count, validation repetitions and per-query call/token caps; actual calls and tokens are reported separately"
+      },
+      "invalid_rounds": []
+    },
+    {
+      "source": {
+        "config": {
+          "task": {
+            "model": "Qwen/Qwen3-4B-Instruct-2507",
+            "base_url": "http://127.0.0.1:18000/v1",
+            "api_key_env": "RSI_LOCAL_API_KEY",
+            "max_tokens": 128,
+            "timeout": 120.0,
+            "temperature": 0.0,
+            "extra_body": {},
+            "user_suffix": ""
+          },
+          "meta": {
+            "model": "deepseek-v4.1-flash",
+            "base_url": "https://zgc.apihy.com",
+            "api_key_env": "RSI_API_KEY",
+            "max_tokens": 8192,
+            "timeout": 600.0,
+            "command": "claude",
+            "state_dir": ".local/claude-memory/seed2026",
+            "prompt_char_budget": 1200
+          },
+          "seed": 2026,
+          "prior_policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "rounds": 5,
+          "validation_repeats": 3,
+          "diagnostic_queries": 64,
+          "context_chars": 12000,
+          "max_task_calls": 24000,
+          "wall_seconds": 21600.0
+        },
+        "source_sha256": "9acd840e4d6136eefcb6cbf4c8a347c51b8889ccda572ee2e2bf19ab377b1cef",
+        "lock_sha256": "fb5b6fc4bbf71733688c25c0f6f4462090910b5abcd81f44ef3303b27f6f4ea9",
+        "data_manifest_sha256": "68048ea10b4154c91cf40f9e7be52a973c8fe6b72ca053c1e806e3a6b5b91622",
+        "split_sha256": {
+          "train": "635260eee78f826fe25ea0b539bafb3dcd62379650262d5675865525d7d78466",
+          "val": "445c9c36ca6a2e9cce8ef0cfb49fa17912ddb03351401b5a1ff6164103fcc3ef",
+          "test": "ccdcde751c9529dd110abbc67fccae2e8af237b10cf10f692fa00318d9c9b3da"
+        },
+        "labels_sha256": "ea1407ad20f0f6237e985ce3062e8472b0012a3f528f0b1d482679ae206ebabc",
+        "weights_updated": false,
+        "protocol": "memory-v2; dynamic counterevidence; three-repeat nonregression selection; finalization freezes all search"
+      },
+      "calibration": {
+        "baselines": {
+          "no_memory": {
+            "policy": {
+              "retrieval": "none",
+              "examples": 0,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 81,
+              "accuracy": 0.54,
+              "correct_by_repeat": [
+                27,
+                27,
+                27
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 27822,
+              "output_tokens": 711,
+              "summed_request_seconds": 53.564748173579574
+            }
+          },
+          "fixed_fewshot": {
+            "policy": {
+              "retrieval": "fixed",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 78,
+              "accuracy": 0.52,
+              "correct_by_repeat": [
+                26,
+                26,
+                26
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 85272,
+              "output_tokens": 702,
+              "summed_request_seconds": 49.3813747279346
+            }
+          },
+          "bm25": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 81360,
+              "output_tokens": 660,
+              "summed_request_seconds": 45.137525517493486
+            }
+          },
+          "fixed_verify": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 120,
+              "accuracy": 0.8,
+              "correct_by_repeat": [
+                40,
+                40,
+                40
+              ],
+              "format_errors": 3,
+              "truncated": 3,
+              "model_calls": 300,
+              "input_tokens": 167430,
+              "output_tokens": 1689,
+              "summed_request_seconds": 113.87132195942104
+            }
+          },
+          "paper_draft_contrast": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 5,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "draft_contrast",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 114,
+              "accuracy": 0.76,
+              "correct_by_repeat": [
+                38,
+                38,
+                38
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 179589,
+              "output_tokens": 1329,
+              "summed_request_seconds": 96.88467265106738
+            }
+          },
+          "paper_label_coverage": {
+            "policy": {
+              "retrieval": "tfidf",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "contrast_pairs",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 246018,
+              "output_tokens": 657,
+              "summed_request_seconds": 69.17054285481572
+            }
+          },
+          "prior_search_best": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 88.20555224828422
+            }
+          }
+        },
+        "selected_baseline": "prior_search_best",
+        "selection": "Best repeated validation accuracy, then lower calls/tokens",
+        "test_opened": false
+      },
+      "search": {
+        "seed": 2026,
+        "rounds": 5,
+        "selected_baseline": "prior_search_best",
+        "baseline": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 123,
+            "accuracy": 0.82,
+            "correct_by_repeat": [
+              41,
+              41,
+              41
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 300,
+            "input_tokens": 491376,
+            "output_tokens": 1308,
+            "summed_request_seconds": 88.20555224828422
+          }
+        },
+        "selected": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 3,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 129,
+            "accuracy": 0.86,
+            "correct_by_repeat": [
+              43,
+              43,
+              43
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 300,
+            "input_tokens": 492105,
+            "output_tokens": 1293,
+            "summed_request_seconds": 90.01323860883713
+          },
+          "evaluation": "evolution/003/candidate1"
+        },
+        "history": [
+          {
+            "round": 0,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 88.20555224828422
+            },
+            "evaluation": "baselines/prior_search_best"
+          },
+          {
+            "round": 1,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 88.20555224828422
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 2,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 88.20555224828422
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 3,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 129,
+              "accuracy": 0.86,
+              "correct_by_repeat": [
+                43,
+                43,
+                43
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 492105,
+              "output_tokens": 1293,
+              "summed_request_seconds": 90.01323860883713
+            },
+            "evaluation": "evolution/003/candidate1",
+            "decision": "accepted"
+          },
+          {
+            "round": 4,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 129,
+              "accuracy": 0.86,
+              "correct_by_repeat": [
+                43,
+                43,
+                43
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 492105,
+              "output_tokens": 1293,
+              "summed_request_seconds": 90.01323860883713
+            },
+            "evaluation": "evolution/003/candidate1",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 5,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 129,
+              "accuracy": 0.86,
+              "correct_by_repeat": [
+                43,
+                43,
+                43
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 492105,
+              "output_tokens": 1293,
+              "summed_request_seconds": 90.01323860883713
+            },
+            "evaluation": "evolution/003/candidate1",
+            "decision": "retained_parent"
+          }
+        ],
+        "proposals": [
+          {
+            "id": "round1-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "diverse",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "contrast_pairs",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Keeps verify/same pipeline but adds diverse contrast pairs and a lower per-label cap so minority diagnoses such as drug reaction appear beside confusable rashes.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 99,
+              "accuracy": 0.66,
+              "correct_by_repeat": [
+                33,
+                33,
+                33
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 637380,
+              "output_tokens": 1296,
+              "summed_request_seconds": 108.32322508655488
+            },
+            "eligible": false,
+            "evaluation": "evolution/001/candidate1"
+          },
+          {
+            "id": "round1-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "draft_contrast",
+              "confirmers": 5,
+              "challengers": 10,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Identify the distinctive symptom combination that separates the leading alternatives, not just one shared term. In verification, compare the draft with retrieved confirmers and different-label challengers; keep the draft only if those examples support the distinctive combination, otherwise choose the best-supported alternative. Output one exact label."
+            },
+            "reason": "Keeps examples layout but re-queries memory with draft contrast and more challengers; new prompt asks for distinctive symptom-cluster comparison and switching when challengers fit better.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 108,
+              "accuracy": 0.72,
+              "correct_by_repeat": [
+                36,
+                36,
+                36
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 417141,
+              "output_tokens": 1311,
+              "summed_request_seconds": 105.5031899921596
+            },
+            "eligible": false,
+            "evaluation": "evolution/001/candidate2"
+          },
+          {
+            "id": "round2-candidate1",
+            "policy": {
+              "retrieval": "hybrid",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Hybrid retrieval plus a 2-per-label cap stops frequent confusable labels (dengue, psoriasis, GERD) flooding the 32 slots, so near-exact rare-label matches (drug reaction tremor, PUD hunger) surface.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 114,
+              "accuracy": 0.76,
+              "correct_by_repeat": [
+                38,
+                38,
+                38
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 494124,
+              "output_tokens": 1299,
+              "summed_request_seconds": 105.57092250883579
+            },
+            "eligible": false,
+            "evaluation": "evolution/002/candidate1"
+          },
+          {
+            "id": "round2-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 24,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "contrast_pairs",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and the paired labeled examples. Each pair contrasts two labels that share symptoms. Choose the label whose distinctive, specific findings match the query, not one supported only by common symptoms like fever, fatigue, or rash. If the paired contrasting label explains the specific findings better, switch to it. In verification, confirm with that pair, then output one exact label."
+            },
+            "reason": "Contrast pairs put boundary labels side by side (asthma vs pneumonia, PUD vs GERD); prompt directs picking the label whose rare specific findings match; 24 examples keep pairs within context budget.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 108,
+              "accuracy": 0.72,
+              "correct_by_repeat": [
+                36,
+                36,
+                36
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 654459,
+              "output_tokens": 1293,
+              "summed_request_seconds": 101.5245039910078
+            },
+            "eligible": false,
+            "evaluation": "evolution/002/candidate2"
+          },
+          {
+            "id": "round3-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Keep bm25/top/verify but lower the per-label cap to 3, so frequent confusable labels (dengue, psoriasis, GERD) crowd fewer slots and rarer exemplars like drug reaction and PUD can surface.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 129,
+              "accuracy": 0.86,
+              "correct_by_repeat": [
+                43,
+                43,
+                43
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 492105,
+              "output_tokens": 1293,
+              "summed_request_seconds": 90.01323860883713
+            },
+            "eligible": true,
+            "evaluation": "evolution/003/candidate1"
+          },
+          {
+            "id": "round3-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query into exactly one allowed label using the retrieved labeled examples. Many labels share nonspecific symptoms such as fever, fatigue, nausea, appetite loss, itching, or rash; do not decide on those alone. Compare leading candidates and choose the label whose distinctive, specific findings, such as location, trigger, timing, or an unusual associated sign, best match the whole query. In verification, check the draft against its same-label examples and against retrieved examples of the strongest alternative; if the alternative explains more specific findings, switch. Output one exact label with no explanation."
+            },
+            "reason": "Keep retrieval and verify pipeline but rewrite the prompt to rank distinctive findings over shared nonspecific symptoms and to switch during verification when the strongest alternative fits the specific findings better.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 120,
+              "accuracy": 0.8,
+              "correct_by_repeat": [
+                40,
+                40,
+                40
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 519276,
+              "output_tokens": 1308,
+              "summed_request_seconds": 88.74850540794432
+            },
+            "eligible": false,
+            "evaluation": "evolution/003/candidate2"
+          },
+          {
+            "id": "round4-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "draft_contrast",
+              "confirmers": 5,
+              "challengers": 8,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Prompt unchanged; keeps bm25, cap 3, best_last but adds draft_contrast with 8 challengers, so alternative-label examples fitting the full symptom set appear before finalizing.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 114,
+              "accuracy": 0.76,
+              "correct_by_repeat": [
+                38,
+                38,
+                38
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 386610,
+              "output_tokens": 1302,
+              "summed_request_seconds": 177.45360801927745
+            },
+            "eligible": false,
+            "evaluation": "evolution/004/candidate1"
+          },
+          {
+            "id": "round4-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "coverage",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify into exactly one allowed label. A retrieved example is strong evidence only when it matches most of the query's findings, not just one or two. Labels sharing only common symptoms with the query (fever, tiredness, pain, nausea, rash, itching, appetite or taste changes) are weak matches. Choose the label whose example best covers the query's full set of symptoms, including any less common or specific one. Output only the exact label."
+            },
+            "reason": "Coverage layout gives a query-relevant exemplar per label, surfacing rare classes; the prompt requires matching the query's full symptom set rather than shared generic symptoms.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 114,
+              "accuracy": 0.76,
+              "correct_by_repeat": [
+                38,
+                38,
+                38
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 657834,
+              "output_tokens": 1305,
+              "summed_request_seconds": 123.94500956125557
+            },
+            "eligible": false,
+            "evaluation": "evolution/004/candidate2"
+          }
+        ],
+        "random_control": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 123,
+            "accuracy": 0.82,
+            "correct_by_repeat": [
+              41,
+              41,
+              41
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 300,
+            "input_tokens": 491376,
+            "output_tokens": 1308,
+            "summed_request_seconds": 88.20555224828422
+          },
+          "evaluation": "baselines/prior_search_best",
+          "candidates": [
+            {
+              "policy": {
+                "retrieval": "tfidf",
+                "examples": 8,
+                "selection": "diverse",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "verify",
+                "layout": "examples",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 3,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 102,
+                "accuracy": 0.68,
+                "correct_by_repeat": [
+                  34,
+                  34,
+                  34
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 169953,
+                "output_tokens": 1326,
+                "summed_request_seconds": 67.05507446452975
+              },
+              "evaluation": "random/001-1"
+            },
+            {
+              "policy": {
+                "retrieval": "tfidf",
+                "examples": 24,
+                "selection": "diverse",
+                "max_per_label": 2,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_first",
+                "workflow": "direct",
+                "layout": "examples",
+                "review_retrieval": "same",
+                "confirmers": 3,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 111,
+                "accuracy": 0.74,
+                "correct_by_repeat": [
+                  37,
+                  37,
+                  37
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 189327,
+                "output_tokens": 657,
+                "summed_request_seconds": 50.41816418804228
+              },
+              "evaluation": "random/001-2"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 32,
+                "selection": "top",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "direct",
+                "layout": "contrast_pairs",
+                "review_retrieval": "same",
+                "confirmers": 8,
+                "challengers": 8,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 111,
+                "accuracy": 0.74,
+                "correct_by_repeat": [
+                  37,
+                  37,
+                  37
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 319560,
+                "output_tokens": 660,
+                "summed_request_seconds": 54.97990230284631
+              },
+              "evaluation": "random/002-1"
+            },
+            {
+              "policy": {
+                "retrieval": "tfidf",
+                "examples": 16,
+                "selection": "top",
+                "max_per_label": 2,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_first",
+                "workflow": "rewrite",
+                "layout": "contrast_pairs",
+                "review_retrieval": "same",
+                "confirmers": 5,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 117,
+                "accuracy": 0.78,
+                "correct_by_repeat": [
+                  39,
+                  39,
+                  39
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 322506,
+                "output_tokens": 3428,
+                "summed_request_seconds": 95.48376338556409
+              },
+              "evaluation": "random/002-2"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 16,
+                "selection": "diverse",
+                "max_per_label": 2,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_first",
+                "workflow": "verify",
+                "layout": "coverage",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 3,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 114,
+                "accuracy": 0.76,
+                "correct_by_repeat": [
+                  38,
+                  38,
+                  38
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 288171,
+                "output_tokens": 1323,
+                "summed_request_seconds": 79.97823257744312
+              },
+              "evaluation": "random/003-1"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 4,
+                "selection": "top",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_last",
+                "workflow": "verify",
+                "layout": "contrast_pairs",
+                "review_retrieval": "same",
+                "confirmers": 5,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 99,
+                "accuracy": 0.66,
+                "correct_by_repeat": [
+                  33,
+                  33,
+                  33
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 442683,
+                "output_tokens": 1314,
+                "summed_request_seconds": 51.335127705708146
+              },
+              "evaluation": "random/003-2"
+            },
+            {
+              "policy": {
+                "retrieval": "tfidf",
+                "examples": 32,
+                "selection": "top",
+                "max_per_label": 1,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_first",
+                "workflow": "rewrite",
+                "layout": "coverage",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 5,
+                "challengers": 8,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 109,
+                "accuracy": 0.7266666666666667,
+                "correct_by_repeat": [
+                  37,
+                  36,
+                  36
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 199566,
+                "output_tokens": 3452,
+                "summed_request_seconds": 62.969736594706774
+              },
+              "evaluation": "random/004-1"
+            },
+            {
+              "policy": {
+                "retrieval": "fixed",
+                "examples": 8,
+                "selection": "top",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "direct",
+                "layout": "coverage",
+                "review_retrieval": "same",
+                "confirmers": 8,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 102,
+                "accuracy": 0.68,
+                "correct_by_repeat": [
+                  34,
+                  34,
+                  34
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 206622,
+                "output_tokens": 678,
+                "summed_request_seconds": 26.43379282578826
+              },
+              "evaluation": "random/004-2"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 32,
+                "selection": "diverse",
+                "max_per_label": 1,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_first",
+                "workflow": "verify",
+                "layout": "examples",
+                "review_retrieval": "same",
+                "confirmers": 3,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 111,
+                "accuracy": 0.74,
+                "correct_by_repeat": [
+                  37,
+                  37,
+                  37
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 363609,
+                "output_tokens": 1329,
+                "summed_request_seconds": 77.2992908153683
+              },
+              "evaluation": "random/005-1"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 16,
+                "selection": "diverse",
+                "max_per_label": 32,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "rewrite",
+                "layout": "examples",
+                "review_retrieval": "same",
+                "confirmers": 5,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 117,
+                "accuracy": 0.78,
+                "correct_by_repeat": [
+                  39,
+                  39,
+                  39
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 148321,
+                "output_tokens": 3416,
+                "summed_request_seconds": 70.6295128017664
+              },
+              "evaluation": "random/005-2"
+            }
+          ]
+        },
+        "application_calls_at_freeze": {
+          "task": 6706,
+          "meta": 5
+        },
+        "test_opened": false,
+        "weights_updated": false,
+        "controls": "Equal candidate count, validation repetitions and per-query call/token caps; actual calls and tokens are reported separately"
+      },
+      "invalid_rounds": [
+        {
+          "round": "005",
+          "rejection": {
+            "error_type": "MetaOutputOverflow",
+            "record": "meta_result.json",
+            "call_budget_refunded": false,
+            "repair": "Reject missing proposal; retain raw error, usage and all task results"
+          },
+          "raw_usage": {
+            "input_tokens": 99034,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "output_tokens": 32768,
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "",
+            "iterations": [],
+            "speed": "standard"
+          }
+        }
+      ]
+    },
+    {
+      "source": {
+        "config": {
+          "task": {
+            "model": "Qwen/Qwen3-4B-Instruct-2507",
+            "base_url": "http://127.0.0.1:18000/v1",
+            "api_key_env": "RSI_LOCAL_API_KEY",
+            "max_tokens": 128,
+            "timeout": 120.0,
+            "temperature": 0.0,
+            "extra_body": {},
+            "user_suffix": ""
+          },
+          "meta": {
+            "model": "deepseek-v4.1-flash",
+            "base_url": "https://zgc.apihy.com",
+            "api_key_env": "RSI_API_KEY",
+            "max_tokens": 8192,
+            "timeout": 600.0,
+            "command": "claude",
+            "state_dir": ".local/claude-memory/seed42",
+            "prompt_char_budget": 1200
+          },
+          "seed": 42,
+          "prior_policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "rounds": 5,
+          "validation_repeats": 3,
+          "diagnostic_queries": 64,
+          "context_chars": 12000,
+          "max_task_calls": 24000,
+          "wall_seconds": 21600.0
+        },
+        "source_sha256": "9acd840e4d6136eefcb6cbf4c8a347c51b8889ccda572ee2e2bf19ab377b1cef",
+        "lock_sha256": "fb5b6fc4bbf71733688c25c0f6f4462090910b5abcd81f44ef3303b27f6f4ea9",
+        "data_manifest_sha256": "68048ea10b4154c91cf40f9e7be52a973c8fe6b72ca053c1e806e3a6b5b91622",
+        "split_sha256": {
+          "train": "635260eee78f826fe25ea0b539bafb3dcd62379650262d5675865525d7d78466",
+          "val": "445c9c36ca6a2e9cce8ef0cfb49fa17912ddb03351401b5a1ff6164103fcc3ef",
+          "test": "ccdcde751c9529dd110abbc67fccae2e8af237b10cf10f692fa00318d9c9b3da"
+        },
+        "labels_sha256": "ea1407ad20f0f6237e985ce3062e8472b0012a3f528f0b1d482679ae206ebabc",
+        "weights_updated": false,
+        "protocol": "memory-v2; dynamic counterevidence; three-repeat nonregression selection; finalization freezes all search"
+      },
+      "calibration": {
+        "baselines": {
+          "no_memory": {
+            "policy": {
+              "retrieval": "none",
+              "examples": 0,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 81,
+              "accuracy": 0.54,
+              "correct_by_repeat": [
+                27,
+                27,
+                27
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 27822,
+              "output_tokens": 711,
+              "summed_request_seconds": 32.028711918741465
+            }
+          },
+          "fixed_fewshot": {
+            "policy": {
+              "retrieval": "fixed",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 84,
+              "accuracy": 0.56,
+              "correct_by_repeat": [
+                28,
+                28,
+                28
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 83022,
+              "output_tokens": 699,
+              "summed_request_seconds": 25.232913298532367
+            }
+          },
+          "bm25": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 81360,
+              "output_tokens": 660,
+              "summed_request_seconds": 41.932809287682176
+            }
+          },
+          "fixed_verify": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 120,
+              "accuracy": 0.8,
+              "correct_by_repeat": [
+                40,
+                40,
+                40
+              ],
+              "format_errors": 3,
+              "truncated": 3,
+              "model_calls": 300,
+              "input_tokens": 167430,
+              "output_tokens": 1689,
+              "summed_request_seconds": 77.14200950041413
+            }
+          },
+          "paper_draft_contrast": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 5,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "draft_contrast",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 114,
+              "accuracy": 0.76,
+              "correct_by_repeat": [
+                38,
+                38,
+                38
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 179589,
+              "output_tokens": 1329,
+              "summed_request_seconds": 93.48858305439353
+            }
+          },
+          "paper_label_coverage": {
+            "policy": {
+              "retrieval": "tfidf",
+              "examples": 8,
+              "selection": "top",
+              "max_per_label": 32,
+              "deduplicate": true,
+              "label_hints": false,
+              "order": "best_first",
+              "workflow": "direct",
+              "layout": "contrast_pairs",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 150,
+              "input_tokens": 246018,
+              "output_tokens": 657,
+              "summed_request_seconds": 77.99575590901077
+            }
+          },
+          "prior_search_best": {
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 113.41923310607672
+            }
+          }
+        },
+        "selected_baseline": "prior_search_best",
+        "selection": "Best repeated validation accuracy, then lower calls/tokens",
+        "test_opened": false
+      },
+      "search": {
+        "seed": 42,
+        "rounds": 5,
+        "selected_baseline": "prior_search_best",
+        "baseline": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 123,
+            "accuracy": 0.82,
+            "correct_by_repeat": [
+              41,
+              41,
+              41
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 300,
+            "input_tokens": 491376,
+            "output_tokens": 1308,
+            "summed_request_seconds": 113.41923310607672
+          }
+        },
+        "selected": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 32,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": true,
+            "order": "best_last",
+            "workflow": "verify",
+            "layout": "examples",
+            "review_retrieval": "same",
+            "confirmers": 5,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 123,
+            "accuracy": 0.82,
+            "correct_by_repeat": [
+              41,
+              41,
+              41
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 300,
+            "input_tokens": 491376,
+            "output_tokens": 1308,
+            "summed_request_seconds": 113.41923310607672
+          },
+          "evaluation": "baselines/prior_search_best"
+        },
+        "history": [
+          {
+            "round": 0,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 113.41923310607672
+            },
+            "evaluation": "baselines/prior_search_best"
+          },
+          {
+            "round": 1,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 113.41923310607672
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 2,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 113.41923310607672
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 3,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 113.41923310607672
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 4,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 113.41923310607672
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          },
+          {
+            "round": 5,
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 491376,
+              "output_tokens": 1308,
+              "summed_request_seconds": 113.41923310607672
+            },
+            "evaluation": "baselines/prior_search_best",
+            "decision": "retained_parent"
+          }
+        ],
+        "proposals": [
+          {
+            "id": "round1-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "diverse",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Cap each label at 2 and select diversely so frequent labels (psoriasis, dengue, chicken pox) stop crowding out the correct class; prompt unchanged.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 489951,
+              "output_tokens": 1299,
+              "summed_request_seconds": 89.68398221209645
+            },
+            "eligible": false,
+            "evaluation": "evolution/001/candidate1"
+          },
+          {
+            "id": "round1-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "contrast_pairs",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Use only the allowed labels. Read the query's distinctive findings and the retrieved labeled examples. Many symptoms (fatigue, fever, rash, dizziness) are shared across labels, so do not decide from a single keyword. Compare the query with the closest examples of different labels and prefer the label that explains the most specific combination of findings. If two labels remain plausible, choose the one whose characteristic features the query matches and whose non-matching features the query lacks."
+            },
+            "reason": "Add contrast_pairs to expose different-label boundaries and cap 2 per label; prompt tells model to weigh specific symptom combinations over shared keywords.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 102,
+              "accuracy": 0.68,
+              "correct_by_repeat": [
+                34,
+                34,
+                34
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 658662,
+              "output_tokens": 1281,
+              "summed_request_seconds": 135.90972926840186
+            },
+            "eligible": false,
+            "evaluation": "evolution/001/candidate2"
+          },
+          {
+            "id": "round2-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 24,
+              "selection": "top",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Trim to 24 top matches and cap 3 per label, reducing repeated dominant-label evidence that can drown closer full-pattern matches.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 386802,
+              "output_tokens": 1296,
+              "summed_request_seconds": 75.38654663600028
+            },
+            "eligible": false,
+            "evaluation": "evolution/002/candidate1"
+          },
+          {
+            "id": "round2-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Use only the allowed labels. Identify the query's most specific findings, then compare the full pattern with the labeled examples. Do not decide from one shared symptom such as fatigue, fever, rash, dizziness, or pain. Prefer the label whose characteristic combination the query matches most completely. Check whether a competing label would require findings the query lacks. A closely matching example with the same full pattern should outweigh several weaker matches to another label. Before answering, verify the leading label against the closest different-label examples and switch only if they explain more specific findings. Output one exact allowed label."
+            },
+            "reason": "Add a general decision rule to weigh specific symptom combinations, absent hallmarks, and a close full-pattern example over many weak shared-symptom matches.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                40,
+                41,
+                42
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 519576,
+              "output_tokens": 1308,
+              "summed_request_seconds": 142.4479232057929
+            },
+            "eligible": false,
+            "evaluation": "evolution/002/candidate2"
+          },
+          {
+            "id": "round3-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "draft_contrast",
+              "confirmers": 3,
+              "challengers": 7,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "On the verify call, re-query memory with the draft for 3 confirmers and 7 different-label challengers, so a draft driven by one salient symptom must survive counterexamples; prompt unchanged.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 117,
+              "accuracy": 0.78,
+              "correct_by_repeat": [
+                39,
+                39,
+                39
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 360015,
+              "output_tokens": 1311,
+              "summed_request_seconds": 99.98682132922113
+            },
+            "eligible": false,
+            "evaluation": "evolution/003/candidate1"
+          },
+          {
+            "id": "round3-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Use only the allowed labels. First identify the query's distinctive findings, not just its most frequent words. Shared symptoms (fatigue, fever, rash, pain, dizziness, cough, nausea, itching, appetite loss) are weak evidence on their own. Compare the query with the closest examples of more than one label. Choose the label whose characteristic combination the query matches and whose typical findings the query does not contradict. Do not let a single salient symptom override the rest of the pattern. If the closest example of another label explains a distinctive finding the leading label cannot, prefer that label. Output one exact allowed label."
+            },
+            "reason": "Prompt directs weighing distinctive findings and the full pattern over shared symptoms, and switching only when another label explains a finding the draft cannot.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 120,
+              "accuracy": 0.8,
+              "correct_by_repeat": [
+                40,
+                40,
+                40
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 522276,
+              "output_tokens": 1308,
+              "summed_request_seconds": 89.46824943460524
+            },
+            "eligible": false,
+            "evaluation": "evolution/003/candidate2"
+          },
+          {
+            "id": "round4-candidate1",
+            "policy": {
+              "retrieval": "hybrid",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Hybrid BM25+TF-IDF re-ranks so rare distinctive terms (brain fog, leg veins, spreading facial sores) outweigh shared-symptom matches that pull current errors; prompt and flow unchanged.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 120,
+              "accuracy": 0.8,
+              "correct_by_repeat": [
+                40,
+                40,
+                40
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 497049,
+              "output_tokens": 1299,
+              "summed_request_seconds": 89.40246145427227
+            },
+            "eligible": false,
+            "evaluation": "evolution/004/candidate1"
+          },
+          {
+            "id": "round4-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 2,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_first",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Use only the allowed labels. Decide from the complete combination of the query's findings, not one shared symptom such as rash, fever, fatigue, dizziness, or pain. An example that matches several query findings outweighs many examples that share a single symptom. Prefer the label whose closest example covers the most query findings and is contradicted least; output one exact allowed label."
+            },
+            "reason": "Cap 2 per label and put the strongest match first so dengue/psoriasis/chicken-pox stop crowding; prompt weighs a full-pattern match over many shared-symptom matches.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 108,
+              "accuracy": 0.72,
+              "correct_by_repeat": [
+                36,
+                36,
+                36
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 508335,
+              "output_tokens": 1299,
+              "summed_request_seconds": 87.76160676032305
+            },
+            "eligible": false,
+            "evaluation": "evolution/004/candidate2"
+          },
+          {
+            "id": "round5-candidate1",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 32,
+              "selection": "top",
+              "max_per_label": 4,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "verify",
+              "layout": "examples",
+              "review_retrieval": "draft_contrast",
+              "confirmers": 5,
+              "challengers": 3,
+              "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+            },
+            "reason": "Incumbent's draft_contrast test was challenger-heavy (3/7). Use 5 confirmers and only 3 challengers so a draft supported by close examples survives; prompt unchanged.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 111,
+              "accuracy": 0.74,
+              "correct_by_repeat": [
+                37,
+                37,
+                37
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 345117,
+              "output_tokens": 1323,
+              "summed_request_seconds": 94.56678251363337
+            },
+            "eligible": false,
+            "evaluation": "evolution/005/candidate1"
+          },
+          {
+            "id": "round5-candidate2",
+            "policy": {
+              "retrieval": "bm25",
+              "examples": 28,
+              "selection": "top",
+              "max_per_label": 3,
+              "deduplicate": true,
+              "label_hints": true,
+              "order": "best_last",
+              "workflow": "rewrite",
+              "layout": "coverage",
+              "review_retrieval": "same",
+              "confirmers": 5,
+              "challengers": 5,
+              "system_prompt": "Use only the allowed labels. First list the query's distinctive findings, ignoring shared ones like fatigue, fever, rash, pain, dizziness, cough, itching. Then pick the label whose characteristic combination matches most and whose hallmarks are absent from the query. Output one exact allowed label."
+            },
+            "reason": "Coverage layout guarantees a relevant example per label, countering dengue/psoriasis overcrowding; rewrite lists distinctive findings before deciding.",
+            "summary": {
+              "examples": 50,
+              "repeats": 3,
+              "correct": 123,
+              "accuracy": 0.82,
+              "correct_by_repeat": [
+                41,
+                41,
+                41
+              ],
+              "format_errors": 0,
+              "truncated": 0,
+              "model_calls": 300,
+              "input_tokens": 311833,
+              "output_tokens": 3427,
+              "summed_request_seconds": 90.27620255760849
+            },
+            "eligible": false,
+            "evaluation": "evolution/005/candidate2"
+          }
+        ],
+        "random_control": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 8,
+            "selection": "top",
+            "max_per_label": 4,
+            "deduplicate": true,
+            "label_hints": false,
+            "order": "best_last",
+            "workflow": "direct",
+            "layout": "coverage",
+            "review_retrieval": "draft_contrast",
+            "confirmers": 8,
+            "challengers": 5,
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 129,
+            "accuracy": 0.86,
+            "correct_by_repeat": [
+              43,
+              43,
+              43
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 150,
+            "input_tokens": 211296,
+            "output_tokens": 663,
+            "summed_request_seconds": 66.64126857370138
+          },
+          "evaluation": "random/005-2",
+          "candidates": [
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 24,
+                "selection": "top",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "direct",
+                "layout": "contrast_pairs",
+                "review_retrieval": "same",
+                "confirmers": 8,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 113,
+                "accuracy": 0.7533333333333333,
+                "correct_by_repeat": [
+                  37,
+                  38,
+                  38
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 319560,
+                "output_tokens": 658,
+                "summed_request_seconds": 61.053023267537355
+              },
+              "evaluation": "random/001-1"
+            },
+            {
+              "policy": {
+                "retrieval": "tfidf",
+                "examples": 4,
+                "selection": "diverse",
+                "max_per_label": 32,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_last",
+                "workflow": "rewrite",
+                "layout": "examples",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 5,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 102,
+                "accuracy": 0.68,
+                "correct_by_repeat": [
+                  34,
+                  34,
+                  34
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 65149,
+                "output_tokens": 3447,
+                "summed_request_seconds": 109.29565638117492
+              },
+              "evaluation": "random/001-2"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 8,
+                "selection": "diverse",
+                "max_per_label": 32,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "rewrite",
+                "layout": "coverage",
+                "review_retrieval": "same",
+                "confirmers": 8,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 117,
+                "accuracy": 0.78,
+                "correct_by_repeat": [
+                  39,
+                  39,
+                  39
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 202680,
+                "output_tokens": 3439,
+                "summed_request_seconds": 120.47642047330737
+              },
+              "evaluation": "random/002-1"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 16,
+                "selection": "diverse",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_first",
+                "workflow": "direct",
+                "layout": "examples",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 5,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 111,
+                "accuracy": 0.74,
+                "correct_by_repeat": [
+                  37,
+                  37,
+                  37
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 138600,
+                "output_tokens": 695,
+                "summed_request_seconds": 89.29071760736406
+              },
+              "evaluation": "random/002-2"
+            },
+            {
+              "policy": {
+                "retrieval": "tfidf",
+                "examples": 8,
+                "selection": "top",
+                "max_per_label": 1,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_first",
+                "workflow": "verify",
+                "layout": "contrast_pairs",
+                "review_retrieval": "same",
+                "confirmers": 8,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 111,
+                "accuracy": 0.74,
+                "correct_by_repeat": [
+                  37,
+                  37,
+                  37
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 496743,
+                "output_tokens": 1314,
+                "summed_request_seconds": 145.0896351262927
+              },
+              "evaluation": "random/003-1"
+            },
+            {
+              "policy": {
+                "retrieval": "hybrid",
+                "examples": 16,
+                "selection": "diverse",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_last",
+                "workflow": "verify",
+                "layout": "coverage",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 5,
+                "challengers": 3,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 114,
+                "accuracy": 0.76,
+                "correct_by_repeat": [
+                  38,
+                  38,
+                  38
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 289881,
+                "output_tokens": 1326,
+                "summed_request_seconds": 92.1275365781039
+              },
+              "evaluation": "random/003-2"
+            },
+            {
+              "policy": {
+                "retrieval": "fixed",
+                "examples": 24,
+                "selection": "diverse",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_first",
+                "workflow": "direct",
+                "layout": "examples",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 5,
+                "challengers": 8,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 93,
+                "accuracy": 0.62,
+                "correct_by_repeat": [
+                  31,
+                  31,
+                  31
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 181572,
+                "output_tokens": 681,
+                "summed_request_seconds": 55.99644823744893
+              },
+              "evaluation": "random/004-1"
+            },
+            {
+              "policy": {
+                "retrieval": "bm25",
+                "examples": 8,
+                "selection": "diverse",
+                "max_per_label": 1,
+                "deduplicate": true,
+                "label_hints": true,
+                "order": "best_last",
+                "workflow": "rewrite",
+                "layout": "coverage",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 8,
+                "challengers": 8,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 117,
+                "accuracy": 0.78,
+                "correct_by_repeat": [
+                  39,
+                  39,
+                  39
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 200258,
+                "output_tokens": 3420,
+                "summed_request_seconds": 97.8040273822844
+              },
+              "evaluation": "random/004-2"
+            },
+            {
+              "policy": {
+                "retrieval": "bm25",
+                "examples": 8,
+                "selection": "diverse",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_first",
+                "workflow": "verify",
+                "layout": "contrast_pairs",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 8,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 111,
+                "accuracy": 0.74,
+                "correct_by_repeat": [
+                  37,
+                  37,
+                  37
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 300,
+                "input_tokens": 392112,
+                "output_tokens": 1332,
+                "summed_request_seconds": 138.71838233806193
+              },
+              "evaluation": "random/005-1"
+            },
+            {
+              "policy": {
+                "retrieval": "bm25",
+                "examples": 8,
+                "selection": "top",
+                "max_per_label": 4,
+                "deduplicate": true,
+                "label_hints": false,
+                "order": "best_last",
+                "workflow": "direct",
+                "layout": "coverage",
+                "review_retrieval": "draft_contrast",
+                "confirmers": 8,
+                "challengers": 5,
+                "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+              },
+              "summary": {
+                "examples": 50,
+                "repeats": 3,
+                "correct": 129,
+                "accuracy": 0.86,
+                "correct_by_repeat": [
+                  43,
+                  43,
+                  43
+                ],
+                "format_errors": 0,
+                "truncated": 0,
+                "model_calls": 150,
+                "input_tokens": 211296,
+                "output_tokens": 663,
+                "summed_request_seconds": 66.64126857370138
+              },
+              "evaluation": "random/005-2"
+            }
+          ]
+        },
+        "application_calls_at_freeze": {
+          "task": 7028,
+          "meta": 5
+        },
+        "test_opened": false,
+        "weights_updated": false,
+        "controls": "Equal candidate count, validation repetitions and per-query call/token caps; actual calls and tokens are reported separately"
+      },
+      "invalid_rounds": []
+    }
+  ],
+  "prior_failed_meta": [
+    {
+      "run": "memory-s2d-suite-v1",
+      "kind": "meta_output_overflow",
+      "is_error": true,
+      "message": "API Error: Claude's response exceeded the 4096 output token maximum. To configure this behavior, set the CLAUDE_CODE_MAX_OUTPUT_TOKENS environment variable.",
+      "usage": {
+        "input_tokens": 27662,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 16384,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "",
+        "iterations": [],
+        "speed": "standard"
+      },
+      "candidates_produced": 0,
+      "test_accessed": false
+    }
+  ],
+  "preflight_calibrations": {
+    "memory-s2d-preflight-v1": {
+      "baselines": {
+        "no_memory": {
+          "policy": {
+            "retrieval": "none",
+            "examples": 0,
+            "selection": "top",
+            "max_per_label": 32,
+            "deduplicate": true,
+            "label_hints": false,
+            "order": "best_first",
+            "workflow": "direct",
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "correct_by_repeat": [
+              0,
+              0,
+              0
+            ],
+            "format_errors": 150,
+            "truncated": 0,
+            "model_calls": 150,
+            "input_tokens": 25722,
+            "output_tokens": 1309,
+            "summed_request_seconds": 41.7727903611958
+          }
+        },
+        "fixed_fewshot": {
+          "policy": {
+            "retrieval": "fixed",
+            "examples": 8,
+            "selection": "top",
+            "max_per_label": 32,
+            "deduplicate": true,
+            "label_hints": false,
+            "order": "best_first",
+            "workflow": "direct",
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 21,
+            "accuracy": 0.14,
+            "correct_by_repeat": [
+              7,
+              7,
+              7
+            ],
+            "format_errors": 87,
+            "truncated": 0,
+            "model_calls": 150,
+            "input_tokens": 80922,
+            "output_tokens": 1192,
+            "summed_request_seconds": 29.256133461371064
+          }
+        },
+        "bm25": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 8,
+            "selection": "top",
+            "max_per_label": 32,
+            "deduplicate": true,
+            "label_hints": false,
+            "order": "best_first",
+            "workflow": "direct",
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 6,
+            "accuracy": 0.04,
+            "correct_by_repeat": [
+              2,
+              2,
+              2
+            ],
+            "format_errors": 138,
+            "truncated": 0,
+            "model_calls": 150,
+            "input_tokens": 79260,
+            "output_tokens": 978,
+            "summed_request_seconds": 42.95993295311928
+          }
+        },
+        "fixed_verify": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 8,
+            "selection": "top",
+            "max_per_label": 32,
+            "deduplicate": true,
+            "label_hints": false,
+            "order": "best_first",
+            "workflow": "verify",
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 6,
+            "accuracy": 0.04,
+            "correct_by_repeat": [
+              2,
+              2,
+              2
+            ],
+            "format_errors": 138,
+            "truncated": 6,
+            "model_calls": 300,
+            "input_tokens": 163398,
+            "output_tokens": 2700,
+            "summed_request_seconds": 57.48910620994866
+          }
+        }
+      },
+      "selected_baseline": "fixed_fewshot",
+      "selection": "Best repeated validation accuracy, then lower calls/tokens",
+      "test_opened": false
+    },
+    "memory-s2d-preflight-v2": {
+      "baselines": {
+        "no_memory": {
+          "policy": {
+            "retrieval": "none",
+            "examples": 0,
+            "selection": "top",
+            "max_per_label": 32,
+            "deduplicate": true,
+            "label_hints": false,
+            "order": "best_first",
+            "workflow": "direct",
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 81,
+            "accuracy": 0.54,
+            "correct_by_repeat": [
+              27,
+              27,
+              27
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 150,
+            "input_tokens": 27822,
+            "output_tokens": 711,
+            "summed_request_seconds": 30.19013679213822
+          }
+        },
+        "fixed_fewshot": {
+          "policy": {
+            "retrieval": "fixed",
+            "examples": 8,
+            "selection": "top",
+            "max_per_label": 32,
+            "deduplicate": true,
+            "label_hints": false,
+            "order": "best_first",
+            "workflow": "direct",
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 84,
+            "accuracy": 0.56,
+            "correct_by_repeat": [
+              28,
+              28,
+              28
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 150,
+            "input_tokens": 83022,
+            "output_tokens": 699,
+            "summed_request_seconds": 25.315608467906713
+          }
+        },
+        "bm25": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 8,
+            "selection": "top",
+            "max_per_label": 32,
+            "deduplicate": true,
+            "label_hints": false,
+            "order": "best_first",
+            "workflow": "direct",
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 117,
+            "accuracy": 0.78,
+            "correct_by_repeat": [
+              39,
+              39,
+              39
+            ],
+            "format_errors": 0,
+            "truncated": 0,
+            "model_calls": 150,
+            "input_tokens": 81360,
+            "output_tokens": 660,
+            "summed_request_seconds": 25.1754086650908
+          }
+        },
+        "fixed_verify": {
+          "policy": {
+            "retrieval": "bm25",
+            "examples": 8,
+            "selection": "top",
+            "max_per_label": 32,
+            "deduplicate": true,
+            "label_hints": false,
+            "order": "best_first",
+            "workflow": "verify",
+            "system_prompt": "Classify the query using the allowed labels and relevant labeled examples. Distinguish similar classes using the full description."
+          },
+          "summary": {
+            "examples": 50,
+            "repeats": 3,
+            "correct": 120,
+            "accuracy": 0.8,
+            "correct_by_repeat": [
+              40,
+              40,
+              40
+            ],
+            "format_errors": 3,
+            "truncated": 3,
+            "model_calls": 300,
+            "input_tokens": 167430,
+            "output_tokens": 1689,
+            "summed_request_seconds": 54.49944383837283
+          }
+        }
+      },
+      "selected_baseline": "fixed_verify",
+      "selection": "Best repeated validation accuracy, then lower calls/tokens",
+      "test_opened": false
+    }
+  },
+  "data_manifest": {
+    "benchmark": "Symptom2Disease: Meta-Harness/MCE released splits",
+    "reference": "https://github.com/stanford-iris-lab/meta-harness/tree/main/reference_examples/text_classification/data/symptom_diagnosis",
+    "splits": {
+      "train": {
+        "git_blob": "1e41fed548ba5bb76220260eed0e0f6d93d30e6d",
+        "source": "https://api.github.com/repos/stanford-iris-lab/meta-harness/git/blobs/1e41fed548ba5bb76220260eed0e0f6d93d30e6d",
+        "source_sha256": "b41e494b40bf971a1eadd79ed4dda527640916abe0a2dc94e047e13ef293ee4c",
+        "source_count": 200,
+        "count": 200,
+        "sha256": "635260eee78f826fe25ea0b539bafb3dcd62379650262d5675865525d7d78466",
+        "ids": [
+          "s2d-train-000",
+          "s2d-train-001",
+          "s2d-train-002",
+          "s2d-train-003",
+          "s2d-train-004",
+          "s2d-train-005",
+          "s2d-train-006",
+          "s2d-train-007",
+          "s2d-train-008",
+          "s2d-train-009",
+          "s2d-train-010",
+          "s2d-train-011",
+          "s2d-train-012",
+          "s2d-train-013",
+          "s2d-train-014",
+          "s2d-train-015",
+          "s2d-train-016",
+          "s2d-train-017",
+          "s2d-train-018",
+          "s2d-train-019",
+          "s2d-train-020",
+          "s2d-train-021",
+          "s2d-train-022",
+          "s2d-train-023",
+          "s2d-train-024",
+          "s2d-train-025",
+          "s2d-train-026",
+          "s2d-train-027",
+          "s2d-train-028",
+          "s2d-train-029",
+          "s2d-train-030",
+          "s2d-train-031",
+          "s2d-train-032",
+          "s2d-train-033",
+          "s2d-train-034",
+          "s2d-train-035",
+          "s2d-train-036",
+          "s2d-train-037",
+          "s2d-train-038",
+          "s2d-train-039",
+          "s2d-train-040",
+          "s2d-train-041",
+          "s2d-train-042",
+          "s2d-train-043",
+          "s2d-train-044",
+          "s2d-train-045",
+          "s2d-train-046",
+          "s2d-train-047",
+          "s2d-train-048",
+          "s2d-train-049",
+          "s2d-train-050",
+          "s2d-train-051",
+          "s2d-train-052",
+          "s2d-train-053",
+          "s2d-train-054",
+          "s2d-train-055",
+          "s2d-train-056",
+          "s2d-train-057",
+          "s2d-train-058",
+          "s2d-train-059",
+          "s2d-train-060",
+          "s2d-train-061",
+          "s2d-train-062",
+          "s2d-train-063",
+          "s2d-train-064",
+          "s2d-train-065",
+          "s2d-train-066",
+          "s2d-train-067",
+          "s2d-train-068",
+          "s2d-train-069",
+          "s2d-train-070",
+          "s2d-train-071",
+          "s2d-train-072",
+          "s2d-train-073",
+          "s2d-train-074",
+          "s2d-train-075",
+          "s2d-train-076",
+          "s2d-train-077",
+          "s2d-train-078",
+          "s2d-train-079",
+          "s2d-train-080",
+          "s2d-train-081",
+          "s2d-train-082",
+          "s2d-train-083",
+          "s2d-train-084",
+          "s2d-train-085",
+          "s2d-train-086",
+          "s2d-train-087",
+          "s2d-train-088",
+          "s2d-train-089",
+          "s2d-train-090",
+          "s2d-train-091",
+          "s2d-train-092",
+          "s2d-train-093",
+          "s2d-train-094",
+          "s2d-train-095",
+          "s2d-train-096",
+          "s2d-train-097",
+          "s2d-train-098",
+          "s2d-train-099",
+          "s2d-train-100",
+          "s2d-train-101",
+          "s2d-train-102",
+          "s2d-train-103",
+          "s2d-train-104",
+          "s2d-train-105",
+          "s2d-train-106",
+          "s2d-train-107",
+          "s2d-train-108",
+          "s2d-train-109",
+          "s2d-train-110",
+          "s2d-train-111",
+          "s2d-train-112",
+          "s2d-train-113",
+          "s2d-train-114",
+          "s2d-train-115",
+          "s2d-train-116",
+          "s2d-train-117",
+          "s2d-train-118",
+          "s2d-train-119",
+          "s2d-train-120",
+          "s2d-train-121",
+          "s2d-train-122",
+          "s2d-train-123",
+          "s2d-train-124",
+          "s2d-train-125",
+          "s2d-train-126",
+          "s2d-train-127",
+          "s2d-train-128",
+          "s2d-train-129",
+          "s2d-train-130",
+          "s2d-train-131",
+          "s2d-train-132",
+          "s2d-train-133",
+          "s2d-train-134",
+          "s2d-train-135",
+          "s2d-train-136",
+          "s2d-train-137",
+          "s2d-train-138",
+          "s2d-train-139",
+          "s2d-train-140",
+          "s2d-train-141",
+          "s2d-train-142",
+          "s2d-train-143",
+          "s2d-train-144",
+          "s2d-train-145",
+          "s2d-train-146",
+          "s2d-train-147",
+          "s2d-train-148",
+          "s2d-train-149",
+          "s2d-train-150",
+          "s2d-train-151",
+          "s2d-train-152",
+          "s2d-train-153",
+          "s2d-train-154",
+          "s2d-train-155",
+          "s2d-train-156",
+          "s2d-train-157",
+          "s2d-train-158",
+          "s2d-train-159",
+          "s2d-train-160",
+          "s2d-train-161",
+          "s2d-train-162",
+          "s2d-train-163",
+          "s2d-train-164",
+          "s2d-train-165",
+          "s2d-train-166",
+          "s2d-train-167",
+          "s2d-train-168",
+          "s2d-train-169",
+          "s2d-train-170",
+          "s2d-train-171",
+          "s2d-train-172",
+          "s2d-train-173",
+          "s2d-train-174",
+          "s2d-train-175",
+          "s2d-train-176",
+          "s2d-train-177",
+          "s2d-train-178",
+          "s2d-train-179",
+          "s2d-train-180",
+          "s2d-train-181",
+          "s2d-train-182",
+          "s2d-train-183",
+          "s2d-train-184",
+          "s2d-train-185",
+          "s2d-train-186",
+          "s2d-train-187",
+          "s2d-train-188",
+          "s2d-train-189",
+          "s2d-train-190",
+          "s2d-train-191",
+          "s2d-train-192",
+          "s2d-train-193",
+          "s2d-train-194",
+          "s2d-train-195",
+          "s2d-train-196",
+          "s2d-train-197",
+          "s2d-train-198",
+          "s2d-train-199"
+        ]
+      },
+      "val": {
+        "git_blob": "e85fc0660a74405af7301cd8c9e1dbe0e93f51b8",
+        "source": "https://api.github.com/repos/stanford-iris-lab/meta-harness/git/blobs/e85fc0660a74405af7301cd8c9e1dbe0e93f51b8",
+        "source_sha256": "f6ad74bea9fb59f4a3abf930668042c33fbb7519bc9e2568a9758c2a0b1277e8",
+        "source_count": 50,
+        "count": 50,
+        "sha256": "445c9c36ca6a2e9cce8ef0cfb49fa17912ddb03351401b5a1ff6164103fcc3ef",
+        "ids": [
+          "s2d-val-000",
+          "s2d-val-001",
+          "s2d-val-002",
+          "s2d-val-003",
+          "s2d-val-004",
+          "s2d-val-005",
+          "s2d-val-006",
+          "s2d-val-007",
+          "s2d-val-008",
+          "s2d-val-009",
+          "s2d-val-010",
+          "s2d-val-011",
+          "s2d-val-012",
+          "s2d-val-013",
+          "s2d-val-014",
+          "s2d-val-015",
+          "s2d-val-016",
+          "s2d-val-017",
+          "s2d-val-018",
+          "s2d-val-019",
+          "s2d-val-020",
+          "s2d-val-021",
+          "s2d-val-022",
+          "s2d-val-023",
+          "s2d-val-024",
+          "s2d-val-025",
+          "s2d-val-026",
+          "s2d-val-027",
+          "s2d-val-028",
+          "s2d-val-029",
+          "s2d-val-030",
+          "s2d-val-031",
+          "s2d-val-032",
+          "s2d-val-033",
+          "s2d-val-034",
+          "s2d-val-035",
+          "s2d-val-036",
+          "s2d-val-037",
+          "s2d-val-038",
+          "s2d-val-039",
+          "s2d-val-040",
+          "s2d-val-041",
+          "s2d-val-042",
+          "s2d-val-043",
+          "s2d-val-044",
+          "s2d-val-045",
+          "s2d-val-046",
+          "s2d-val-047",
+          "s2d-val-048",
+          "s2d-val-049"
+        ]
+      },
+      "test": {
+        "git_blob": "ecb94153e9eec31818f92352d5b84374390ec2c0",
+        "source": "https://api.github.com/repos/stanford-iris-lab/meta-harness/git/blobs/ecb94153e9eec31818f92352d5b84374390ec2c0",
+        "source_sha256": "6a6b224665715f40d42a46eed82498698d39fa7689241eaae2cc2276e444671d",
+        "source_count": 212,
+        "count": 211,
+        "sha256": "ccdcde751c9529dd110abbc67fccae2e8af237b10cf10f692fa00318d9c9b3da",
+        "ids": [
+          "s2d-test-000",
+          "s2d-test-001",
+          "s2d-test-002",
+          "s2d-test-003",
+          "s2d-test-004",
+          "s2d-test-005",
+          "s2d-test-006",
+          "s2d-test-007",
+          "s2d-test-008",
+          "s2d-test-009",
+          "s2d-test-010",
+          "s2d-test-011",
+          "s2d-test-012",
+          "s2d-test-013",
+          "s2d-test-014",
+          "s2d-test-015",
+          "s2d-test-016",
+          "s2d-test-017",
+          "s2d-test-018",
+          "s2d-test-019",
+          "s2d-test-020",
+          "s2d-test-021",
+          "s2d-test-022",
+          "s2d-test-023",
+          "s2d-test-024",
+          "s2d-test-025",
+          "s2d-test-026",
+          "s2d-test-027",
+          "s2d-test-028",
+          "s2d-test-029",
+          "s2d-test-030",
+          "s2d-test-031",
+          "s2d-test-032",
+          "s2d-test-033",
+          "s2d-test-034",
+          "s2d-test-035",
+          "s2d-test-036",
+          "s2d-test-037",
+          "s2d-test-038",
+          "s2d-test-039",
+          "s2d-test-040",
+          "s2d-test-041",
+          "s2d-test-042",
+          "s2d-test-043",
+          "s2d-test-044",
+          "s2d-test-045",
+          "s2d-test-046",
+          "s2d-test-047",
+          "s2d-test-048",
+          "s2d-test-049",
+          "s2d-test-050",
+          "s2d-test-051",
+          "s2d-test-052",
+          "s2d-test-053",
+          "s2d-test-054",
+          "s2d-test-055",
+          "s2d-test-056",
+          "s2d-test-057",
+          "s2d-test-058",
+          "s2d-test-059",
+          "s2d-test-060",
+          "s2d-test-061",
+          "s2d-test-062",
+          "s2d-test-063",
+          "s2d-test-064",
+          "s2d-test-065",
+          "s2d-test-066",
+          "s2d-test-067",
+          "s2d-test-068",
+          "s2d-test-069",
+          "s2d-test-070",
+          "s2d-test-071",
+          "s2d-test-072",
+          "s2d-test-073",
+          "s2d-test-074",
+          "s2d-test-075",
+          "s2d-test-076",
+          "s2d-test-077",
+          "s2d-test-078",
+          "s2d-test-079",
+          "s2d-test-080",
+          "s2d-test-081",
+          "s2d-test-082",
+          "s2d-test-083",
+          "s2d-test-084",
+          "s2d-test-085",
+          "s2d-test-086",
+          "s2d-test-087",
+          "s2d-test-088",
+          "s2d-test-089",
+          "s2d-test-090",
+          "s2d-test-091",
+          "s2d-test-092",
+          "s2d-test-093",
+          "s2d-test-094",
+          "s2d-test-095",
+          "s2d-test-096",
+          "s2d-test-097",
+          "s2d-test-098",
+          "s2d-test-099",
+          "s2d-test-100",
+          "s2d-test-101",
+          "s2d-test-102",
+          "s2d-test-103",
+          "s2d-test-104",
+          "s2d-test-105",
+          "s2d-test-106",
+          "s2d-test-107",
+          "s2d-test-108",
+          "s2d-test-109",
+          "s2d-test-110",
+          "s2d-test-111",
+          "s2d-test-112",
+          "s2d-test-113",
+          "s2d-test-114",
+          "s2d-test-115",
+          "s2d-test-116",
+          "s2d-test-117",
+          "s2d-test-118",
+          "s2d-test-119",
+          "s2d-test-120",
+          "s2d-test-121",
+          "s2d-test-122",
+          "s2d-test-123",
+          "s2d-test-124",
+          "s2d-test-125",
+          "s2d-test-126",
+          "s2d-test-127",
+          "s2d-test-128",
+          "s2d-test-129",
+          "s2d-test-130",
+          "s2d-test-131",
+          "s2d-test-132",
+          "s2d-test-133",
+          "s2d-test-134",
+          "s2d-test-135",
+          "s2d-test-136",
+          "s2d-test-137",
+          "s2d-test-138",
+          "s2d-test-139",
+          "s2d-test-141",
+          "s2d-test-142",
+          "s2d-test-143",
+          "s2d-test-144",
+          "s2d-test-145",
+          "s2d-test-146",
+          "s2d-test-147",
+          "s2d-test-148",
+          "s2d-test-149",
+          "s2d-test-150",
+          "s2d-test-151",
+          "s2d-test-152",
+          "s2d-test-153",
+          "s2d-test-154",
+          "s2d-test-155",
+          "s2d-test-156",
+          "s2d-test-157",
+          "s2d-test-158",
+          "s2d-test-159",
+          "s2d-test-160",
+          "s2d-test-161",
+          "s2d-test-162",
+          "s2d-test-163",
+          "s2d-test-164",
+          "s2d-test-165",
+          "s2d-test-166",
+          "s2d-test-167",
+          "s2d-test-168",
+          "s2d-test-169",
+          "s2d-test-170",
+          "s2d-test-171",
+          "s2d-test-172",
+          "s2d-test-173",
+          "s2d-test-174",
+          "s2d-test-175",
+          "s2d-test-176",
+          "s2d-test-177",
+          "s2d-test-178",
+          "s2d-test-179",
+          "s2d-test-180",
+          "s2d-test-181",
+          "s2d-test-182",
+          "s2d-test-183",
+          "s2d-test-184",
+          "s2d-test-185",
+          "s2d-test-186",
+          "s2d-test-187",
+          "s2d-test-188",
+          "s2d-test-189",
+          "s2d-test-190",
+          "s2d-test-191",
+          "s2d-test-192",
+          "s2d-test-193",
+          "s2d-test-194",
+          "s2d-test-195",
+          "s2d-test-196",
+          "s2d-test-197",
+          "s2d-test-198",
+          "s2d-test-199",
+          "s2d-test-200",
+          "s2d-test-201",
+          "s2d-test-202",
+          "s2d-test-203",
+          "s2d-test-204",
+          "s2d-test-205",
+          "s2d-test-206",
+          "s2d-test-207",
+          "s2d-test-208",
+          "s2d-test-209",
+          "s2d-test-210",
+          "s2d-test-211"
+        ]
+      }
+    },
+    "exclusions": [
+      {
+        "id": "s2d-test-140",
+        "duplicate_of": "s2d-val-027",
+        "rule": "normalized exact query overlap; retain earlier training/validation row"
+      }
+    ],
+    "labels": [
+      "allergy",
+      "arthritis",
+      "bronchial asthma",
+      "cervical spondylosis",
+      "chicken pox",
+      "common cold",
+      "dengue",
+      "diabetes",
+      "drug reaction",
+      "fungal infection",
+      "gastroesophageal reflux disease",
+      "hypertension",
+      "impetigo",
+      "jaundice",
+      "malaria",
+      "migraine",
+      "peptic ulcer disease",
+      "pneumonia",
+      "psoriasis",
+      "typhoid",
+      "urinary tract infection",
+      "varicose veins"
+    ],
+    "scope": "Data-only reuse; independent runner; fixed small-model adaptation, not paper main-table reproduction"
+  },
+  "weights_updated": false,
+  "test_accessed": false,
+  "scope": "Frozen search evidence only; no unperformed test results inferred",
+  "resume_verification": {
+    "identical_frozen_choices": true,
+    "new_task_calls": 0,
+    "new_meta_calls": 0,
+    "frozen_sha256": {
+      "seed123": "bb6e26ed86162da072f7a40d4d35dc00bfab95211a7446b7b543aefd4e4673a6",
+      "seed2026": "9fee5e3f8e130cca2dcf9eb7cfae703b1df8b37065dc45987aed5525b4eb4e6d",
+      "seed42": "ac03e64617d6adc4f51632e6866b6e9fa1b626652dcbfc60d2072bc14b5d656b"
+    }
+  }
+}

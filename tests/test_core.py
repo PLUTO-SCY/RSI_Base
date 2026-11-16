@@ -385,3 +385,30 @@ def test_claude_state_cannot_escape_project(tmp_path, monkeypatch):
     (tmp_path / ".env.local").write_text("RSI_API_KEY=fixture-key\n")
     with pytest.raises(ValueError, match="inside"):
         ClaudeMeta(settings, tmp_path).propose(config.agent, [], tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("message", "exception"),
+    [
+        ("Claude's response exceeded the 8192 output token maximum.", ValueError),
+        ("Provider authorization failed", RuntimeError),
+    ],
+)
+def test_meta_overflow_is_rejectable_and_other_provider_errors_still_stop(
+    tmp_path, monkeypatch, message, exception
+):
+    (tmp_path / ".env.local").write_text("RSI_API_KEY=fixture-key\n")
+    monkeypatch.setattr("rsi_base.improve.shutil.which", lambda _: "/fake/claude")
+    monkeypatch.setattr(
+        "rsi_base.improve.subprocess.run",
+        lambda *_, **__: SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({"type": "result", "is_error": True, "result": message}),
+            stderr="",
+        ),
+    )
+    with pytest.raises(exception):
+        ClaudeMeta(configuration().meta, tmp_path).propose(
+            configuration().agent, {}, tmp_path / "out"
+        )
+    assert (tmp_path / "out/meta_result.json").exists()

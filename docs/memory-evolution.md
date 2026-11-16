@@ -38,8 +38,8 @@ RSI_GPU=0 sh scripts/serve_task.sh
 另一个终端运行：
 
 ```sh
-.venv/bin/python scripts/run_memory.py suite --output runs/memory-s2d-suite-v3
-.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-suite-v3
+.venv/bin/python scripts/run_memory.py suite --output runs/memory-s2d-suite-v4
+.venv/bin/python scripts/run_memory.py finalize --output runs/memory-s2d-suite-v4
 ```
 
 当前配置 `configs/memory_s2d.json`；Task每次输出128token、temperature0，记忆上下文12000字符、单题至多两次调用。搜索中断后同命令恢复，源代码/依赖/输入变化则拒绝恢复。正式搜索时不修改实现。凭据仍为忽略的`.env.local`，本地无鉴权Task端点使用`EMPTY`。
@@ -61,3 +61,13 @@ RSI_GPU=0 sh scripts/serve_task.sh
 这组验证的二次调用仍复用同一批记忆。按论文附录B.1补充两种实际流程：根据草稿标签检索同标签支持例和不同标签反例；覆盖全部标签的代表例并呈现局部对比示例。独立实现，不复制论文代码。
 
 第二组v3把这两种文献机制也列入固定基线，并将此前已知最优的32示例BM25策略（41/50）列为`prior_search_best`，避免重新从较弱起点展示增长。训练LOO诊断增至64题；每轮第一个候选必须保留父代prompt原文、最多改变三个结构字段，第二个候选可同时改prompt。其余搜索、测试与稳定性门槛不变。所有这些调整只参考训练/验证结果；最终测试继续封存。
+
+v3完成后：纯Meta仅seed2026找到稳定验证增益41→43/50；随机结构搜索仅seed42找到41→43/50。另两次各自保持41/50。第五轮有一次Meta输出8192token溢出，作为失败提案拒绝，保留原调用与用量，不退还预算；真实恢复新增调用0。完整记录：[memory-search-v3.json](validation/memory-search-v3.json)。测试仍未打开。
+
+## 第三组：使提案过程更稳定
+
+v4与v3保持相同固定参考父代、任务模型、评分和单题预算，用于比较提案策略；不会把重启实验算成继续突破历史最优。每轮改为一个通用局部结构邻居和一个Meta候选，共仍为两个候选。局部邻居仅按配置数值做有界相邻变更，不使用类别、题目或答案常量。这是算法开发阶段基于训练/验证的调整，最终测试仍未用于设计。
+
+同时补齐每一步预测和记忆顺序；同一训练记忆在Meta输入中只传一次。无效的未启用参数会规范化，防止相同执行被当作新策略重评。Meta输出溢出会被拒绝，混合策略仍可评估合法的局部候选。随机对照的整数参数改为在完整合法范围均匀采样；v2/v3历史随机对照使用粗网格，需区分其采样分布。
+
+上述为一组工程调整，不能把全部收益单独归因于某一个改动。v4仍按原定三次搜索、三次重复和独立测试门槛验收；LoRA继续后置。

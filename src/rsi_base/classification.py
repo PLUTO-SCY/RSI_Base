@@ -39,6 +39,32 @@ class MemoryBatch(StrictModel):
     candidates: list[MemoryCandidate] = Field(min_length=2, max_length=2)
 
 
+class SingleMemoryBatch(StrictModel):
+    candidates: list[MemoryCandidate] = Field(min_length=1, max_length=1)
+
+
+def effective_policy(policy):
+    """Canonicalize unused knobs so ineffective edits cannot earn noisy 'improvements'."""
+    values = policy.model_dump()
+    if policy.workflow != "verify":
+        values["review_retrieval"] = "same"
+    if values["review_retrieval"] == "same":
+        values.update(confirmers=5, challengers=5)
+    if policy.retrieval == "none":
+        values.update(
+            examples=0,
+            selection="top",
+            max_per_label=32,
+            label_hints=False,
+            order="best_first",
+            layout="examples",
+            review_retrieval="same",
+            confirmers=5,
+            challengers=5,
+        )
+    return MemoryPolicy.model_validate(values)
+
+
 STOP = set(
     "a an and are as at be been but by can for from had has have i in is it its me my of on or that the their then there these they this to was were when with you your im ive feeling feel get getting really lot also lately".split()
 )

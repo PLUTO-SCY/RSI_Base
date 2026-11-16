@@ -4,13 +4,20 @@ import json
 import random
 from pathlib import Path
 
-from .classification import MemoryBatch, MemoryPolicy, normalize
+from .classification import (
+    MemoryBatch,
+    MemoryCandidate,
+    MemoryPolicy,
+    SingleMemoryBatch,
+    effective_policy,
+    normalize,
+)
 from .improve import ClaudeMeta
 from .memory_loop import (
-    META_MEMORY,
     calibrate,
     evaluate_policy,
     experiment,
+    memory_meta_system,
     rank_policy,
     stable_improvement,
 )
@@ -19,19 +26,105 @@ from .types import digest
 
 
 def random_policy(rng):
-    return MemoryPolicy(
-        retrieval=rng.choice(["bm25", "tfidf", "hybrid", "fixed"]),
-        examples=rng.choice([4, 8, 16, 24, 32]),
-        selection=rng.choice(["top", "diverse"]),
-        max_per_label=rng.choice([1, 2, 4, 32]),
-        label_hints=rng.choice([False, True]),
-        order=rng.choice(["best_first", "best_last"]),
-        workflow=rng.choice(["direct", "verify", "rewrite"]),
-        layout=rng.choice(["examples", "coverage", "contrast_pairs"]),
-        review_retrieval=rng.choice(["same", "draft_contrast"]),
-        confirmers=rng.choice([3, 5, 8]),
-        challengers=rng.choice([3, 5, 8]),
+    return effective_policy(
+        MemoryPolicy(
+            retrieval=rng.choice(["none", "bm25", "tfidf", "hybrid", "fixed"]),
+            examples=rng.randint(1, 32),
+            selection=rng.choice(["top", "diverse"]),
+            max_per_label=rng.randint(1, 32),
+            label_hints=rng.choice([False, True]),
+            order=rng.choice(["best_first", "best_last"]),
+            workflow=rng.choice(["direct", "verify", "rewrite"]),
+            layout=rng.choice(["examples", "coverage", "contrast_pairs"]),
+            review_retrieval=rng.choice(["same", "draft_contrast"]),
+            confirmers=rng.randint(1, 16),
+            challengers=rng.randint(1, 16),
+        )
     )
+
+
+def local_neighbor(current, index, seen):
+    """A bounded one-field neighborhood, independent of labels or reference answers."""
+    variants = []
+    fields = ["max_per_label", "examples"]
+    if current.workflow == "verify" and current.review_retrieval == "draft_contrast":
+        fields += ["confirmers", "challengers"]
+    for field in fields:
+        for delta in [-1, 1]:
+            value = getattr(current, field) + delta
+            upper = 16 if field in {"confirmers", "challengers"} else 32
+            if 1 <= value <= upper:
+                variants.append((field, current.model_copy(update={field: value})))
+    variants += [
+        (
+            "order",
+            current.model_copy(
+                update={"order": "best_last" if current.order == "best_first" else "best_first"}
+            ),
+        ),
+        ("label_hints", current.model_copy(update={"label_hints": not current.label_hints})),
+        (
+            "workflow",
+            current.model_copy(
+                update={"workflow": "direct" if current.workflow == "verify" else "verify"}
+            ),
+        ),
+    ]
+    for offset in range(len(variants)):
+        field, policy = variants[(index - 1 + offset) % len(variants)]
+        policy = effective_policy(policy)
+        if digest(policy.model_dump()) not in seen:
+            return MemoryCandidate(
+                policy=policy,
+                reason=f"Bounded local neighbor: change {field}; preserve the parent's prompt and remaining effective fields.",
+            )
+    return MemoryCandidate(
+        policy=current,
+        reason="All bounded neighbors already evaluated; retain the parent as a cached control.",
+    )
+
+
+def training_feedback(records, references, training, workflow):
+    """Show every inference step and ordered memory IDs; transmit shared memory only once."""
+    selected = [r for r in records if not r["score"]][:8] + [r for r in records if r["score"]][:2]
+    bank = {row["id"]: row for row in training}
+    used, examples = set(), []
+    stages = {
+        "direct": ["predict"],
+        "verify": ["predict", "verify"],
+        "rewrite": ["rewrite", "predict"],
+    }[workflow]
+    for row in selected:
+        memories = row.get("memory_by_stage", {"predict": row["memory_ids"]})
+        used.update(identifier for ids in memories.values() for identifier in ids)
+        examples.append(
+            {
+                "question": references[row["problem_id"]]["question"],
+                "reference": references[row["problem_id"]]["answer"],
+                "response": row["response"],
+                "score": row["score"],
+                "memory_by_stage": memories,
+                "steps": [
+                    {
+                        "stage": stage,
+                        "response": trace["response"][:1200],
+                        "finish_reason": trace.get("finish_reason"),
+                    }
+                    for stage, trace in zip(stages, row["traces"], strict=True)
+                ],
+            }
+        )
+    return {
+        "examples": examples,
+        "shared_training_memory": {
+            identifier: {
+                "question": bank[identifier]["question"],
+                "label": bank[identifier]["answer"],
+            }
+            for identifier in sorted(used)
+        },
+        "memory_order_preserved": True,
+    }
 
 
 def search(config, data, output, root, *, meta=None):
@@ -70,8 +163,12 @@ def search(config, data, output, root, *, meta=None):
         diagnostics = random.Random(config.seed).sample(
             training, min(len(training), config.diagnostic_queries)
         )
+        proposal_type = SingleMemoryBatch if config.proposal_strategy == "mixed" else MemoryBatch
         meta = meta or ClaudeMeta(
-            config.meta, root, system_prompt=META_MEMORY, proposal_type=MemoryBatch
+            config.meta,
+            root,
+            system_prompt=memory_meta_system(config.proposal_strategy),
+            proposal_type=proposal_type,
         )
         rng = random.Random(config.seed + 10000)
 
@@ -110,30 +207,21 @@ def search(config, data, output, root, *, meta=None):
                 leave_one_out=True,
             )
             references = {r["id"]: r for r in diagnostics}
-            failures = [r for r in records if not r["score"]][:8]
-            successes = [r for r in records if r["score"]][:2]
             evidence = {
-                "proposal_schema": MemoryBatch.model_json_schema(),
-                "training_diagnostics": [
-                    {
-                        "question": references[r["problem_id"]]["question"],
-                        "reference": references[r["problem_id"]]["answer"],
-                        "response": r["response"],
-                        "memory": [
-                            {"id": m["id"], "question": m["question"], "label": m["answer"]}
-                            for m in training
-                            if m["id"] in r["memory_ids"]
-                        ],
-                        "score": r["score"],
-                    }
-                    for r in failures + successes
-                ],
+                "proposal_schema": proposal_type.model_json_schema(),
+                "training_diagnostics": training_feedback(
+                    records, references, training, current.workflow
+                ),
                 "diagnostic_summary": diagnostic_summary,
                 "validation_incumbent": current_summary,
                 "baseline_summaries": {
                     k: v["summary"] for k, v in calibration["baselines"].items()
                 },
                 "previous_candidates": tried,
+                "previous_invalid_proposals": [
+                    {"round": p.parent.name, **read_json(p)}
+                    for p in sorted((output / "evolution").glob("*/invalid.json"))
+                ],
                 "labels": labels,
                 "fixed_constraints": {
                     "context_chars": config.context_chars,
@@ -147,6 +235,13 @@ def search(config, data, output, root, *, meta=None):
             }
             path = directory / "proposal.json"
             invalid = directory / "invalid.json"
+            local = (
+                local_neighbor(current, index, by_policy)
+                if config.proposal_strategy == "mixed"
+                else None
+            )
+            if local is not None:
+                write_json(directory / "local_proposal.json", local.model_dump())
             if not path.exists() and not invalid.exists():
                 identifier = ledger.start("meta", round=index)
                 write_json(
@@ -155,7 +250,14 @@ def search(config, data, output, root, *, meta=None):
                 )
                 try:
                     proposal, metadata = meta.propose(current, evidence, directory)
-                    proposal = MemoryBatch.model_validate(proposal.model_dump())
+                    raw = proposal_type.model_validate(proposal.model_dump())
+                    write_json(directory / "meta_proposal.json", raw.model_dump())
+                    items = ([local] if local is not None else []) + raw.candidates
+                    items = [
+                        MemoryCandidate(policy=effective_policy(c.policy), reason=c.reason)
+                        for c in items
+                    ]
+                    proposal = MemoryBatch(candidates=items)
                     first = proposal.candidates[0].policy
                     if (
                         first.system_prompt != current.system_prompt
@@ -177,7 +279,11 @@ def search(config, data, output, root, *, meta=None):
                     write_json(path, proposal.model_dump())
                     ledger.finish(identifier, "meta", **metadata)
                 except ValueError as exc:
-                    write_json(invalid, {"error_type": type(exc).__name__})
+                    write_json(
+                        invalid, {"error_type": type(exc).__name__, "detail": str(exc)[:600]}
+                    )
+                    if local is not None:
+                        write_json(path, {"candidates": [local.model_dump()]})
                     ledger.finish(identifier, "meta", error_type=type(exc).__name__)
                 except Exception as exc:
                     ledger.finish(
@@ -186,8 +292,12 @@ def search(config, data, output, root, *, meta=None):
                     raise
             eligible = []
             if path.exists():
-                proposal = MemoryBatch.model_validate(read_json(path))
-                for offset, candidate in enumerate(proposal.candidates):
+                candidates = [
+                    MemoryCandidate.model_validate(c) for c in read_json(path)["candidates"]
+                ]
+                if not 1 <= len(candidates) <= 2:
+                    raise ValueError("Invalid host candidate count")
+                for offset, candidate in enumerate(candidates):
                     name = f"round{index}-candidate{offset + 1}"
                     summary, location = evaluate(
                         candidate.policy, directory / f"candidate{offset + 1}"
@@ -259,6 +369,7 @@ def search(config, data, output, root, *, meta=None):
         report = {
             "seed": config.seed,
             "rounds": config.rounds,
+            "proposal_strategy": config.proposal_strategy,
             "selected_baseline": seed_name,
             "baseline": seed,
             "selected": {

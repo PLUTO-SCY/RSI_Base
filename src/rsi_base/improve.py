@@ -150,6 +150,8 @@ class ClaudeMeta:
             raise RuntimeError("Claude did not return a JSON envelope") from exc
         write_json(Path(output) / "meta_result.json", result)
         if process.returncode or result.get("is_error") or result.get("type") != "result":
+            if result.get("is_error") and "output token maximum" in str(result.get("result", "")):
+                raise ValueError("Meta proposal exceeded its output token budget")
             raise RuntimeError("Claude returned an error; inspect the redacted meta_result.json")
         proposal = parse_proposal(result.get("result", ""), self.proposal_type)
         return proposal, {
