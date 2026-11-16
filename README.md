@@ -64,7 +64,7 @@ sh scripts/run_smoke.sh
 | configs/local_qwen.json | 本地 Task endpoint 模板，尚未在 Qwen 服务上实测；Meta 仍使用 DeepSeek |
 | configs/qwen_math_growth.json | 4B 六轮无增长对照；历史评分协议见诊断记录 |
 | configs/qwen_1_7b_math_growth.json | 1.7B 六轮历史对照，策略与格式耦合 |
-| configs/qwen_1_7b_boxed_growth.json | 当前增长试验：固定格式后缀、600字符策略、八轮搜索 |
+| configs/qwen_1_7b_boxed_growth.json | 历史数学诊断：固定格式后缀、600字符策略、八轮搜索，未确认稳定泛化 |
 | configs/memory_s2d.json | 记忆分类harness：固定4B模型、5轮×2候选、重复验证、独立搜索与随机对照 |
 | configs/memory_s2d_expanded.json | 扩大选择集协议；三张卡分别运行独立搜索，训练记忆和模型权重固定 |
 | configs/memory_s2d_starter.json | 当前默认：从固定 few-shot 演化，与强固定基线、随机搜索分别比较 |
