@@ -38,6 +38,8 @@ v0.1 只有 harness/config 改进，没有权重训练；v0.2 才交付受限 ha
 
 采用固定外部 Meta 模型。Meta 与 Task 是两个逻辑角色；每轮一个子候选，串行执行，不建立种群或历史父代搜索。
 
+当前首选组合是 Claude Code CLI 作为 Meta 的 proposer harness，Task 使用自研薄执行逻辑。v0.1 的 Meta 只接宿主提供的证据并输出结构化候选，Task 先保持单次生成；角色、模型与执行边界见[选型决策 D12](decisions.md)。
+
 ~~~text
 评估父代 H0，记录基线
 对 r = 1..3：
