@@ -5,7 +5,9 @@ from pydantic import ValidationError
 
 from rsi_base.classification import MemoryBatch, MemoryHarness, MemoryPolicy, label_score
 from rsi_base.improve import parse_proposal
-from rsi_base.memory_loop import evaluate_policy, stable_improvement
+from rsi_base.memory_audit import cluster_interval, finalize, paired_records
+from rsi_base.memory_loop import MemoryConfig, evaluate_policy, stable_improvement
+from rsi_base.memory_search import search
 from rsi_base.storage import Ledger
 from rsi_base.types import Limits
 
@@ -21,8 +23,8 @@ def training():
 
 def test_label_contract_rejects_ambiguity_and_unknown_labels():
     labels = ["fruit", "machine"]
-    assert label_score("[LABEL] FRUIT [/LABEL]", "fruit", labels)["score"] == 1
-    for response in ["fruit", "[LABEL]other[/LABEL]", "[LABEL]fruit[/LABEL][LABEL]machine[/LABEL]"]:
+    assert label_score(" FRUIT ", "fruit", labels)["score"] == 1
+    for response in ["[LABEL]fruit[/LABEL]", "other", "fruit or machine"]:
         assert label_score(response, "fruit", labels)["status"] == "format_error"
 
 
@@ -43,7 +45,7 @@ def test_harness_excludes_query_reference_and_bounds_calls(training, workflow, e
 
     def call(stage, spec, question):
         captured.append((stage, question))
-        return {"response": "[LABEL]fruit[/LABEL]"}
+        return {"response": "fruit"}
 
     harness = MemoryHarness(training, ["fruit", "machine"])
     row = {"id": "heldout", "question": "apple on tree", "answer": "PRIVATE_REFERENCE"}
@@ -84,7 +86,7 @@ def test_two_step_resume_keeps_finished_first_call(training, tmp_path):
             if "Draft label" in question and self.fail:
                 self.fail = False
                 raise ConnectionError("interrupted second stage")
-            return {"response": "[LABEL]fruit[/LABEL]"}
+            return {"response": "fruit"}
 
     task = Flaky()
     harness = MemoryHarness(training, ["fruit", "machine"])
@@ -108,3 +110,86 @@ def test_two_step_resume_keeps_finished_first_call(training, tmp_path):
         evaluate_policy(
             tmp_path / "eval", problems, MemoryPolicy(), harness, task, ledger, repeats=1
         )
+
+
+def test_finalization_refuses_unfrozen_search_before_loading_test(tmp_path):
+    with pytest.raises(ValueError, match="frozen"):
+        finalize([tmp_path / "unfinished"], tmp_path / "missing-data", tmp_path / "out", tmp_path)
+    assert not (tmp_path / "out").exists()
+
+
+def test_paired_uncertainty_clusters_repeats_by_question():
+    baseline = [
+        {"id": f"{r}:{p}", "problem_id": p, "repeat": r, "score": 0}
+        for r in range(3)
+        for p in ["a", "b"]
+    ]
+    selected = [{**row, "score": int(row["problem_id"] == "a")} for row in baseline]
+    paired = paired_records(baseline, selected)
+    assert paired["question_deltas"] == {"a": 1, "b": 0}
+    assert paired["mean_delta"] == 0.5
+    interval = cluster_interval(paired["question_deltas"], samples=1000)
+    assert interval["mean"] == 0.5
+    assert interval["low"] == 0 and interval["high"] == 1
+
+
+def test_memory_search_feedback_boundary_selection_and_frozen_resume(tmp_path, monkeypatch):
+    from rsi_base.storage import write_json
+
+    data = tmp_path / "data"
+    data.mkdir()
+    (tmp_path / "uv.lock").write_text("fixture")
+    write_json(data / "labels.json", ["fruit", "machine"])
+    write_json(data / "manifest.json", {"fixture": True})
+    for split, size in [("train", 4), ("val", 2), ("test", 1)]:
+        rows = [
+            {"id": f"{split}-{i}", "question": f"{split.upper()}_PRIVATE_{i}", "answer": "fruit"}
+            for i in range(size)
+        ]
+        (data / f"{split}.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    class Task:
+        calls = 0
+
+        def run(self, spec, question):
+            self.calls += 1
+            return {"response": "fruit" if "improved" in spec.system_prompt else "machine"}
+
+    task = Task()
+    monkeypatch.setattr("rsi_base.memory_loop.TaskAgent", lambda *_: task)
+
+    class Meta:
+        calls = 0
+
+        def propose(self, current, evidence, output):
+            self.calls += 1
+            text = json.dumps(evidence)
+            assert "VAL_PRIVATE" not in text and "TEST_PRIVATE" not in text
+            assert "TRAIN_PRIVATE" in text
+            return MemoryBatch.model_validate(
+                {
+                    "candidates": [
+                        {
+                            "policy": {"system_prompt": "improved generic classification"},
+                            "reason": "fixture",
+                        },
+                        {"policy": {"system_prompt": "unchanged"}, "reason": "fixture"},
+                    ]
+                }
+            ), {}
+
+    config = MemoryConfig(
+        task={"model": "fixture", "base_url": "http://localhost:8000"},
+        meta={"model": "fixture", "base_url": "http://localhost:8000"},
+        rounds=1,
+        validation_repeats=2,
+        diagnostic_queries=4,
+        max_task_calls=200,
+    )
+    meta = Meta()
+    first = search(config, data, tmp_path / "run", tmp_path, meta=meta)
+    assert first["selected"]["summary"]["accuracy"] == 1
+    assert not first["test_opened"] and not first["weights_updated"]
+    before = task.calls
+    again = search(config, data, tmp_path / "run", tmp_path, meta=meta)
+    assert again == first and task.calls == before and meta.calls == 1

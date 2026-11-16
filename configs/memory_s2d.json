@@ -20,6 +20,6 @@
   "validation_repeats": 3,
   "diagnostic_queries": 32,
   "context_chars": 12000,
-  "max_task_calls": 16000,
+  "max_task_calls": 24000,
   "wall_seconds": 21600
 }

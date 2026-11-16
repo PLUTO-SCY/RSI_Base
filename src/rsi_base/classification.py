@@ -54,8 +54,7 @@ def normalize(text):
 
 
 def label_score(response, reference, labels):
-    matches = re.findall(r"\[LABEL\]([^\[\]\n]+)\[/LABEL\]", response, flags=re.I)
-    prediction = normalize(matches[0]) if len(matches) == 1 else None
+    prediction = normalize(response)
     valid = prediction in labels
     return {
         "parsed_answer": prediction,
@@ -155,7 +154,11 @@ class MemoryHarness:
     def context(self, question, policy, *, query=None, exclude_id=None):
         selected, hints = self.index.retrieve(query or question, policy, exclude_id=exclude_id)
         header = "Allowed labels: " + "; ".join(self.labels) + "\n\nLabeled training examples:\n"
-        tail = "\nQuery:\n" + question + "\n\nReturn exactly [LABEL]one allowed label[/LABEL]."
+        tail = (
+            "\nQuery:\n"
+            + question
+            + "\n\nChoose the best label from Allowed labels. Output only its exact name, without brackets, tags, explanation or any other text."
+        )
         if len(header + tail) > self.context_chars:
             raise ValueError("Query and label contract exceed fixed context budget")
         examples, used = "", []
