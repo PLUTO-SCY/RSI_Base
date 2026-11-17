@@ -50,15 +50,25 @@ def audit(directory):
     code = [r for r in registry.values() if r["policy"]["retrieval"] == "python"]
     batches = frozen["sandbox_completed_batches_this_process"]
     task_usage = Counter()
+    phase_calls, phase_usage = Counter(), {}
     for r in starts:
         if r["kind"] == "task":
-            task_usage.update(
-                {
-                    k: v
-                    for k, v in (finishes.get(r["call_id"], {}).get("usage") or {}).items()
-                    if isinstance(v, (int, float))
-                }
+            usage = {
+                k: v
+                for k, v in (finishes.get(r["call_id"], {}).get("usage") or {}).items()
+                if isinstance(v, (int, float))
+            }
+            task_usage.update(usage)
+            parts = Path(r.get("evaluation", "")).parts
+            phase = (
+                "development_selection_audit"
+                if "probe_selection_audit" in parts
+                else "historical_test_replay"
+                if "test" in parts
+                else "official_search"
             )
+            phase_calls[phase] += 1
+            phase_usage.setdefault(phase, Counter()).update(usage)
     meta_results = [
         read_json(p) for p in sorted((directory / "evolution").glob("*/meta_result.json"))
     ]
@@ -66,6 +76,9 @@ def audit(directory):
         "seed": config["seed"],
         "source_sha256": read_json(directory / "run.json")["source_sha256"],
         "physical_application_calls": dict(Counter(r["kind"] for r in starts)),
+        "official_search_application_calls_at_freeze": frozen["application_calls_at_freeze"],
+        "physical_task_calls_by_phase": dict(phase_calls),
+        "physical_task_usage_by_phase": {k: dict(v) for k, v in phase_usage.items()},
         "wall_seconds_between_first_and_last_call": max(r["time"] for r in calls if "time" in r)
         - min(r["time"] for r in starts),
         "unsettled_calls": sum(r["call_id"] not in finishes for r in starts),
@@ -132,6 +145,7 @@ def audit(directory):
             "correct_by_repeat"
         ],
         "sandbox_completed_batches_this_process": len(batches),
+        "sandbox_cost_scope": "Completed batches on the persistent main retrieval index in this process; excludes failed/interrupted batches, previous process segments, and ephemeral confirm/challenge indexes",
         "sandbox_completed_worker_cpu_seconds_this_process": sum(
             r["worker_cpu_seconds"] for r in batches
         ),
