@@ -11,7 +11,8 @@ from .types import AgentSpec, StrictModel
 
 
 class MemoryPolicy(StrictModel):
-    retrieval: Literal["none", "fixed", "bm25", "tfidf", "hybrid"] = "bm25"
+    retrieval: Literal["none", "fixed", "bm25", "tfidf", "hybrid", "python"] = "bm25"
+    retrieval_code: str = Field(default="", max_length=12000)
     examples: int = Field(default=8, ge=0, le=32)
     selection: Literal["top", "diverse"] = "top"
     max_per_label: int = Field(default=32, ge=1, le=32)
@@ -46,6 +47,8 @@ class SingleMemoryBatch(StrictModel):
 def effective_policy(policy):
     """Canonicalize unused knobs so ineffective edits cannot earn noisy 'improvements'."""
     values = policy.model_dump()
+    if policy.retrieval != "python":
+        values["retrieval_code"] = ""
     if policy.workflow != "verify":
         values["review_retrieval"] = "same"
     if values["review_retrieval"] == "same":
@@ -53,6 +56,8 @@ def effective_policy(policy):
     if policy.retrieval != "none":
         if policy.layout == "contrast_pairs":
             values["max_per_label"] = 32
+            values["selection"] = "top"
+            values["examples"] = min(32, 2 * ((policy.examples + 1) // 2))
         elif policy.examples:
             values["max_per_label"] = min(policy.max_per_label, policy.examples)
     if policy.retrieval == "none":
@@ -105,16 +110,52 @@ def label_score(response, reference, labels):
 class MemoryIndex:
     def __init__(self, training):
         self.training = tuple(dict(row) for row in training)
+        self.ranking_cache = {}
+        self.code_metrics = []
 
-    def retrieve(self, query, policy, *, exclude_id=None):
-        # Rebuild only from permitted memory rows; leave-one-out also excludes identical text.
-        rows = [
+    def permitted(self, query, exclude_id):
+        return [
             r
             for r in self.training
             if r["id"] != exclude_id and normalize(r["question"]) != normalize(query)
         ]
+
+    def prepare_code(self, policy, queries):
+        from .memory_code import run_code
+
+        missing = [
+            (query, excluded)
+            for query, excluded in queries
+            if (policy.retrieval_code, query, excluded) not in self.ranking_cache
+        ]
+        if missing:
+            outputs = run_code(
+                policy.retrieval_code,
+                [
+                    {"query": query, "memory": self.permitted(query, excluded)}
+                    for query, excluded in missing
+                ],
+                metrics=self.code_metrics,
+            )
+            for (query, excluded), ranking in zip(missing, outputs, strict=True):
+                self.ranking_cache[(policy.retrieval_code, query, excluded)] = ranking
+
+    def retrieve(self, query, policy, *, exclude_id=None):
+        # Rebuild only from permitted memory rows; leave-one-out also excludes identical text.
+        rows = self.permitted(query, exclude_id)
         if policy.retrieval == "none" or not policy.examples:
             return [], []
+        cache_key = (policy.retrieval, query, exclude_id)
+        if policy.retrieval == "python":
+            self.prepare_code(policy, [(query, exclude_id)])
+            bank = {row["id"]: row for row in rows}
+            ranks = [
+                (item["score"], bank[item["id"]])
+                for item in self.ranking_cache[(policy.retrieval_code, query, exclude_id)]
+            ]
+            return self.select(ranks, policy)
+        if cache_key in self.ranking_cache:
+            return self.select(self.ranking_cache[cache_key], policy)
         tokens = [Counter(words(r["question"])) for r in rows]
         df = Counter(w for doc in tokens for w in doc)
         n = len(rows)
@@ -148,6 +189,11 @@ class MemoryIndex:
             ]
             ranks.append((value, row))
         ranks.sort(key=lambda x: (-x[0], x[1]["id"]))
+        self.ranking_cache[cache_key] = ranks
+        return self.select(ranks, policy)
+
+    @staticmethod
+    def select(ranks, policy):
         votes = Counter()
         for value, row in ranks[:16]:
             votes[row["answer"]] += max(value, 0)

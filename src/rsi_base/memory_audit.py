@@ -80,6 +80,11 @@ def finalize(run_directories, data, output, root):
         "test_repeats": "same predeclared count as validation",
         "comparison": "Selected vs strongest fixed validation baseline; random control separate",
     }
+    statuses = {
+        read_json(p / "run.json")["config"].get("test_status", "held_out") for p in directories
+    }
+    if "historical_replay" in statuses:
+        identity["test_status"] = "historical_replay; previously used cases, not fresh confirmation"
     output.mkdir(parents=True, exist_ok=True)
     path = output / "final_protocol.json"
     if path.exists() and read_json(path) != identity:
@@ -175,7 +180,9 @@ def finalize(run_directories, data, output, root):
         "stability_gate_passed": len(reports) >= 3
         and all(r["paired"]["mean_delta"] > 0 for r in reports)
         and interval["low"] > 0,
-        "scope": "Stability on one public benchmark with fixed weights; not evidence of universal task or model generalization",
+        "scope": "Historical replay on previously used cases; no fresh independent confirmation"
+        if "historical_replay" in statuses
+        else "Stability on one public benchmark with fixed weights; not evidence of universal task or model generalization",
         "final_protocol": identity,
     }
     write_json(output / "report.json", result)

@@ -77,6 +77,10 @@ def main():
             "stability_gate": "Positive test delta in every search seed and question-cluster bootstrap lower bound > 0; repeats averaged within each question",
             "task_base_urls_by_seed": endpoints,
         }
+        if config.test_status == "historical_replay":
+            protocol["test_status"] = (
+                "Previously used historical cases; no fresh independent confirmation"
+            )
         args.output.mkdir(parents=True, exist_ok=True)
         path = args.output / "suite.json"
         if path.exists() and read_json(path) != protocol:

@@ -58,7 +58,7 @@ class ClaudeMeta:
         self.settings, self.root = settings, Path(root).resolve()
         self.system_prompt, self.proposal_type = system_prompt, proposal_type
 
-    def propose(self, current, evidence, output):
+    def propose(self, current, evidence, output, *, tool_config=None, tool_names=(), tool_env=None):
         executable = shutil.which(self.settings.command)
         if not executable:
             raise ValueError("Claude Code executable is unavailable")
@@ -92,6 +92,7 @@ class ClaudeMeta:
                 "CLAUDE_CODE_MAX_OUTPUT_TOKENS": str(self.settings.max_tokens),
             }
         )
+        env.update(tool_env or {})
         command = [
             executable,
             "--bare",
@@ -107,7 +108,7 @@ class ClaudeMeta:
             "",
             "--strict-mcp-config",
             "--mcp-config",
-            '{"mcpServers":{}}',
+            json.dumps(tool_config or {"mcpServers": {}}),
             "--no-session-persistence",
             "--permission-mode",
             "dontAsk",
@@ -115,6 +116,15 @@ class ClaudeMeta:
             self.system_prompt
             + f" The system_prompt must be at most {self.settings.prompt_char_budget} characters.",
         ]
+        if tool_names:
+            command.extend(
+                [
+                    "--allowedTools",
+                    ",".join("mcp__rsi__" + name for name in tool_names),
+                    "--max-turns",
+                    "40",
+                ]
+            )
         if self.settings.effort is not None:
             command.extend(["--effort", self.settings.effort])
         request = {"current": current.model_dump(), "development_evidence": evidence}
@@ -125,6 +135,7 @@ class ClaudeMeta:
                 "arguments": command[1:],
                 "state_dir": self.settings.state_dir,
                 "sampling_control": "Claude Code; no temperature override is applied",
+                "host_tools": list(tool_names),
             },
         )
         before = global_config_fingerprints()
@@ -159,7 +170,11 @@ class ClaudeMeta:
             if result.get("is_error") and "output token maximum" in str(result.get("result", "")):
                 raise ValueError("Meta proposal exceeded its output token budget")
             raise MetaCallFailure("Claude returned an error; inspect the redacted meta_result.json")
-        proposal = parse_proposal(result.get("result", ""), self.proposal_type)
+        proposal = (
+            parse_proposal(result.get("result", ""), self.proposal_type)
+            if self.proposal_type is not None
+            else result.get("result", "")
+        )
         return proposal, {
             "usage": result.get("usage"),
             "model_usage": result.get("modelUsage"),

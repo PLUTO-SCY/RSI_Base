@@ -61,6 +61,15 @@ def main():
     )
 
     if args.ready:
+        if config.proposal_strategy == "agent":
+
+            def sandbox():
+                from rsi_base.memory_code import run_code
+
+                run_code("def rank(query, memory): return []", [{"query": "ready", "memory": []}])
+                return "Namespace probe passed; host home/network absent"
+
+            check("retrieval_sandbox", sandbox)
 
         def cli():
             executable = shutil.which(config.meta.command)

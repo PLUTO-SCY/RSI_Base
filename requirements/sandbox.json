@@ -1,0 +1,8 @@
+{
+  "package": "bubblewrap",
+  "version": "0.4.0-1ubuntu4.1",
+  "platform": "linux-x86_64",
+  "url": "https://security.ubuntu.com/ubuntu/pool/main/b/bubblewrap/bubblewrap_0.4.0-1ubuntu4.1_amd64.deb",
+  "sha256": "c8393a164df5850e65eae06c8c0e837c6752911e3720623dfe59d04024f38a17",
+  "scope": "Project-local extraction for the validated Ubuntu20.04 host; other Linux hosts may provide a compatible system bwrap"
+}

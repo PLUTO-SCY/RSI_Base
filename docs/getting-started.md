@@ -133,7 +133,7 @@ sh scripts/harness.sh report --suite runs/my-memory-suite \
 
 Task端点需兼容OpenAI Chat Completions。当前Claude Code Meta端点需兼容Anthropic Messages；只有OpenAI协议的服务不能直接填入Meta的`base_url`。默认网关的Task路由带`/v1`，Meta配置使用网关根路径；不要修改全局`ANTHROPIC_*`变量。
 
-当前已实现的编辑空间是结构化记忆/上下文/流程配置。新benchmark adapter、任意Python代码演化、LoRA训练仍按增量路线另行接入。
+默认starter协议的编辑空间是结构化记忆/上下文/流程配置。新增可读源码、完整开发反馈和沙箱Python检索代码的模式，见[工具化演化指南](harness-agent-v1.md)，需额外`setup --sandbox`并显式指定`configs/memory_s2d_agent.json`。任意工作流源码编辑、新benchmark adapter与LoRA训练仍后置。
 
 ## 8. 常见问题
 

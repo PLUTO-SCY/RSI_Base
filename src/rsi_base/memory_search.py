@@ -129,6 +129,10 @@ def training_feedback(records, references, training, workflow):
 
 
 def search(config, data, output, root, *, meta=None):
+    if config.proposal_strategy == "agent":
+        from .memory_agent import agent_search
+
+        return agent_search(config, data, output, root, meta=meta)
     output = Path(output)
     if not (output / "calibration.json").exists():
         calibrate(config, data, output, root)

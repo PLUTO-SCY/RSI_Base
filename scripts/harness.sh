@@ -15,7 +15,7 @@ if [ "$#" -gt 0 ]; then shift; fi
 case "$RSI_COMMAND" in
   --help|-h|help)
     echo "Usage: sh scripts/harness.sh COMMAND [arguments]"
-    echo "  setup [--gpu] [--claude]  Install project-local environments/tools"
+    echo "  setup [--gpu] [--claude] [--sandbox]  Install project-local environments/tools"
     echo "  data                      Rebuild/verify pinned public data (idempotent)"
     echo "  model [arguments]         Download/resume the pinned Qwen checkpoint"
     echo "  credentials               Save a hidden project-local API credential"

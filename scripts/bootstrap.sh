@@ -5,12 +5,14 @@ RSI_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$RSI_ROOT"
 RSI_WITH_GPU=0
 RSI_WITH_CLAUDE=0
+RSI_WITH_SANDBOX=0
 for RSI_OPTION in "$@"; do
   case "$RSI_OPTION" in
     --gpu) RSI_WITH_GPU=1 ;;
     --claude) RSI_WITH_CLAUDE=1 ;;
+    --sandbox) RSI_WITH_SANDBOX=1 ;;
     --help|-h)
-      echo "Usage: sh scripts/bootstrap.sh [--gpu] [--claude]"
+      echo "Usage: sh scripts/bootstrap.sh [--gpu] [--claude] [--sandbox]"
       echo "Core Python environment is always installed. GPU and Claude tools are optional."
       exit 0 ;;
     *) echo "Unknown option: $RSI_OPTION" >&2; exit 2 ;;
@@ -28,6 +30,9 @@ if ! command -v uv >/dev/null 2>&1 || [ "$(uv --version | cut -d ' ' -f 2)" != "
   UV_UNMANAGED_INSTALL="$RSI_ROOT/.local/bin" UV_NO_MODIFY_PATH=1 sh .local/installers/uv-0.11.17.sh
 fi
 sh scripts/setup.sh
+if [ "$RSI_WITH_SANDBOX" = 1 ]; then
+  .venv/bin/python scripts/setup_sandbox.py
+fi
 if [ "$RSI_WITH_CLAUDE" = 1 ]; then
   command -v npm >/dev/null 2>&1 || { echo "Install Node.js >=18 and npm, or supply an existing Claude Code CLI." >&2; exit 1; }
   node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' || {

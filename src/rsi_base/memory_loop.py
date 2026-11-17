@@ -23,7 +23,12 @@ class MemoryConfig(StrictModel):
     meta: MetaSettings
     seed: int = 42
     prior_policy: MemoryPolicy | None = None
-    proposal_strategy: Literal["meta", "mixed"] = "meta"
+    proposal_strategy: Literal["meta", "mixed", "agent"] = "meta"
+    reference_policies: dict[str, MemoryPolicy] = Field(default_factory=dict)
+    probe_queries: int = Field(default=24, ge=4, le=64)
+    max_probes: int = Field(default=4, ge=2, le=8)
+    max_tool_calls: int = Field(default=20, ge=4, le=40)
+    test_status: Literal["held_out", "historical_replay"] = "held_out"
     initial_baseline: str | None = None
     show_control_scores_to_meta: bool = True
     rounds: int = Field(default=5, ge=1, le=20)
@@ -70,7 +75,7 @@ def memory_meta_system(strategy):
     )
 
 
-def baseline_policies(prior_policy=None):
+def baseline_policies(prior_policy=None, reference_policies=None):
     policies = {
         "no_memory": MemoryPolicy(retrieval="none", examples=0),
         "fixed_fewshot": MemoryPolicy(retrieval="fixed", examples=8),
@@ -85,6 +90,10 @@ def baseline_policies(prior_policy=None):
     }
     if prior_policy is not None:
         policies["prior_search_best"] = prior_policy
+    for name, policy in (reference_policies or {}).items():
+        if name in policies:
+            raise ValueError("Reference policy names must not replace fixed controls")
+        policies[name] = policy
     return policies
 
 
@@ -110,7 +119,7 @@ def experiment(config, data, output, root, *, task=None):
             "split_sha256": {s: file_hash(data / f"{s}.jsonl") for s in ("train", "val", "test")},
             "labels_sha256": file_hash(data / "labels.json"),
             "weights_updated": False,
-            "protocol": "memory-v3; observable steps and canonical edits; three-repeat nonregression selection; finalization freezes all search",
+            "protocol": "memory-v4; shared requests retain separate repeats; host tools expose development only; sandboxed code; finalization freezes all search",
         }
         path = output / "run.json"
         if path.exists() and read_json(path) != manifest:
@@ -171,6 +180,20 @@ def evaluate_policy(
     cached = completed(directory)
     if cached is not None:
         return load_rows(directory / "results.jsonl"), cached
+    if policy.retrieval == "python" and policy.workflow != "rewrite":
+        harness.index.prepare_code(
+            policy, [(row["question"], row["id"] if leave_one_out else None) for row in problems]
+        )
+    cache_scope = digest(
+        {
+            "data": identity["data_sha256"],
+            "memory": identity["memory_sha256"],
+            "seed": seed,
+            "loo": leave_one_out,
+        }
+    )
+    shared = ledger.path.parent / "request_cache" / cache_scope
+    shared.mkdir(parents=True, exist_ok=True)
     existing = (
         load_rows(directory / "results.jsonl") if (directory / "results.jsonl").exists() else []
     )
@@ -203,6 +226,22 @@ def evaluate_policy(
                 if value["request_sha256"] != request_hash:
                     raise ValueError("Cached task request changed")
                 return value["result"]
+            cache_file = shared / (digest({"request": request_hash, "repeat": repeat}) + ".json")
+            if cache_file.exists():
+                value = read_json(cache_file)
+                if value["request_sha256"] != request_hash or value["result_sha256"] != digest(
+                    value["result"]
+                ):
+                    raise ValueError("Shared request cache mismatch")
+                write_json(
+                    step,
+                    {
+                        "request_sha256": request_hash,
+                        "result": value["result"],
+                        "reused_request": True,
+                    },
+                )
+                return value["result"]
             with mutex:
                 identifier = ledger.start(
                     "task", evaluation=str(directory), task_id=key, stage=stage
@@ -210,6 +249,14 @@ def evaluate_policy(
             try:
                 result = task.run(spec, question)
                 write_json(step, {"request_sha256": request_hash, "result": result})
+                write_json(
+                    cache_file,
+                    {
+                        "request_sha256": request_hash,
+                        "result_sha256": digest(result),
+                        "result": result,
+                    },
+                )
             except Exception as exc:
                 with mutex:
                     ledger.finish(
@@ -286,7 +333,7 @@ def rank_policy(item):
 
 
 def calibrate(config, data, output, root):
-    policies = baseline_policies(config.prior_policy)
+    policies = baseline_policies(config.prior_policy, config.reference_policies)
     if config.initial_baseline is not None and config.initial_baseline not in policies:
         raise ValueError("Unknown initial baseline")
     if (Path(output) / "frozen.json").exists():

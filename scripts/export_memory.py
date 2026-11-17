@@ -94,7 +94,7 @@ def main():
     )
     parser.add_argument(
         "--name",
-        choices=["memory-evolution", "memory-evolution-expanded"],
+        choices=["memory-evolution", "memory-evolution-expanded", "memory-agent-v1"],
         default="memory-evolution",
     )
     args = parser.parse_args()
@@ -132,6 +132,20 @@ def main():
             {key: sum(values) / len(values) for key, values in combined.items()}
         )
     report["data_manifest"] = read_json(args.data / "manifest.json")
+    if report["suite_protocol"]["config"].get("proposal_strategy") == "agent":
+        report["search_method_gate_passed"] = (
+            len(report["runs"]) >= 3
+            and report["selected_vs_strong_fixed_question_cluster_bootstrap"]["low"] > 0
+            and report["selected_vs_random_question_cluster_bootstrap"]["low"] > 0
+            and all(
+                r["selected"]["accuracy"]
+                > max(r["strong_fixed_baseline"]["accuracy"], r["random_control"]["accuracy"])
+                for r in report["runs"]
+            )
+        )
+        report["search_method_gate_scope"] = (
+            "Descriptive historical replay only; fresh independent confirmation remains outstanding"
+        )
     runtime_path = args.runtime or root / ".local/task-runtime-memory.json"
     report["task_runtime"] = read_json(runtime_path)
     if any(
