@@ -12,7 +12,9 @@ from rsi_base.storage import read_json, write_json
 from rsi_base.types import digest
 
 
-def plot(report, destination, name):
+def plot(report, destination, name, *, zoom=False):
+    import math
+
     import matplotlib
 
     matplotlib.use("Agg")
@@ -48,7 +50,16 @@ def plot(report, destination, name):
                 edgecolors=color,
             )
     for ax in axes:
-        ax.set_ylim(0, 100)
+        if zoom:
+            values = [value for line in ax.lines for value in line.get_ydata()]
+            values += [
+                float(point[1])
+                for collection in ax.collections
+                for point in collection.get_offsets()
+            ]
+            ax.set_ylim(max(0, math.floor(min(values)) - 1), min(100, math.ceil(max(values)) + 1))
+        else:
+            ax.set_ylim(0, 100)
         ax.grid(alpha=0.25)
         ax.legend(fontsize=8)
         ax.set_ylabel("Exact-label accuracy (%)")
@@ -60,7 +71,10 @@ def plot(report, destination, name):
     axes[0].set_xlabel("Evolution iteration")
     axes[1].set_xlabel("Evolution iteration")
     axes[2].set_xticks([0, 1], ["Seed harness", "Evolved harness"])
-    fig.suptitle("S2D memory-harness evolution — Qwen3-4B, weights fixed")
+    fig.suptitle(
+        "S2D memory-harness evolution — Qwen3-4B, weights fixed"
+        + (" (zoomed axes)" if zoom else "")
+    )
     interval = report["paired_question_cluster_bootstrap"]
     fig.text(
         0.5,
@@ -229,6 +243,8 @@ def main():
     destination = args.output_dir
     write_json(destination / f"{args.name}.json", report)
     plot(report, destination, args.name)
+    if args.name == "memory-agent-v1":
+        plot(report, destination, args.name + "-zoom", zoom=True)
     print(
         json.dumps(
             {

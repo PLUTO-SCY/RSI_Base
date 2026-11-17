@@ -61,6 +61,19 @@ sh scripts/harness.sh run finalize --config configs/memory_s2d_agent.json \
 
 三卡并行时另启动GPU1/18001与GPU2/18002，suite增加`--parallel`并替换对应端口，finalize也增加`--parallel`。全部搜索冻结后才回放测试。改代码/配置要使用新run；恢复需要完全相同的源文件和协议。旧协议仍可复现，省略`--config`时入口仍运行旧starter协议；本模式须显式指定新配置。
 
+冻结回放结束后，记录服务指纹并导出曲线/成本；环境与代码应先提交，导出器会校验运行源码与Git字节一致：
+
+```sh
+sh scripts/harness.sh runtime --gpu 0 --port 18000 --output runs/my-agent-suite/task-runtime.json
+sh scripts/harness.sh report --suite runs/my-agent-suite \
+  --runtime runs/my-agent-suite/task-runtime.json --name memory-agent-v1 \
+  --output-dir runs/my-agent-suite/public
+.venv/bin/python scripts/audit_memory_agent.py --suite runs/my-agent-suite \
+  --output runs/my-agent-suite/public/search-audit.json
+```
+
+曲线同时保留0–100%全尺度版本和标明缩放坐标的`-zoom`版本，方便检查强起点附近的变化。
+
 ## 本次实验状态
 
 72项离线测试通过；本机namespace隔离、候选返回值、跨候选缓存、repeat隔离和冻结恢复均有覆盖。真实DeepSeek/Claude Code预检完成18个内部轮次、17次宿主工具调用、两次Python检索试跑及提交；宿主232次Task请求、1次Meta CLI调用，未打开测试。8题的小预检未产生增长，仅用于验证闭环，不作为性能证据。首次预检因CLI轮次限制未完成提交，记录保留，随后增加限制并修正阅读/试跑顺序。
