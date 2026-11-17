@@ -1,0 +1,9 @@
+{
+  "name": "rsi-base-claude-runtime",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Optional project-local Meta CLI; copied into .local before npm ci",
+  "dependencies": {
+    "@anthropic-ai/claude-code": "2.1.169"
+  }
+}

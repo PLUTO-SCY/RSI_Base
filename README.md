@@ -30,16 +30,15 @@ Task 执行训练诊断与候选选择样本 → 固定规则评分
 
 ## 运行记忆 harness backbone
 
-完整的环境、固定数据重建、模型下载、三卡服务、搜索与导出命令见[复现指南](docs/harness-backbone.md)。所有安装与运行脚本保存在仓库，项目环境不修改系统 Python 或全局 Claude 配置。
-
-服务和数据准备完成后，记忆 CLI 默认使用标准 few-shot 起点配置：
+完整入口见[从全新clone开始的上手指南](docs/getting-started.md)：环境版本、隐藏凭据、数据重建、模型下载、单卡服务、两题smoke、三卡实验与结果导出。统一使用`sh scripts/harness.sh`，无需activate或修改全局Claude/shell配置。
 
 ~~~sh
-.venv/bin/python scripts/run_memory.py suite --parallel \
-  --task-base-urls http://127.0.0.1:18000/v1 http://127.0.0.1:18001/v1 http://127.0.0.1:18002/v1
-.venv/bin/python scripts/run_memory.py finalize --parallel
-.venv/bin/python scripts/export_memory.py
+sh scripts/harness.sh setup --gpu --claude
+sh scripts/harness.sh data
+sh scripts/harness.sh model
 ~~~
+
+接着按指南配置自己的凭据，启动单卡服务并运行`doctor`和`smoke`。上述准备命令不会自动启动演化或调用Meta API。只做无GPU/无API检查：`setup`后运行`check`和`doctor`。研究结果与验收边界另见[实验报告](docs/harness-backbone.md)。
 
 ## 最小 API 连通性检查
 
@@ -56,7 +55,7 @@ sh scripts/run_smoke.sh
 
 凭据脚本隐藏输入，将密钥写入被 Git 忽略的 .env.local，权限 0600。已有文件不会被覆盖。无需修改用户的 shell 或全局 Claude 配置。
 
-运行说明、独立 baseline 和恢复命令见[上手指南](docs/getting-started.md)。运行真实命令会消费所配置服务的 API 用量。
+早期数学pilot的baseline和恢复命令见[历史指南](docs/legacy-math-quickstart.md)。运行真实命令会消费所配置服务的API用量。
 
 ## 配置
 

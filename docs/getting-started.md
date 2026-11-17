@@ -1,118 +1,149 @@
-# v0.0 / v0.1 上手指南
+# 从全新 clone 到首次 harness 实验
 
-当前实现的范围是：固定权重、单任务、单候选、串行 prompt 改进。v0.2 的训练与更多任务按 roadmap 后续实现。
+当前主入口是`sh scripts/harness.sh`。本指南不需要作者的环境、历史run、模型缓存或API key。先完成两题连接检查，再显式启动完整实验；默认不训练权重。实验结论与对照见[harness报告](harness-backbone.md)，旧数学pilot见[历史指南](legacy-math-quickstart.md)。
 
-## 1. 项目环境
+## 1. 机器与环境
 
-从仓库根目录运行：
+已验证平台：Linux x86_64、A100-SXM4-80GB、NVIDIA驱动580.65.06。单卡即可按本指南串行运行；三卡用于并行三次搜索，四卡不是启动条件。其他显卡的显存与兼容性尚需实测，80GB是已验证配置，不是声称的最低显存。
 
-~~~sh
-sh scripts/setup.sh
-~~~
+| 部分 | 固定版本/位置 | 创建方式 |
+| --- | --- | --- |
+| 宿主工具 | Git、curl；本地npm安装CLI时还需Node.js≥18和npm | 机器预先提供；CLI安装已实测Node20.20.2 |
+| Python管理 | uv0.11.17、Python3.11.15 | 缺失的uv与Python下载到项目`.local/` |
+| 核心环境 | `.venv/`，精确依赖见`uv.lock` | `setup`，CPU检查也使用此环境 |
+| 本地推理环境 | `.venv-task/`，vLLM0.11.0、PyTorch2.8.0/CUDA12.8 | `setup --gpu`，精确依赖见`requirements/task.lock` |
+| Meta CLI | Claude Code2.1.169 | `setup --claude`安装到`.local/claude-cli/`，含npm依赖锁 |
+| Task权重 | Qwen3-4B-Instruct-2507固定revision | `model`，位置`.local/models/qwen3-4b-instruct-2507/` |
 
-脚本通过 uv 和 uv.lock 创建/同步 .venv，不使用系统 pip 安装依赖，不修改 shell 启动文件。需要已有 uv；项目 .python-version 固定 Python 版本，uv 可在缺失时下载所需解释器。
+NVIDIA驱动由宿主提供，脚本不安装系统驱动或系统Python包。核心环境与GPU环境分开，避免vLLM/PyTorch约束影响实验编排。GPU平台要求参考[vLLM0.11安装文档](https://docs.vllm.ai/en/v0.11.0/getting_started/installation/gpu.html)。
 
-Meta 需要已有 Claude Code CLI，本机验证为 2.1.169，且已核对 bare、print、model、tools、JSON 输出等参数。当前脚本不安装或升级全局 Claude Code。其他版本先检查兼容性。
+uv使用官方固定版本安装器和项目安装目录，不修改shell profile，见[uv安装选项](https://docs.astral.sh/uv/reference/installer/)。CLI的npm包与平台依赖固定为2.1.169，Node要求来自[该版本包元数据](https://registry.npmjs.org/@anthropic-ai/claude-code/2.1.169)；新版本安装方式可能不同，参考[Claude Code官方说明](https://code.claude.com/docs/en/setup)。
 
-所有后续 Python 命令均使用 .venv/bin/python，不要求 activate。
+首次安装和下载需要访问Python包源、GitHub、Hugging Face，以及可选的npm源。GPU环境和权重较大，请预留磁盘空间。若已持有兼容的Claude CLI，可省略`--claude`；只做CPU检查或使用已有Task服务时，可省略`--gpu`。
 
-## 2. 仅配置本项目凭据
+## 2. Clone与安装
 
-~~~sh
-.venv/bin/python scripts/configure_credentials.py
-~~~
+```sh
+git clone https://github.com/PLUTO-SCY/RSI_Base.git
+cd RSI_Base
+sh scripts/harness.sh setup --gpu --claude
+sh scripts/harness.sh check
+```
 
-按提示输入 API key，不会回显。生成 .env.local，并设为 0600；文件已被 .gitignore 排除。脚本不覆盖已有文件。模板见 .env.example，勿在模板中写真实密钥。
+`setup`本身只安装核心环境；两个可选参数分别添加GPU环境和项目内CLI。入口脚本也可使用绝对路径从其他工作目录调用，会自行定位仓库根目录。不需要activate，不需要sudo，不修改全局Claude配置或`.bashrc`。Python、uv、npm缓存也放在`.local/`；脚本保留在`scripts/`，依赖锁随Git提交。
 
-RSI_API_KEY 用于给定的 DeepSeek 服务。也可通过同名环境变量提供，环境变量优先。无需修改 ANTHROPIC_BASE_URL、全局 Claude 设置或 shell profile。
+## 3. 凭据与数据
 
-若使用本地无鉴权 Task 服务，可以在本地 .env.local 中另设 RSI_LOCAL_API_KEY=EMPTY；configs/local_qwen.json 仅是接入模板，尚未在本机 Qwen 服务上验证。
+```sh
+sh scripts/harness.sh credentials
+sh scripts/harness.sh data
+sh scripts/harness.sh model
+```
 
-## 3. 验证网关和 Claude Code
+凭据命令隐藏输入，生成Git忽略的`.env.local`，权限0600；已有文件不会被覆盖。示例中不包含真实密钥。默认Meta为DeepSeek经已配置网关接入Claude Code，需使用自己的网关凭据。
 
-以下会产生少量真实调用：
+`data`依次重建原始200/50/211数据、591条去重上游池、发布的200/300/291划分，并校验manifest与各数据文件哈希。已有的正确数据直接复用；不完整或修改过的目录会报错，不自动删除或覆盖。GitHub公共API限流时使用固定commit的raw文件，并继续校验相同Git blob哈希。整个准备过程不调用模型、不读取历史run。
 
-~~~sh
-.venv/bin/python scripts/probe_api.py
-.venv/bin/python scripts/probe_claude.py
-~~~
+`model`按以下固定快照下载，Hugging Face可复用已完成的下载文件：
 
-前者分别检查 OpenAI Chat Completions 与 Anthropic Messages；后者实际运行一条 Claude Code 提案。
+```text
+Qwen/Qwen3-4B-Instruct-2507
+revision: cdbee75f17c01a7cc42f958dc650907174af0554
+```
 
-本次网关同时支持两种协议：
+重建发布划分只能复现既有实验协议，不能把已公布的291题重新宣称为新发现的未见测试。
 
-- Task 的 OpenAI base_url 为 https://zgc.apihy.com/v1。
-- Claude Code 的 ANTHROPIC_BASE_URL 为 https://zgc.apihy.com，客户端请求 /v1/messages。
-- 两者的路由差异保留在配置中，无需协议代理或机器级配置。
+## 4. 单卡启动与两题检查
 
-Claude 子进程使用项目内独立 CLAUDE_CONFIG_DIR、显式 provider/model 环境、bare 模式、空工具集与空 MCP 配置。输入来自宿主提供的开发侧记录，输出须通过 Proposal 字段校验。
+终端一，前台启动服务：
 
-监测 .claude.json、.claude/settings.json、.bashrc、.profile 的内容哈希；检测到变化则停止。该检查是指定文件的变化检查，不是对整台机器文件系统的审计。
+```sh
+RSI_GPU=0 RSI_TASK_PORT=18000 sh scripts/harness.sh serve
+```
 
-## 4. 准备小规模 GSM8K pilot
+终端二，等服务完成加载后执行：
 
-~~~sh
-.venv/bin/python scripts/fetch_gsm8k.py \
-  --revision 3101c7d5072418e28b9008a6636bde82a006892c \
-  --dev-size 6 --test-size 6
-~~~
+```sh
+sh scripts/harness.sh doctor --ready --local-gpu
+sh scripts/harness.sh smoke
+```
 
-脚本固定官方源 commit，按 seed 42 对训练池题目去重/打乱，分出互不重叠的开发与留出样本。保存来源、原始数据哈希、split 哈希和样本 ID。
+`doctor`检查Python/包版本；`--ready`增加CLI参数兼容性、凭据是否存在、数据完整性与Task的`GET /models`，`--local-gpu`增加CUDA/BF16及权重分片检查。它不生成回答、不调用Meta API，也不验证凭据的远端有效性；不会打印密钥。
 
-这里的 test 是训练池中的独立留出 pilot，**不是官方完整测试集**。默认数据下载到忽略的 data/gsm8k。输出已存在时拒绝覆盖，重新准备需选新的 --output 目录。
+`smoke`仅从选择集取两题，用生产harness检索训练记忆并调用Task两次，检查标签输出合同。它不演化、不打开最终测试、不应解释为准确率结果。若要验证Meta的真实接入，显式增加一次CLI调用：
 
-评分协议：解析最后一个 #### 后的数值，或纯数值/单个 boxed 数值，按有理数比较，支持负数、小数、千分位和分数；其他格式计 format_error。它是当前固定数值评分规则，不宣称等同所有官方数学 benchmark 评分。
+```sh
+sh scripts/harness.sh smoke --meta --output runs/harness-smoke-meta
+```
 
-## 5. 跑基线与三轮循环
+这个可选命令会消费自己的Meta API用量。CLI内部可能重试，不能把一次CLI调用当成上游HTTP请求的绝对上限。smoke记录在`runs/harness-smoke*/`；重复检查请用新的`--output`，不会覆盖已有记录。
 
-只跑固定 Task 基线：
+## 5. 完整实验：单卡串行或三卡并行
 
-~~~sh
-.venv/bin/rsi baseline --config configs/deepseek_smoke.json \
-  --dev data/gsm8k/dev.jsonl --test data/gsm8k/test.jsonl \
-  --output runs/baseline
-~~~
+这是显式的正式运行：3次搜索，每次5轮×2候选，每个候选在300题上重复3次；另有七个固定控制与同候选数随机搜索。Meta最多15次CLI提案，Task评估远多于smoke，请依据`calls.jsonl`核对实际成本。
 
-跑三轮：
+单卡服务继续运行，三个seed顺序执行：
 
-~~~sh
-sh scripts/run_smoke.sh
-~~~
+```sh
+sh scripts/harness.sh run suite \
+  --task-base-urls http://127.0.0.1:18000/v1 http://127.0.0.1:18000/v1 http://127.0.0.1:18000/v1 \
+  --output runs/my-memory-suite
+sh scripts/harness.sh run finalize --output runs/my-memory-suite
+```
 
-默认输出 runs/deepseek-v0.1。为保留历史，同名目录拒绝直接覆盖。可以指定新目录，或显式恢复：
+若有三张可用卡，另外两个终端分别启动：
 
-~~~sh
-sh scripts/run_smoke.sh runs/my-run
-RSI_RESUME=1 sh scripts/run_smoke.sh
-~~~
+```sh
+RSI_GPU=1 RSI_TASK_PORT=18001 sh scripts/harness.sh serve
+RSI_GPU=2 RSI_TASK_PORT=18002 sh scripts/harness.sh serve
+```
 
-恢复要求配置、数据、实现与依赖锁哈希一致，并校验完成轮次的文件哈希。逐题结果可继续追加；不重做已记录的题目和提案。恢复不是逐 token 确定性复现，也不承诺网络请求 exactly-once。
+随后将完整实验换为以下命令；选择与数据协议相同，改变的是服务映射和调度：
 
-## 6. 读结果
+```sh
+sh scripts/harness.sh run suite --parallel \
+  --task-base-urls http://127.0.0.1:18000/v1 http://127.0.0.1:18001/v1 http://127.0.0.1:18002/v1 \
+  --output runs/my-memory-suite
+sh scripts/harness.sh run finalize --parallel --output runs/my-memory-suite
+```
 
-- run.json：配置、数据/实现/依赖锁哈希与固定选择协议。
-- calls.jsonl：task API 调用与 Claude 调用的开始/结束、用量、错误、未确认状态。
-- rounds/000：父代基线。
-- rounds/001 等：提案、Meta 输入与运行参数、逐题执行、选择理由、产物校验。
-- final：冻结选择之后的独立评估，不进入 Meta 输入。
-- summary.json：轮数、选择版本、分数、实际应用层调用次数。
+两种模式选择其一，不能对同一run修改端口映射。`finalize`必须等全部搜索冻结；只复用框架不要求先运行作者的强起点对照，也不要求导入历史固定控制。没有缓存时会自动评估固定策略。
 
-v0.1 只开放 system_prompt 字段，reason 用于解释；其他字段不能通过提案修改。Task 模型、temperature、输出上限和 scorer 保持固定。
+## 6. 看进度、保存指纹与导出
 
-## 7. 预算与已知边界
+```sh
+sh scripts/harness.sh inspect runs/my-memory-suite
+sh scripts/harness.sh runtime --gpu 0 --port 18000 --output runs/my-memory-suite/task-runtime.json
+sh scripts/harness.sh report --suite runs/my-memory-suite \
+  --runtime runs/my-memory-suite/task-runtime.json \
+  --output-dir runs/my-memory-suite/public
+```
 
-调用开始前记账，失败调用也消耗额度。开发评估不能消费预留给最终评估的 Task 调用数；恢复不清零调用次数。
+导出JSON/PNG/SVG到自己的run，避免覆盖仓库中已公开的实验报告。三卡运行时可额外分别记录`--gpu 1 --port 18001 --output runs/my-memory-suite/task-runtime-expanded-123.json`、`--gpu 2 --port 18002 --output runs/my-memory-suite/task-runtime-expanded-2026.json`，GPU0同理记录seed42；若三份齐全，导出器会核对各卡权重指纹一致。
 
-wall_seconds 从首次运行开始计算，包含暂停时间；到期后不启动新调用，已经启动的调用由各自 timeout 控制。未确认的中断请求保留已消费调用记录，之后的新尝试另计。
+记录包括模型快照、依赖锁、源码哈希、冻结策略、曲线、逐题与调用checkpoint。原始数据、权重、凭据和完整轨迹均在Git忽略目录；公开聚合结果可另行选择提交。不要提交`.env.local`。
 
-Meta 的上限是 Claude CLI 调用次数；CLI 内部可能有服务重试，不能将它理解为上游 HTTP 请求数或真实美元硬上限。保存的 CLI cost 是 CLI 估计，对第三方模型不作为网关账单；主要依据 provider token usage 和外部账单核对成本。
+实验前先提交代码；运行后变更源码、依赖、数据或配置会拒绝恢复。中断后重用完全相同的命令和输出目录继续；恢复历史run应检出其对应源码，或使用匹配版本的独立worktree。预算从最初启动计算，恢复不清零。详见[实验协议](experiment-protocol.md)。
 
-第一版尚无：权重训练、工具 agent、任意代码修改、任务种群、完整原子网络事务、自动依赖升级或四卡调度。
+完成后在各服务终端按Ctrl-C释放GPU，保留环境和权重缓存供下次使用。
 
-## 8. 离线检查
+## 7. 替换自己的模型或服务
 
-~~~sh
-sh scripts/check.sh
-~~~
+复制`configs/memory_s2d_starter.json`到自己的配置路径，修改`task.model/base_url/api_key_env`、`meta.model/base_url/api_key_env/command`。运行、doctor和smoke都支持`--config`。若使用自带Task服务，可跳过GPU环境、模型下载和本地serve；导出可核验报告时需服务端提供相应runtime/权重指纹JSON。
 
-此命令运行格式/静态检查和 pytest，不下载数据、不访问 API，也不需要 Claude 登录。测试中的模型与任务均为显式 fake fixture；真实验证单独记录。
+Task端点需兼容OpenAI Chat Completions。当前Claude Code Meta端点需兼容Anthropic Messages；只有OpenAI协议的服务不能直接填入Meta的`base_url`。默认网关的Task路由带`/v1`，Meta配置使用网关根路径；不要修改全局`ANTHROPIC_*`变量。
+
+当前已实现的编辑空间是结构化记忆/上下文/流程配置。新benchmark adapter、任意Python代码演化、LoRA训练仍按增量路线另行接入。
+
+## 8. 常见问题
+
+| 现象 | 处理 |
+| --- | --- |
+| 没有uv | `setup`自动安装固定版本到项目；需curl和可用网络 |
+| 没有Claude CLI或参数不匹配 | 安装Node/npm后运行`setup --claude`，或在配置中指定兼容的`meta.command` |
+| 没有CUDA/BF16或驱动不可见 | 检查宿主驱动与GPU；脚本不会修改系统驱动 |
+| 本地服务尚未启动、模型名不匹配 | 在终端一启动serve，检查端口及`task.model`，再运行doctor |
+| 数据校验失败 | 保留现场，检查被指出的目录；不要修改发布manifest来绕过校验 |
+| Meta 401/403或协议报错 | 检查自己的凭据和Anthropic协议路由；用显式`smoke --meta`验证 |
+| 不能恢复已有run | 核对源码/依赖/配置/数据哈希；新协议使用新输出目录 |
+| 想先做无GPU、无API检查 | `sh scripts/harness.sh setup`后运行`check`和`doctor`，不用安装GPU或CLI |

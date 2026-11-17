@@ -86,6 +86,10 @@ def main():
     parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-starter-v1")
     parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
     parser.add_argument(
+        "--runtime", type=Path, help="Runtime JSON captured for this experiment's Task service"
+    )
+    parser.add_argument("--output-dir", type=Path, default=root / "docs/validation")
+    parser.add_argument(
         "--tooling-commit", help="Commit containing the export and scheduling scripts"
     )
     parser.add_argument(
@@ -128,9 +132,15 @@ def main():
             {key: sum(values) / len(values) for key, values in combined.items()}
         )
     report["data_manifest"] = read_json(args.data / "manifest.json")
-    report["task_runtime"] = read_json(root / ".local/task-runtime-memory.json")
+    runtime_path = args.runtime or root / ".local/task-runtime-memory.json"
+    report["task_runtime"] = read_json(runtime_path)
+    if any(
+        report["task_runtime"]["model"] != row["source"]["config"]["task"]["model"]
+        for row in report["runs"]
+    ):
+        raise ValueError("Runtime fingerprint belongs to a different Task model")
     runtimes = {
-        row["seed"]: root / f".local/task-runtime-expanded-{row['seed']}.json"
+        row["seed"]: runtime_path.parent / f"task-runtime-expanded-{row['seed']}.json"
         for row in report["runs"]
     }
     if all(path.exists() for path in runtimes.values()):
@@ -202,7 +212,7 @@ def main():
     serialized = " ".join(json.dumps(report, ensure_ascii=False).split()).casefold()
     if any(" ".join(text.split()).casefold() in serialized for text in texts):
         raise ValueError("Dataset query in public output; keep raw evidence private")
-    destination = root / "docs/validation"
+    destination = args.output_dir
     write_json(destination / f"{args.name}.json", report)
     plot(report, destination, args.name)
     print(

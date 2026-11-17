@@ -22,6 +22,29 @@ LABELS = sorted(
     "common cold|gastroesophageal reflux disease|urinary tract infection|typhoid|pneumonia|"
     "peptic ulcer disease|jaundice|migraine".split("|")
 )
+RAW_REVISION = "f805ad3aa4ada290458c1e0deadbe132fbbdea4e"
+
+
+def download_blob(split, blob, *, get=httpx.get):
+    url = f"https://api.github.com/repos/stanford-iris-lab/meta-harness/git/blobs/{blob}"
+    try:
+        response = get(url, timeout=60)
+        response.raise_for_status()
+    except httpx.HTTPError:
+        # Public API quotas must not require each new user to configure a GitHub token.
+        raw_url = (
+            "https://raw.githubusercontent.com/stanford-iris-lab/meta-harness/"
+            f"{RAW_REVISION}/reference_examples/text_classification/data/"
+            f"symptom_diagnosis/{split}.jsonl"
+        )
+        response = get(raw_url, timeout=60, follow_redirects=True)
+        response.raise_for_status()
+        data = response.content
+    else:
+        data = base64.b64decode(response.json()["content"])
+    if hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest() != blob:
+        raise ValueError("Git data blob fingerprint mismatch")
+    return data
 
 
 def main():
@@ -34,11 +57,7 @@ def main():
     assembled, seen, records, exclusions = {}, {}, {}, []
     for split, (blob, count) in SOURCES.items():
         url = f"https://api.github.com/repos/stanford-iris-lab/meta-harness/git/blobs/{blob}"
-        response = httpx.get(url, timeout=60)
-        response.raise_for_status()
-        data = base64.b64decode(response.json()["content"])
-        if hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest() != blob:
-            raise ValueError("Git data blob fingerprint mismatch")
+        data = download_blob(split, blob)
         rows = [json.loads(line) for line in data.decode().splitlines() if line.strip()]
         if len(rows) != count:
             raise ValueError("Unexpected split size")

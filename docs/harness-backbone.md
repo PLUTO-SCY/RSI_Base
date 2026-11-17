@@ -60,40 +60,10 @@ seed控制训练记忆排列、固定few-shot内容、训练诊断与随机控�
 
 为避免重复执行已完成的固定对照，标准起点实验复用强起点实验的固定控制测量。导入脚本检查模型/生成设置、数据、依赖锁、策略/评分实现和评估函数AST一致，并校验原始checkpoint哈希。只复用控制测量，不导入候选或测试结果。复用的观测不是新的独立样本；物理调用成本在来源账本中保留。
 
-全新clone无需历史实验目录。需要已有Claude Code CLI（本机验证2.1.169）及自己的DeepSeek接入凭据，环境/数据准备如下：
+## 环境与复用入口
 
-```sh
-sh scripts/setup.sh
-sh scripts/setup_task.sh
-.venv/bin/python scripts/configure_credentials.py
-.venv-task/bin/python scripts/download_task.py --model Qwen/Qwen3-4B-Instruct-2507 \
-  --revision cdbee75f17c01a7cc42f958dc650907174af0554 --directory .local/models/qwen3-4b-instruct-2507
-.venv/bin/python scripts/prepare_memory_data.py
-.venv/bin/python scripts/prepare_memory_confirmation.py
-.venv/bin/python scripts/prepare_memory_expanded.py --rebuild-published-split
-```
+环境安装、数据/模型下载、单卡与三卡运行、恢复及导出统一见[从全新clone开始的上手指南](getting-started.md)，入口为`sh scripts/harness.sh`。该路径不依赖作者的原始run或固定控制缓存。
 
-重建会逐项校验发布的manifest，不依赖被忽略的历史运行日志，也不把已发布划分称为新的未见测试。启动本地模型服务后，可直接运行后面的`suite`命令，省略可选的对照导入。三卡服务命令见[扩大选择集协议](memory-evolution-expanded.md)；只有一个服务时，三个endpoint都可指向该服务。
+本报告的标准实验复用了已经校验的固定控制测量，这是历史实验成本说明，不是新用户的启动前提。仅当手头确有兼容来源run时，才需要使用`scripts/import_memory_baselines.py`；通常可直接运行suite，由运行器自行评估控制。
 
-```sh
-.venv/bin/python scripts/import_memory_baselines.py \
-  --source runs/memory-s2d-expanded-v2 --source-commit de1adf0 \
-  --output runs/memory-s2d-starter-v1 --config configs/memory_s2d_starter.json \
-  --data data/memory-s2d-expanded
-.venv/bin/python scripts/run_memory.py suite --parallel \
-  --config configs/memory_s2d_starter.json --data data/memory-s2d-expanded \
-  --task-base-urls http://127.0.0.1:18000/v1 http://127.0.0.1:18001/v1 http://127.0.0.1:18002/v1 \
-  --output runs/memory-s2d-starter-v1
-```
-
-独立测试、消融和恢复检查只在两组搜索都冻结后执行；所有结果按真实证据填写。
-
-```sh
-.venv/bin/python scripts/run_memory.py finalize --parallel --output runs/memory-s2d-starter-v1
-.venv/bin/python scripts/audit_memory_ablations.py
-.venv/bin/python scripts/verify_memory_resume.py --suite runs/memory-s2d-starter-v1 --data data/memory-s2d-expanded
-.venv-task/bin/python scripts/record_task_runtime.py --output .local/task-runtime-memory.json
-.venv/bin/python scripts/export_memory.py
-```
-
-环境安装、服务、下载、数据重建、运行和导出脚本全部保留。没有固定控制缓存时，运行器会自行评估控制；不会依赖本机已有的私有产物。
+发布的核心源码与调度/导出脚本提交分别保存在机器可读报告中。恢复历史运行应使用其对应源码，不把新的安装或调度辅助脚本当成新的算法增益。

@@ -13,8 +13,10 @@ known = [
     for k, v in dotenv_values(root / ".env.local").items()
     if v and k.endswith(("API_KEY", "TOKEN", "SECRET"))
 ]
+# Require a token boundary to avoid matching "sk-" inside ordinary task-runtime filenames.
+# Known project secret values are also checked at every position independently below.
 pattern = re.compile(
-    rb"(?:sk-[A-Za-z0-9_-]{20,}|github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{25,})"
+    rb"(?<![A-Za-z0-9])(?:sk-[A-Za-z0-9_-]{20,}|github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{25,})"
 )
 paths = subprocess.run(
     ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
