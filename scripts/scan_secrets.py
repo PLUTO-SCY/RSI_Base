@@ -31,7 +31,17 @@ for encoded in paths:
     name = encoded.decode()
     path = root / name
     if name == ".env.local" or name.startswith(
-        (".local/", ".venv/", ".venv-task/", "runs/", "data/")
+        (
+            ".local/",
+            ".venv/",
+            ".venv-task/",
+            "runs/",
+            "data/",
+            "reports/",
+            "results/",
+            "archives/",
+            "docs/validation/",
+        )
     ):
         failures.add(name)
         continue

@@ -1,0 +1,76 @@
+{
+  "benchmark": "Symptom2Disease",
+  "sources": {
+    "reference": {
+      "repository": "stanford-iris-lab/meta-harness",
+      "revision": "f805ad3aa4ada290458c1e0deadbe132fbbdea4e",
+      "path": "reference_examples/text_classification/data/symptom_diagnosis",
+      "splits": {
+        "train": {
+          "git_blob": "1e41fed548ba5bb76220260eed0e0f6d93d30e6d",
+          "count": 200
+        },
+        "val": {
+          "git_blob": "e85fc0660a74405af7301cd8c9e1dbe0e93f51b8",
+          "count": 50
+        },
+        "test": {
+          "git_blob": "ecb94153e9eec31818f92352d5b84374390ec2c0",
+          "count": 212
+        }
+      }
+    },
+    "additional": {
+      "url": "https://huggingface.co/datasets/gretelai/symptom_to_diagnosis/resolve/722cfb0e11f8ae37339c7f573b5e10429b94df49/train.jsonl",
+      "sha256": "9b8ff27dab30cdeb194d6581dcebffe0d91e21921f974f091736c1f25cad283c",
+      "count": 853
+    }
+  },
+  "labels": [
+    "allergy",
+    "arthritis",
+    "bronchial asthma",
+    "cervical spondylosis",
+    "chicken pox",
+    "common cold",
+    "dengue",
+    "diabetes",
+    "drug reaction",
+    "fungal infection",
+    "gastroesophageal reflux disease",
+    "hypertension",
+    "impetigo",
+    "jaundice",
+    "malaria",
+    "migraine",
+    "peptic ulcer disease",
+    "pneumonia",
+    "psoriasis",
+    "typhoid",
+    "urinary tract infection",
+    "varicose veins"
+  ],
+  "labels_sha256": "ea1407ad20f0f6237e985ce3062e8472b0012a3f528f0b1d482679ae206ebabc",
+  "split_seed": 20261116,
+  "development_size": 300,
+  "retained_additional_rows": 591,
+  "deduplication": {
+    "normalization": "casefold and collapse whitespace",
+    "character_trigram_jaccard_threshold": 0.9
+  },
+  "splits": {
+    "train": {
+      "count": 200,
+      "sha256": "635260eee78f826fe25ea0b539bafb3dcd62379650262d5675865525d7d78466"
+    },
+    "val": {
+      "count": 300,
+      "sha256": "5a0087460564579ef722caad8e1a681b6bdb80df99eeaca0bc1e6ea61781f7dd"
+    },
+    "test": {
+      "count": 291,
+      "sha256": "e88e454b2287f928ec38292da966b6aa4e24e3249fffffb58c57800c17042041"
+    }
+  },
+  "test_status": "historical_replay"
+}

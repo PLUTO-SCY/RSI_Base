@@ -11,7 +11,7 @@ from pathlib import Path
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", type=Path, nargs="?", default=root / "runs/memory-s2d-agent-demo")
+    parser.add_argument("suite", type=Path, nargs="?", default=root / "runs/demo")
     args = parser.parse_args()
     reports = []
     directories = (

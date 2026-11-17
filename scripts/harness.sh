@@ -33,7 +33,7 @@ case "$RSI_COMMAND" in
 esac
 [ -x .venv/bin/python ] || { echo "Run sh scripts/harness.sh setup first." >&2; exit 1; }
 case "$RSI_COMMAND" in
-  data) exec .venv/bin/python scripts/prepare_harness.py "$@" ;;
+  data) exec .venv/bin/python scripts/prepare_data.py "$@" ;;
   model)
     [ -x .venv-task/bin/python ] || { echo "Run setup --gpu first (or use an existing remote Task endpoint)." >&2; exit 1; }
     exec .venv-task/bin/python scripts/download_task.py "$@" ;;

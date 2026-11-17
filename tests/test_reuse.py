@@ -14,6 +14,7 @@ import pytest
 from rsi_base.classification import MemoryCandidate, SingleMemoryBatch
 from rsi_base.loop import file_hash
 from rsi_base.memory_loop import MemoryConfig
+from rsi_base.types import digest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -52,9 +53,7 @@ def test_smoke_has_bounded_calls_and_never_opens_final_test(
                 candidates=[MemoryCandidate(policy=current, reason="probe")]
             ), {}
 
-    config = MemoryConfig.model_validate_json(
-        (ROOT / "configs/memory_s2d_starter.json").read_text()
-    )
+    config = MemoryConfig.model_validate_json((ROOT / "configs/default.json").read_text())
     output = tmp_path / "smoke"
     run = script("smoke_harness.py")["smoke"]
     if response == "invalid-label":
@@ -77,11 +76,14 @@ def test_idempotent_data_verification_detects_corruption(tmp_path):
     (tmp_path / "labels.json").write_text('["fruit"]')
     manifest = {
         "labels": ["fruit"],
+        "labels_sha256": file_hash(tmp_path / "labels.json"),
         "splits": {"val": {"count": 1, "sha256": file_hash(tmp_path / "val.jsonl")}},
     }
-    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
-    expected = file_hash(tmp_path / "manifest.json")
-    verify = script("prepare_harness.py")["verify_asset"]
+    (tmp_path / "manifest.json").write_text(
+        json.dumps({**manifest, "lock_sha256": digest(manifest)})
+    )
+    expected = manifest
+    verify = script("prepare_data.py")["verify_asset"]
     assert verify(tmp_path, expected) == {"val": 1}
     (tmp_path / "val.jsonl").write_text("changed\n")
     with pytest.raises(ValueError, match="changed data"):
@@ -99,7 +101,7 @@ def test_rate_limit_fallback_keeps_blob_integrity():
             403 if len(requests) == 1 else 200, content=payload, request=httpx.Request("GET", url)
         )
 
-    downloader = script("prepare_memory_data.py")
+    downloader = script("prepare_data.py")
     assert downloader["download_blob"]("train", blob, get=get) == payload
     assert downloader["RAW_REVISION"] in requests[1]
     requests.clear()
@@ -108,7 +110,7 @@ def test_rate_limit_fallback_keeps_blob_integrity():
 
 
 def test_doctor_config_errors_do_not_echo_secret_values(tmp_path):
-    config = json.loads((ROOT / "configs/memory_s2d_starter.json").read_text())
+    config = json.loads((ROOT / "configs/default.json").read_text())
     secret = "DUMMY-SECRET-MUST-NOT-BE-PRINTED"
     config["meta"]["api_key"] = secret
     path = tmp_path / "invalid.json"
@@ -128,9 +130,9 @@ def test_doctor_hidden_help_flag_uses_only_verified_pinned_contract(
     tmp_path, monkeypatch, capsys, version, expected
 ):
     monkeypatch.syspath_prepend(str(ROOT / "scripts"))
-    import prepare_harness
+    import prepare_data
 
-    monkeypatch.setattr(prepare_harness, "verify_asset", lambda *_: {"train": 200})
+    monkeypatch.setattr(prepare_data, "verify_asset", lambda *_: {"train": 200})
     monkeypatch.setattr(shutil, "which", lambda _: "/fixture/claude")
     monkeypatch.setattr(
         subprocess,
@@ -150,7 +152,7 @@ def test_doctor_hidden_help_flag_uses_only_verified_pinned_contract(
     )
     monkeypatch.setenv("RSI_API_KEY", "DUMMY")
     monkeypatch.setenv("RSI_LOCAL_API_KEY", "EMPTY")
-    config = json.loads((ROOT / "configs/memory_s2d_starter.json").read_text())
+    config = json.loads((ROOT / "configs/default.json").read_text())
     config["task"]["model"] = "fixture"
     path = tmp_path / "config.json"
     path.write_text(json.dumps(config))

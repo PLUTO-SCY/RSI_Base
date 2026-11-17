@@ -21,7 +21,7 @@ htmlcov/
 build/
 dist/
 
-# Experiment assets: keep manifests in versioned experiment definitions instead
+# Local assets and generated experiment output
 /artifacts/
 /runs/
 /data/
@@ -30,6 +30,10 @@ dist/
 /models/
 /outputs/
 /logs/
+/reports/
+/results/
+/archives/
+/docs/validation/
 wandb/
 *.safetensors
 *.ckpt

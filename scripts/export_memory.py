@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish aggregate curves, frozen policies and provenance; keep task traces local."""
+"""Export aggregate curves, frozen policies and provenance to local run output."""
 
 import argparse
 import json
@@ -21,7 +21,7 @@ def plot(report, destination, name, *, zoom=False):
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 3, figsize=(13, 4.4))
-    agent_mode = name.startswith("memory-agent-")
+    historical_replay = report["suite_protocol"]["config"].get("test_status") == "historical_replay"
     for index, row in enumerate(report["runs"]):
         color = f"C{index}"
         curve = row["curve"]
@@ -66,29 +66,28 @@ def plot(report, destination, name, *, zoom=False):
         ax.set_ylabel("Exact-label accuracy (%)")
     validation_size = report["runs"][0]["curve"][0]["validation"]["examples"]
     test_size = report["runs"][0]["baseline"]["examples"]
-    development_label = "Development / selection" if agent_mode else "Search validation"
-    replay_label = "Historical replay" if agent_mode else "Frozen test replay"
-    axes[0].set_title(f"{development_label} ({validation_size} queries × 3)")
-    axes[1].set_title(f"{replay_label} ({test_size} queries × 3)")
-    axes[2].set_title(("Replay" if agent_mode else "Final test") + "; × random, ◇ strongest fixed")
+    development_label = "Development / selection"
+    replay_label = "Historical replay" if historical_replay else "Frozen test replay"
+    axes[0].set_title(
+        f"{development_label} ({validation_size} queries × {report['suite_protocol']['config']['validation_repeats']})"
+    )
+    axes[1].set_title(
+        f"{replay_label} ({test_size} queries × {report['suite_protocol']['config']['validation_repeats']})"
+    )
+    axes[2].set_title(
+        ("Replay" if historical_replay else "Final test") + "; × random, ◇ strongest fixed"
+    )
     axes[0].set_xlabel("Evolution iteration")
     axes[1].set_xlabel("Evolution iteration")
-    axes[2].set_xticks([0, 1], ["Seed harness", "Evolved harness"])
-    fig.suptitle(
-        (
-            "Weak-start S2D harness evolution — Qwen3-4B, weights fixed"
-            if name.startswith("memory-agent-weak-")
-            else "S2D memory-harness evolution — Qwen3-4B, weights fixed"
-        )
-        + (" (zoomed axes)" if zoom else "")
-    )
+    axes[2].set_xticks([0, 1], ["Initial harness", "Evolved harness"])
+    fig.suptitle("RSI harness evolution — task weights fixed" + (" (zoomed axes)" if zoom else ""))
     interval = report["paired_question_cluster_bootstrap"]
     fig.text(
         0.5,
         0.015,
         (
             "Historical data; searches frozen before replay. "
-            if agent_mode
+            if historical_replay
             else "All searches frozen before test. "
         )
         + f"Paired Δ = {100 * interval['mean']:+.2f} pp; question-cluster 95% CI [{100 * interval['low']:+.2f}, {100 * interval['high']:+.2f}] pp.",
@@ -109,32 +108,28 @@ def plot(report, destination, name, *, zoom=False):
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--suite", type=Path, default=root / "runs/memory-s2d-starter-v1")
-    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
+    parser.add_argument("--suite", type=Path, default=root / "runs/demo")
+    parser.add_argument("--data", type=Path, default=root / "data/s2d")
     parser.add_argument(
         "--runtime", type=Path, help="Runtime JSON captured for this experiment's Task service"
     )
-    parser.add_argument("--output-dir", type=Path, default=root / "docs/validation")
+    parser.add_argument("--output-dir", type=Path, help="Default: SUITE/reports (local only)")
     parser.add_argument(
         "--tooling-commit", help="Commit containing the export and scheduling scripts"
     )
-    parser.add_argument(
-        "--name",
-        choices=[
-            "memory-evolution",
-            "memory-evolution-expanded",
-            "memory-agent-v1",
-            "memory-agent-weak-v1",
-        ],
-        default="memory-evolution",
-    )
+    parser.add_argument("--name", default="report", help="Output filename prefix")
     args = parser.parse_args()
+    if not args.name or any(
+        c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
+        for c in args.name
+    ):
+        parser.error("--name must contain only letters, digits, underscores or hyphens")
     report = read_json(args.suite / "report.json")
     for row in report["runs"]:
         if "strong_fixed_baseline" not in row:
             if row["source"]["config"].get("initial_baseline") is not None:
                 raise ValueError("Explicit seed report requires its own strong-control audit")
-            # Older strong-start audits already use the strongest fixed policy as baseline.
+            # Implicit-baseline runs use the strongest fixed policy as their initial policy.
             row["strong_fixed_baseline_name"] = row["baseline_name"]
             row["strong_fixed_baseline"] = row["baseline"]
             row["selected_vs_strong_fixed"] = row["paired"]
@@ -142,7 +137,6 @@ def main():
     report["comparison_definition"] = {
         "primary": "Selected vs configured initial baseline, identified by each run's baseline_name",
         "strong_fixed": "Selected vs strongest fixed validation baseline, reported separately",
-        "legacy_protocol_label": "The sealed final_protocol.comparison text predates explicit starter selection; actual baseline policies and paired records determine the comparison",
     }
     # Descriptive control comparisons; these do not alter the predeclared acceptance gate.
     for comparison in ["strong_fixed", "random"]:
@@ -185,7 +179,7 @@ def main():
     ):
         raise ValueError("Runtime fingerprint belongs to a different Task model")
     runtimes = {
-        row["seed"]: runtime_path.parent / f"task-runtime-expanded-{row['seed']}.json"
+        row["seed"]: runtime_path.parent / f"task-runtime-{row['seed']}.json"
         for row in report["runs"]
     }
     if all(path.exists() for path in runtimes.values()):
@@ -257,11 +251,10 @@ def main():
     serialized = " ".join(json.dumps(report, ensure_ascii=False).split()).casefold()
     if any(" ".join(text.split()).casefold() in serialized for text in texts):
         raise ValueError("Dataset query in public output; keep raw evidence private")
-    destination = args.output_dir
+    destination = args.output_dir or args.suite / "reports"
     write_json(destination / f"{args.name}.json", report)
     plot(report, destination, args.name)
-    if args.name.startswith("memory-agent-"):
-        plot(report, destination, args.name + "-zoom", zoom=True)
+    plot(report, destination, args.name + "-zoom", zoom=True)
     print(
         json.dumps(
             {

@@ -102,8 +102,8 @@ def smoke(config, data, output, root, *, with_meta=False, task=None, meta=None):
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d_starter.json")
-    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
+    parser.add_argument("--config", type=Path, default=root / "configs/default.json")
+    parser.add_argument("--data", type=Path, default=root / "data/s2d")
     parser.add_argument("--output", type=Path, default=root / "runs/harness-smoke")
     parser.add_argument(
         "--meta",

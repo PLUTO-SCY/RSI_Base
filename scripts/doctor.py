@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import httpx
-from prepare_harness import verify_asset
+from prepare_data import load_lock, verify_asset
 from pydantic import ValidationError
 
 from rsi_base.agent import credentials
@@ -22,8 +22,8 @@ from rsi_base.memory_loop import MemoryConfig
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d_agent.json")
-    parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
+    parser.add_argument("--config", type=Path, default=root / "configs/default.json")
+    parser.add_argument("--data", type=Path, default=root / "data/s2d")
     parser.add_argument(
         "--ready", action="store_true", help="Require Meta/data/Task readiness; GET /models only"
     )
@@ -144,13 +144,9 @@ def main():
 
         check("claude_code", cli)
         check("meta_credential", credential)
-        from rsi_base.loop import file_hash
-
         check(
-            "published_data",
-            lambda: verify_asset(
-                args.data, file_hash(root / "docs/validation/memory-expanded-manifest.json")
-            ),
+            "dataset",
+            lambda: verify_asset(args.data, load_lock()),
         )
         check("task_endpoint", endpoint)
 
