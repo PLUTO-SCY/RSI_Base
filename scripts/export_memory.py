@@ -21,6 +21,7 @@ def plot(report, destination, name, *, zoom=False):
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 3, figsize=(13, 4.4))
+    agent_mode = name.startswith("memory-agent-v1")
     for index, row in enumerate(report["runs"]):
         color = f"C{index}"
         curve = row["curve"]
@@ -65,9 +66,11 @@ def plot(report, destination, name, *, zoom=False):
         ax.set_ylabel("Exact-label accuracy (%)")
     validation_size = report["runs"][0]["curve"][0]["validation"]["examples"]
     test_size = report["runs"][0]["baseline"]["examples"]
-    axes[0].set_title(f"Search validation ({validation_size} queries × 3)")
-    axes[1].set_title(f"Frozen test replay ({test_size} queries × 3)")
-    axes[2].set_title("Final test; × random, ◇ strongest fixed")
+    development_label = "Development / selection" if agent_mode else "Search validation"
+    replay_label = "Historical replay" if agent_mode else "Frozen test replay"
+    axes[0].set_title(f"{development_label} ({validation_size} queries × 3)")
+    axes[1].set_title(f"{replay_label} ({test_size} queries × 3)")
+    axes[2].set_title(("Replay" if agent_mode else "Final test") + "; × random, ◇ strongest fixed")
     axes[0].set_xlabel("Evolution iteration")
     axes[1].set_xlabel("Evolution iteration")
     axes[2].set_xticks([0, 1], ["Seed harness", "Evolved harness"])
@@ -79,7 +82,12 @@ def plot(report, destination, name, *, zoom=False):
     fig.text(
         0.5,
         0.015,
-        f"All searches frozen before test. Paired Δ = {100 * interval['mean']:+.2f} pp; question-cluster 95% CI [{100 * interval['low']:+.2f}, {100 * interval['high']:+.2f}] pp.",
+        (
+            "Historical data; searches frozen before replay. "
+            if agent_mode
+            else "All searches frozen before test. "
+        )
+        + f"Paired Δ = {100 * interval['mean']:+.2f} pp; question-cluster 95% CI [{100 * interval['low']:+.2f}, {100 * interval['high']:+.2f}] pp.",
         ha="center",
         fontsize=9,
     )
