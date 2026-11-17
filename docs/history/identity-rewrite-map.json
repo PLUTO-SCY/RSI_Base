@@ -1,0 +1,141 @@
+{
+  "operation": "Owner-authorized correction of author and committer identity",
+  "github_account": "PLUTO-SCY",
+  "author_name": "chenyang shao",
+  "commit_email": "78310004+PLUTO-SCY@users.noreply.github.com",
+  "old_head": "440872f7f0fbc89f1ea60749ea615de46a6f9b3d",
+  "rewritten_head_before_documentation": "95e297d57522a437311f03e190ac3ea44e4bf0b7",
+  "timestamps_preserved": true,
+  "messages_preserved": true,
+  "all_commit_trees_preserved": true,
+  "old_commit_count": 25,
+  "local_backup_bundle_sha256": "71565fde2f0bb25be34a5697dd76b616b838c292177021b75ef2c22eb5454a4a",
+  "commits": [
+    {
+      "old": "bd0c1a2fcc762ef61a8faa2a0e9685a3b2d53ecc",
+      "new": "63ab63d9a4de157540a70731c0a350a515a1071f",
+      "tree": "eda640c71e00b45b3cfbd970797f566189de6104"
+    },
+    {
+      "old": "99077770a56da6d8cb39426ca6a82a1a609b9f73",
+      "new": "fc4c12460cfb65e32db878781af9c02547c50f59",
+      "tree": "2d88f514118a143507413c6c2c7386912b5e9e7b"
+    },
+    {
+      "old": "c1b23688e98b7ed8170581c91b542fe1969fd84c",
+      "new": "fd16917e43bed71d16ccb6ff6385a1568ee631e4",
+      "tree": "16fd369cb169d47462aac2a853811127d074d4a4"
+    },
+    {
+      "old": "cbdbe30bb032643903dd72688ad0fd2b1706c978",
+      "new": "2cb52537a3ba21977e254c79dfb8cbbd28ea2707",
+      "tree": "b1324c4806cda8f5fe277d3a8a25b7be4eab15d0"
+    },
+    {
+      "old": "677711173352d23f9cfb333d4fb038bdc6cdc7db",
+      "new": "83b92e597680f97b853f764b4d328d1ce631288f",
+      "tree": "f44e502b45ac4a8882d92ad6c3b16c4f76646f83"
+    },
+    {
+      "old": "053aa21711978e16855619d66f39ce5213589897",
+      "new": "559c0194019689f1ca96c17fa70b5d39897ad212",
+      "tree": "1df69e3b8b985e8ddb376004d6eaaaac871e8f06"
+    },
+    {
+      "old": "8dbed754dc90511ae3a84540fd752de7e6d099d9",
+      "new": "cc0d57879f03e7983b73b1e94f8ac338c7bb4a8e",
+      "tree": "d089fe647d7b20d48b19fd8e27f1514441c5f22c"
+    },
+    {
+      "old": "70e11a6059df541e50fb53c65f828554d63d42d3",
+      "new": "a9e93be0f5ebff8d83874c32fec2d3f1868b9571",
+      "tree": "1ee5e1b295d0479e989215c53446c7fbcc77f489"
+    },
+    {
+      "old": "e8914135006b3ea27281d38a957c4f317485a5a4",
+      "new": "95f8fd4f12dbfce32a0738c310ad6b1c477583e4",
+      "tree": "1fd24e9640a0af5b52384cb060d09aab59027f1b"
+    },
+    {
+      "old": "125afd0d27a2c6b1321cbffe7686e070e9df57c7",
+      "new": "b3375e10b3dc590126ba26a9d92843dec226729d",
+      "tree": "750faff0db59f5d11beade0f3f3bacf440f8449e"
+    },
+    {
+      "old": "1c9b381946697957e7252ddc30ee63cad4b475b9",
+      "new": "cf274f5cd4a9c4de950728abc61f0e0d6b7678b4",
+      "tree": "396daf06d87f3b9428568b76b63853c88acefe15"
+    },
+    {
+      "old": "fced99ff7fd16c68d3c3569dc5e7ec79402ce598",
+      "new": "60b6b1c3a5211762259b1733b5549621fe6b3fd8",
+      "tree": "541a21747518afaba121af0fa8839358fa4eb402"
+    },
+    {
+      "old": "59f93c2157ec3ddc758e0584e6c891a42ee876a8",
+      "new": "b83bbd4a6f6708c52281eabe1ea549dd6a3054eb",
+      "tree": "335f3d1a85c2f21867e1834d05194f9086156404"
+    },
+    {
+      "old": "4c4fe49ee3d4b598eae13e74d4cf188a6830e223",
+      "new": "eced220313a900cb48ff11a7b4e12b462eb354ff",
+      "tree": "e29841019dd4755eb9822c5bb436f08b87af4dcd"
+    },
+    {
+      "old": "d133cd6e2cba6ecb060c42eeed19a7b3209bc4b0",
+      "new": "439581350563e43f48bfc2fd117bd88def632e77",
+      "tree": "1f11d50fe9e82a482f791adcd911deb50524bb13"
+    },
+    {
+      "old": "e4cee18ff345f6ae3d2bd94c78c9b99eb3fc7f2c",
+      "new": "b4a9e3a21e389dc2421227bc5c7f9370dcb4c878",
+      "tree": "3eb8a2ade0005b762ce3058d1533af107541791e"
+    },
+    {
+      "old": "5164ee442a687b5573df0a9eaf45ca59746b668c",
+      "new": "cc927d4ba20ed5be8c7acefd75484222b3db93f9",
+      "tree": "5ce4d7df40cd346fdd1f9b93bd3e943c9a6b9af2"
+    },
+    {
+      "old": "de1adf074279474fa5be53b910e4d5c218fda725",
+      "new": "f9326e7634e35c155fc622700e4d87c43ff225ab",
+      "tree": "7be81ad77ad82875b4c1c282f8436fe413b8d74f"
+    },
+    {
+      "old": "a7cec02ca00472f9a5c99ee2e998c02820885979",
+      "new": "fb22aca85d6a0b45891bcba26391168f3ed55ea7",
+      "tree": "6fc591bfaf87fbfddae6fe6acc15ab6fa3f121cf"
+    },
+    {
+      "old": "d145f9ea85e0b0205787ee84d164a326a2455cef",
+      "new": "50e0cff164a3227ffba1cd40c2e2d5701eb2496f",
+      "tree": "af062c6926b058c82226c3406233875e1636de22"
+    },
+    {
+      "old": "59d20b6d8d47942680c7f44de5e89d7b51b9c912",
+      "new": "9320e30af8c866fbba00a98b6cdd1a9062def323",
+      "tree": "20e15c47a8ed3a2c53ee81e541d961b28945641d"
+    },
+    {
+      "old": "a468c98d7a8cbf82759f49c551d21eac0b97f0e6",
+      "new": "e7e30f6681635ecdeca847c8796e8cdbb365420e",
+      "tree": "e44daa170567119611f2c388337317b04f2c6cb1"
+    },
+    {
+      "old": "4538ab339c5f4e5f58a786383102de235196fef2",
+      "new": "42b022a7fe4671241768b53c714659981cd4305c",
+      "tree": "1d3291c6a9670da5f1f432bbe6e31fd0960dbce7"
+    },
+    {
+      "old": "c5094d481bd7e6562cb59d2d1254d0f7baa7969d",
+      "new": "4f5cc73c2d8ebd128283bd0fbed6100956c12d4b",
+      "tree": "2b2d09088a33d86ca6650b3c4bf2ad4346558637"
+    },
+    {
+      "old": "440872f7f0fbc89f1ea60749ea615de46a6f9b3d",
+      "new": "95e297d57522a437311f03e190ac3ea44e4bf0b7",
+      "tree": "dc612cb2209e59764cbc5d189b49809c9dc916aa"
+    }
+  ],
+  "date": "2026-11-17"
+}

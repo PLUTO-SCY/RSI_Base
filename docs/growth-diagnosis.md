@@ -54,7 +54,7 @@ Meta 均为 Claude Code 2.1.169 + DeepSeek API，状态和提供商参数限于�
 
 ## 4B 六轮：无增长的完整对照
 
-实现快照：[053aa21](https://github.com/PLUTO-SCY/RSI_Base/commit/053aa21711978e16855619d66f39ce5213589897)。此轮使用严格数值格式评分，不能与后来的 MATH 评分直接比较。
+实现快照：[559c019](https://github.com/PLUTO-SCY/RSI_Base/commit/559c0194019689f1ca96c17fa70b5d39897ad212)。此轮使用严格数值格式评分，不能与后来的 MATH 评分直接比较。
 
 | 轮数 | 原始候选 dev | 相对父代修复 / 退步 | 选择 |
 | --- | ---: | ---: | --- |
@@ -74,7 +74,7 @@ Meta 均为 Claude Code 2.1.169 + DeepSeek API，状态和提供商参数限于�
 
 ## 1.7B 六轮对照：评分修正仍不足以产生增长
 
-实现快照：[8dbed75](https://github.com/PLUTO-SCY/RSI_Base/commit/8dbed754dc90511ae3a84540fd752de7e6d099d9)。使用 MATH 数值评分，但求解策略和格式说明仍在同一个可变 prompt 中。
+实现快照：[cc0d578](https://github.com/PLUTO-SCY/RSI_Base/commit/cc0d57879f03e7983b73b1e94f8ac338c7bb4a8e)。使用 MATH 数值评分，但求解策略和格式说明仍在同一个可变 prompt 中。
 
 baseline dev 33/48，六个候选依次为 23、30、29、31、32、31/48，全部保留父代。独立曲线中的 monitor 为 20/32，final 为 42/64；未出现增长。第一轮未解析答案从父代的 3 个增至 17 个，说明修改策略会破坏输出约定。
 
@@ -82,7 +82,7 @@ baseline dev 33/48，六个候选依次为 23、30、29、31、32、31/48，全�
 
 ## 固定输出合同后的八轮实验
 
-实现快照：[70e11a6](https://github.com/PLUTO-SCY/RSI_Base/commit/70e11a6059df541e50fb53c65f828554d63d42d3)。固定 Task 用户后缀要求 boxed 数值答案；Meta 只修改求解策略，宿主强制候选不超过 600 字符。搜索前固定八轮，不根据观察集或最终分数追加轮次。
+实现快照：[a9e93be](https://github.com/PLUTO-SCY/RSI_Base/commit/a9e93be0f5ebff8d83874c32fec2d3f1868b9571)。固定 Task 用户后缀要求 boxed 数值答案；Meta 只修改求解策略，宿主强制候选不超过 600 字符。搜索前固定八轮，不根据观察集或最终分数追加轮次。
 
 校准 8/16、未解析 1 个、截断 1 个。正式结果：
 

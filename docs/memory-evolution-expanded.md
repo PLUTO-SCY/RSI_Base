@@ -22,7 +22,7 @@
 
 ## 运行
 
-此强起点实验使用源码`de1adf0`。恢复其本地运行需检出该版本。新clone先在当前主分支按[完整环境与划分重建](harness-backbone.md)准备数据，再切换源码；数据重建不依赖历史日志。
+此强起点实验使用源码`f9326e7`。恢复其本地运行需检出该版本。新clone先在当前主分支按[完整环境与划分重建](harness-backbone.md)准备数据，再切换源码；数据重建不依赖历史日志。
 
 ```sh
 .venv/bin/python scripts/prepare_memory_expanded.py
@@ -64,4 +64,4 @@ RSI_GPU=2 RSI_TASK_PORT=18002 sh scripts/serve_task.sh
 
 完整的强起点曲线、固定策略与候选、随机对照和来源记录保存在[JSON](validation/memory-strong-reference.json)与[图](validation/memory-strong-reference.png)。它与标准起点结果分别报告，不能用简单起点的增长替代这一失败结论。
 
-冻结测试的调度后由串行改为三卡并行，复用逐题checkpoint；候选、样本、重复次数、单题预算和评分不变，切换前未查看测试成绩。核心来源为`de1adf0`，调度/导出脚本来自`59d20b6`，两个提交分别校验。
+冻结测试的调度后由串行改为三卡并行，复用逐题checkpoint；候选、样本、重复次数、单题预算和评分不变，切换前未查看测试成绩。核心来源为`f9326e7`，调度/导出脚本来自`9320e30`，两个提交分别校验。
