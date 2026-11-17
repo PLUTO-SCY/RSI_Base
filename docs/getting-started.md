@@ -147,3 +147,11 @@ Task端点需兼容OpenAI Chat Completions。当前Claude Code Meta端点需兼�
 | Meta 401/403或协议报错 | 检查自己的凭据和Anthropic协议路由；用显式`smoke --meta`验证 |
 | 不能恢复已有run | 核对源码/依赖/配置/数据哈希；新协议使用新输出目录 |
 | 想先做无GPU、无API检查 | `sh scripts/harness.sh setup`后运行`check`和`doctor`，不用安装GPU或CLI |
+
+## 9. 本次实际验证范围
+
+2026-11-17，在无凭据、无项目环境/缓存/数据/权重的隔离checkout中，使用精简PATH验证了uv/Python自动安装、核心依赖安装、公开数据重建及第二次幂等校验；主仓库与隔离checkout各通过66项离线测试。
+
+本机另外验证了项目内CLI安装、既有GPU环境的锁定依赖同步、CUDA/BF16、权重分片、真实Qwen的两题Task smoke，以及显式runtime/自定义目录的报告导出。该smoke为2次Task、0次Meta调用，不打开最终测试。临时GPU服务已停止。没有在隔离checkout重复下载完整GPU依赖和权重，也没有重复完整搜索或训练。
+
+机器可读的版本、文件哈希与检查范围见[reuse-setup.json](validation/reuse-setup.json)。封存实验的核心源码/依赖锁保持原字节，历史实验报告未被本次安装检查覆盖。
