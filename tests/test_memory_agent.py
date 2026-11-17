@@ -143,6 +143,9 @@ def test_tool_agent_reads_development_and_debugs_before_submission(tmp_path, mon
             assert "VAL_PRIVATE" in json.dumps(
                 call("read_artifact", {"artifact": "development/cases.json"})
             )
+            assert "training-summary-fixture" in json.dumps(
+                call("read_artifact", {"artifact": "model/context.json"})
+            )
             assert "visible harness source" in json.dumps(
                 call("read_artifact", {"artifact": "source/classification.py"})
             )
@@ -163,6 +166,7 @@ def test_tool_agent_reads_development_and_debugs_before_submission(tmp_path, mon
         proposal_strategy="agent",
         initial_baseline="no_memory",
         reference_policies={"strong_reference": MemoryPolicy(system_prompt="improved control")},
+        model_context={"training_summary": "training-summary-fixture", "test_opened": False},
         rounds=1,
         probe_queries=4,
         max_probes=2,

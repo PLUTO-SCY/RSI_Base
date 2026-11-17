@@ -4,15 +4,17 @@ set -eu
 RSI_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$RSI_ROOT"
 RSI_WITH_GPU=0
+RSI_WITH_TRAIN=0
 RSI_WITH_CLAUDE=0
 RSI_WITH_SANDBOX=0
 for RSI_OPTION in "$@"; do
   case "$RSI_OPTION" in
     --gpu) RSI_WITH_GPU=1 ;;
+    --train) RSI_WITH_TRAIN=1 ;;
     --claude) RSI_WITH_CLAUDE=1 ;;
     --sandbox) RSI_WITH_SANDBOX=1 ;;
     --help|-h)
-      echo "Usage: sh scripts/bootstrap.sh [--gpu] [--claude] [--sandbox]"
+      echo "Usage: sh scripts/bootstrap.sh [--gpu] [--train] [--claude] [--sandbox]"
       echo "Core Python environment is always installed. GPU and Claude tools are optional."
       exit 0 ;;
     *) echo "Unknown option: $RSI_OPTION" >&2; exit 2 ;;
@@ -47,5 +49,8 @@ fi
 if [ "$RSI_WITH_GPU" = 1 ]; then
   command -v nvidia-smi >/dev/null 2>&1 || { echo "Local serving requires an installed NVIDIA driver (nvidia-smi)." >&2; exit 1; }
   sh scripts/setup_task.sh
+fi
+if [ "$RSI_WITH_TRAIN" = 1 ]; then
+  sh scripts/setup_train.sh
 fi
 echo "Ready. Next: sh scripts/harness.sh data; sh scripts/harness.sh doctor"

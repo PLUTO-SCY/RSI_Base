@@ -23,6 +23,8 @@ sh scripts/harness.sh setup --gpu --claude --sandbox
 
 隔离执行依赖内核允许用户命名空间。提供的 bubblewrap 包针对 Linux x86_64/Ubuntu 20.04；其他系统可提供兼容的 `bwrap`。`doctor --ready` 会实际运行隔离探针，失败时先解决宿主兼容性。
 
+需要 LoRA 训练时加 `--train`，具体采样、训练和模型版本选择见 [LoRA SFT](lora-sft.md)。
+
 仅做开发和离线检查：
 
 ```sh

@@ -35,6 +35,7 @@ for encoded in paths:
             ".local/",
             ".venv/",
             ".venv-task/",
+            ".venv-train/",
             "runs/",
             "data/",
             "reports/",

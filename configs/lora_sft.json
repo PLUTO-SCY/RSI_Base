@@ -1,0 +1,30 @@
+{
+  "base_model": "Qwen/Qwen3-4B-Instruct-2507",
+  "base_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+  "base_directory": ".local/models/qwen3-4b-instruct-2507",
+  "parent_adapter": null,
+  "rank": 16,
+  "alpha": 32,
+  "dropout": 0,
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj"
+  ],
+  "epochs": 1,
+  "learning_rate": 0.0002,
+  "batch_size": 1,
+  "gradient_accumulation_steps": 8,
+  "max_length": 4096,
+  "max_steps": -1,
+  "save_steps": 20,
+  "gradient_checkpointing": true,
+  "seed": 42,
+  "min_samples": 16,
+  "collection_repeats": 1,
+  "evaluation_repeats": 3,
+  "max_collection_calls": 2000,
+  "max_evaluation_calls": 10000,
+  "wall_seconds": 7200
+}

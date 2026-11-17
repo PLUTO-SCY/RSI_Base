@@ -123,6 +123,10 @@ class DevelopmentTools:
                 ),
             }
         )
+        if config.model_context:
+            self.artifacts["model/context.json"] = json.dumps(
+                config.model_context, ensure_ascii=False
+            )
         self.registry_path = self.output / "agent_registry.json"
         self.registry = read_json(self.registry_path) if self.registry_path.exists() else {}
         self.new = {

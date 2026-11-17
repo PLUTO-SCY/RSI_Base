@@ -31,6 +31,7 @@ class MemoryConfig(StrictModel):
     test_status: Literal["held_out", "historical_replay"] = "held_out"
     initial_baseline: str | None = None
     show_control_scores_to_meta: bool = True
+    model_context: dict = Field(default_factory=dict)
     rounds: int = Field(default=5, ge=1, le=20)
     validation_repeats: int = Field(default=3, ge=2, le=5)
     diagnostic_queries: int = Field(default=32, ge=4, le=64)

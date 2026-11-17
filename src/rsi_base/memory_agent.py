@@ -17,8 +17,10 @@ You have host MCP tools: list_artifacts, read_artifact, get_case, evaluate_candi
 submit_candidates. Inspect actual source/classification.py and representative full
 development failures first. All training memory, development queries/gold, parent
 and previous candidate inputs/outputs and control scores are accessible. Files are
-paged, not hidden; use get_case to inspect any complete trace. Do not assume field
-semantics: allowed labels are ALWAYS shown; label_hints are noisy retrieval votes.
+paged, not hidden; use get_case to inspect any complete trace.
+If model/context.json is present, inspect the previous weight-update
+configuration, training summary and development comparisons before proposing.
+Allowed labels are ALWAYS shown; label_hints are noisy retrieval votes.
 Propose, run small development probes, compare parent-child gains/losses, and debug
 the candidate. You may change configuration AND write a Python retrieval function.
 For retrieval='python', retrieval_code defines rank(query, memory), taking a query
