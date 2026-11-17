@@ -21,7 +21,7 @@ def plot(report, destination, name, *, zoom=False):
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 3, figsize=(13, 4.4))
-    agent_mode = name.startswith("memory-agent-v1")
+    agent_mode = name.startswith("memory-agent-")
     for index, row in enumerate(report["runs"]):
         color = f"C{index}"
         curve = row["curve"]
@@ -75,7 +75,11 @@ def plot(report, destination, name, *, zoom=False):
     axes[1].set_xlabel("Evolution iteration")
     axes[2].set_xticks([0, 1], ["Seed harness", "Evolved harness"])
     fig.suptitle(
-        "S2D memory-harness evolution — Qwen3-4B, weights fixed"
+        (
+            "Weak-start S2D harness evolution — Qwen3-4B, weights fixed"
+            if name.startswith("memory-agent-weak-")
+            else "S2D memory-harness evolution — Qwen3-4B, weights fixed"
+        )
         + (" (zoomed axes)" if zoom else "")
     )
     interval = report["paired_question_cluster_bootstrap"]
@@ -116,7 +120,12 @@ def main():
     )
     parser.add_argument(
         "--name",
-        choices=["memory-evolution", "memory-evolution-expanded", "memory-agent-v1"],
+        choices=[
+            "memory-evolution",
+            "memory-evolution-expanded",
+            "memory-agent-v1",
+            "memory-agent-weak-v1",
+        ],
         default="memory-evolution",
     )
     args = parser.parse_args()
@@ -251,7 +260,7 @@ def main():
     destination = args.output_dir
     write_json(destination / f"{args.name}.json", report)
     plot(report, destination, args.name)
-    if args.name == "memory-agent-v1":
+    if args.name.startswith("memory-agent-"):
         plot(report, destination, args.name + "-zoom", zoom=True)
     print(
         json.dumps(

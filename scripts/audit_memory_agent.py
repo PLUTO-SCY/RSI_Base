@@ -72,6 +72,11 @@ def audit(directory):
     meta_results = [
         read_json(p) for p in sorted((directory / "evolution").glob("*/meta_result.json"))
     ]
+    configuration_checks = [
+        finishes.get(r["call_id"], {}).get("global_configuration_unchanged")
+        for r in starts
+        if r["kind"] == "meta"
+    ]
     return {
         "seed": config["seed"],
         "source_sha256": read_json(directory / "run.json")["source_sha256"],
@@ -88,11 +93,13 @@ def audit(directory):
         "meta_cli_estimated_cost_usd_unverified": [r.get("total_cost_usd") for r in meta_results],
         "meta_cli_errors": sum(bool(r.get("is_error")) for r in meta_results),
         "provider_bill_verified": False,
-        "global_configuration_unchanged": all(
-            finishes.get(r["call_id"], {}).get("global_configuration_unchanged") is True
-            for r in starts
-            if r["kind"] == "meta"
-        ),
+        "global_configuration_unchanged": False
+        if any(v is False for v in configuration_checks)
+        else True
+        if all(v is True for v in configuration_checks)
+        else None,
+        "meta_calls_with_confirmed_configuration": sum(v is True for v in configuration_checks),
+        "meta_calls_with_unconfirmed_configuration": sum(v is None for v in configuration_checks),
         "tool_calls": dict(Counter(r["tool"] for r in tools)),
         "tool_errors": dict(Counter(r["error"] for r in tools if r.get("error"))),
         "duplicate_execution_probes_skipped": sum(
@@ -164,6 +171,7 @@ def main():
     result = {
         "runs": [audit(args.suite / f"seed{seed}") for seed in (42, 123, 2026)],
         "information_scope": "Full source/training/development available; availability does not imply every artifact was actually read",
+        "configuration_confirmation_scope": "A null global_configuration_unchanged value indicates absent confirmation metadata for one or more Meta calls; see per-call confirmation counts",
         "test_status": "Historical replay, not fresh independent confirmation",
         "cost_scope": "Task usage counts physical requests. Meta CLI usage is not a verified provider bill. Sandbox completed batches exclude failures/interruptions and earlier process segments.",
         "control_scope": "Equal probe/full-validation caps; random code templates cover a narrower generator; actual costs differ",

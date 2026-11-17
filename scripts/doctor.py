@@ -88,14 +88,25 @@ def main():
             help_text = subprocess.check_output(
                 [executable, "--help"], env=env, text=True, timeout=20
             )
+            reported_version = subprocess.check_output(
+                [executable, "--version"], env=env, text=True, timeout=20
+            ).strip()
             required = ["--bare", "--no-session-persistence", "--strict-mcp-config", "--effort"]
-            if any(flag not in help_text for flag in required):
+            missing = [flag for flag in required if flag not in help_text]
+            pinned = json.loads((root / "requirements/claude-code/package.json").read_text())[
+                "dependencies"
+            ]["@anthropic-ai/claude-code"]
+            # The pinned runtime accepts these flags in real MCP runs, but can hide
+            # --strict-mcp-config in help. Missing help text is not a parse failure.
+            if missing and reported_version.split()[0] != pinned:
                 raise ValueError(
                     "Claude CLI flags differ; install pinned 2.1.169 with setup --claude"
                 )
-            return subprocess.check_output(
-                [executable, "--version"], env=env, text=True, timeout=20
-            ).strip()
+            return {
+                "version": reported_version,
+                "flags_not_listed_in_help": missing,
+                "compatibility": "Pinned runtime contract" if missing else "Required flags visible",
+            }
 
         def credential():
             if not (

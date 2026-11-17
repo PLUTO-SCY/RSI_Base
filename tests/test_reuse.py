@@ -123,6 +123,48 @@ def test_doctor_config_errors_do_not_echo_secret_values(tmp_path):
     assert secret not in result.stdout + result.stderr
 
 
+@pytest.mark.parametrize("version,expected", [("2.1.169", True), ("2.0.0", False)])
+def test_doctor_hidden_help_flag_uses_only_verified_pinned_contract(
+    tmp_path, monkeypatch, capsys, version, expected
+):
+    monkeypatch.syspath_prepend(str(ROOT / "scripts"))
+    import prepare_harness
+
+    monkeypatch.setattr(prepare_harness, "verify_asset", lambda *_: {"train": 200})
+    monkeypatch.setattr(shutil, "which", lambda _: "/fixture/claude")
+    monkeypatch.setattr(
+        subprocess,
+        "check_output",
+        lambda command, **_: (
+            f"{version} (Claude Code)"
+            if command[-1] == "--version"
+            else "--bare --no-session-persistence --effort"
+        ),
+    )
+    monkeypatch.setattr(
+        httpx,
+        "get",
+        lambda url, **_: httpx.Response(
+            200, json={"data": [{"id": "fixture"}]}, request=httpx.Request("GET", url)
+        ),
+    )
+    monkeypatch.setenv("RSI_API_KEY", "DUMMY")
+    monkeypatch.setenv("RSI_LOCAL_API_KEY", "EMPTY")
+    config = json.loads((ROOT / "configs/memory_s2d_starter.json").read_text())
+    config["task"]["model"] = "fixture"
+    path = tmp_path / "config.json"
+    path.write_text(json.dumps(config))
+    monkeypatch.setattr(sys, "argv", ["doctor", "--ready", "--config", str(path)])
+    with pytest.raises(SystemExit):
+        script("doctor.py")["main"]()
+    report = json.loads(capsys.readouterr().out)
+    cli = next(row for row in report["checks"] if row["check"] == "claude_code")
+    assert cli["ok"] is expected
+    if expected:
+        assert cli["detail"]["flags_not_listed_in_help"] == ["--strict-mcp-config"]
+    assert report["model_generations"] == report["meta_api_calls"] == 0
+
+
 def test_scanner_distinguishes_runtime_names_from_tokens_without_echoing(tmp_path):
     subprocess.run(["git", "init", "--quiet", str(tmp_path)], check=True)
     directory = tmp_path / "scripts"
