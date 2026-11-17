@@ -6,7 +6,21 @@
 
 当前演示任务为Symptom2Disease的22类文本分类，使用200条训练记忆、300题开发和291题历史回放。
 
-默认配置[`configs/memory_s2d_agent.json`](configs/memory_s2d_agent.json)显式使用`initial_baseline="no_memory"`：普通分类提示、完整标签/输出合同、无检索示例、单次模型调用。Meta可以逐步增加检索、上下文组织、改写/复核或Python检索代码。已有数据上该设置的对照分数约50%；新的弱起点工具化实验尚未重跑，不把旧结果当作新曲线。
+默认配置[`configs/memory_s2d_agent.json`](configs/memory_s2d_agent.json)显式使用`initial_baseline="no_memory"`：普通分类提示、完整标签/输出合同、无检索示例、单次模型调用。Meta可以逐步增加检索、上下文组织、改写/复核或Python检索代码。已完成真实DeepSeek Meta + 本地Qwen3-4B Task实测，三个seed各五轮；模型权重固定。
+
+**弱起点实测结果：开发平均52.44%→84.85%；291题历史回放平均49.87%→80.68%，三次均提高。**
+
+| seed | 开发集起点→最终 | 历史回放起点→最终 |
+| --- | ---: | ---: |
+| 42 | 52.44%→86.22% | 49.94%→79.04% |
+| 123 | 52.44%→84.00% | 50.06%→82.82% |
+| 2026 | 52.44%→84.33% | 49.60%→80.18% |
+
+![弱起点实际增长曲线](docs/validation/memory-agent-weak-v1.png)
+
+已核验2700条实际起点记录均无检索、单次调用；冻结恢复新增调用0。两轮Meta输出超限已记录，保留父代后继续完成。74项离线检查通过，临时GPU服务已释放。这里的291题是历史回放，未作为全新独立测试宣传。
+
+[实测报告与复现命令](docs/backbone-demo.md) · [机器可读结果](docs/validation/memory-agent-weak-v1.json) · [执行与成本审计](docs/validation/memory-agent-weak-audit.json)。
 
 本阶段检查：真实Meta/Task可调用；候选可提案、执行、评分与接受/拒绝；日志、版本和成本可追溯；中断能恢复；能够演示相对简单起点的增长。强固定/随机对照用于参考，统计显著性和算法领先性属于后续研究结论。
 
@@ -64,7 +78,7 @@ sh scripts/harness.sh run finalize --config configs/memory_s2d_agent.json --outp
 
 CLI省略`--config`时使用新的弱起点工具化配置；历史starter仍可显式指定`configs/memory_s2d_starter.json`。完整安装、三卡并行、恢复、导出见[当前运行指南](docs/backbone-demo.md)与[环境指南](docs/getting-started.md)。脚本、依赖锁全部入库，环境/模型/数据/凭据与完整轨迹放在Git忽略目录，不修改全局Claude或shell配置。
 
-本机及无凭据/数据/权重的干净checkout均通过72项离线测试；真实MCP预检、三次完整搜索和冻结恢复已验证，恢复新增调用0。[环境验证记录](docs/validation/memory-agent-setup.json)。
+本次本机通过74项离线测试，已完成弱起点三次真实搜索和冻结恢复；此前无凭据/数据/权重的干净checkout通过72项离线检查。[环境验证记录](docs/validation/memory-agent-setup.json)。
 
 ## 历史强起点压力测试
 

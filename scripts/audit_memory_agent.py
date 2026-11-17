@@ -6,6 +6,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from rsi_base.loop import file_hash
 from rsi_base.storage import read_json, write_json
 from rsi_base.types import digest
 
@@ -17,6 +18,7 @@ def rows(path):
 def audit(directory):
     frozen = read_json(directory / "frozen.json")
     config = read_json(directory / "run.json")["config"]
+    initial_records = rows(directory / "baselines" / frozen["selected_baseline"] / "results.jsonl")
     calls = rows(directory / "calls.jsonl")
     starts = [r for r in calls if r["event"] == "started"]
     finishes = {r["call_id"]: r for r in calls if r["event"] == "finished"}
@@ -80,6 +82,12 @@ def audit(directory):
     return {
         "seed": config["seed"],
         "source_sha256": read_json(directory / "run.json")["source_sha256"],
+        "initial_harness": frozen["selected_baseline"],
+        "initial_evaluation_records": len(initial_records),
+        "initial_trace_counts": sorted({len(r["traces"]) for r in initial_records}),
+        "initial_records_with_retrieved_memory": sum(
+            bool(r["memory_ids"]) for r in initial_records
+        ),
         "physical_application_calls": dict(Counter(r["kind"] for r in starts)),
         "official_search_application_calls_at_freeze": frozen["application_calls_at_freeze"],
         "physical_task_calls_by_phase": dict(phase_calls),
@@ -169,6 +177,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     result = {
+        "audit_script_sha256": file_hash(__file__),
         "runs": [audit(args.suite / f"seed{seed}") for seed in (42, 123, 2026)],
         "information_scope": "Full source/training/development available; availability does not imply every artifact was actually read",
         "configuration_confirmation_scope": "A null global_configuration_unchanged value indicates absent confirmation metadata for one or more Meta calls; see per-call confirmation counts",

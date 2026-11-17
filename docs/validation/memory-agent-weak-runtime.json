@@ -1,0 +1,144 @@
+{
+  "execution_plan": {
+    "implementation_commit": "29d5e4dd5534f4c4fa7b68433bd1578a62b79dc9",
+    "config_sha256": "9cac8a8bb80712ef0d4020797cf79741c5913ba4989e362e1dd869312d77ff9a",
+    "purpose": "Infrastructure backbone demonstration from natural no-memory single-call harness",
+    "initial_baseline": "no_memory",
+    "seeds": [
+      42,
+      123,
+      2026
+    ],
+    "rounds": 5,
+    "validation_repeats": 3,
+    "test_role": "Historical replay only, after all searches freeze",
+    "source_mutated_during_search": false,
+    "reference_comparisons": "Recorded as references, not infrastructure acceptance conditions",
+    "command": "sh scripts/harness.sh run suite --parallel --config configs/memory_s2d_agent.json --data data/memory-s2d-expanded --task-base-urls http://127.0.0.1:18000/v1 http://127.0.0.1:18001/v1 http://127.0.0.1:18002/v1 --output runs/memory-s2d-agent-weak-v1"
+  },
+  "readiness": {
+    "checks": [
+      {
+        "check": "python",
+        "ok": true,
+        "detail": "3.11.15"
+      },
+      {
+        "check": "core_packages",
+        "ok": true,
+        "detail": {
+          "openai": "2.54.0",
+          "pydantic": "2.14.3",
+          "httpx": "0.28.1"
+        }
+      },
+      {
+        "check": "configuration",
+        "ok": true,
+        "detail": {
+          "task_model": "Qwen/Qwen3-4B-Instruct-2507",
+          "meta_model": "deepseek-v4.1-flash"
+        }
+      },
+      {
+        "check": "retrieval_sandbox",
+        "ok": true,
+        "detail": "Namespace probe passed; host home/network absent"
+      },
+      {
+        "check": "claude_code",
+        "ok": true,
+        "detail": {
+          "version": "2.1.169 (Claude Code)",
+          "flags_not_listed_in_help": [
+            "--strict-mcp-config"
+          ],
+          "compatibility": "Pinned runtime contract"
+        }
+      },
+      {
+        "check": "meta_credential",
+        "ok": true,
+        "detail": "Present; value never displayed"
+      },
+      {
+        "check": "published_data",
+        "ok": true,
+        "detail": {
+          "train": 200,
+          "val": 300,
+          "test": 291
+        }
+      },
+      {
+        "check": "task_endpoint",
+        "ok": true,
+        "detail": [
+          "Qwen/Qwen3-4B-Instruct-2507"
+        ]
+      }
+    ],
+    "model_generations": 0,
+    "meta_api_calls": 0
+  },
+  "offline_checks": {
+    "tests_passed": 74,
+    "secret_scan_passed": true
+  },
+  "environment_scope": "Existing pinned project-local Python/GPU/CLI environments; no global configuration changes requested",
+  "model_weights_updated": false,
+  "scope": "Actual three-seed, five-round Meta/Task execution; numerical outcomes and failures supplied by frozen searches and final replay report",
+  "completion": {
+    "observed_at_utc": "2026-11-17T10:47:12.730704+00:00",
+    "experiment_completed": true,
+    "initial_actual_records_verified": 2700,
+    "initial_all_single_call": true,
+    "initial_all_without_retrieved_memory": true,
+    "all_five_round_histories_saved": true,
+    "all_seeds_development_improved": true,
+    "all_seeds_historical_replay_improved": true,
+    "meta_cli_invocations": 15,
+    "meta_cli_error_invocations": 2,
+    "pending_application_calls": 0,
+    "resume_verification": {
+      "before": {
+        "42": {
+          "task": 31609,
+          "meta": 5
+        },
+        "123": {
+          "task": 33569,
+          "meta": 5
+        },
+        "2026": {
+          "task": 30756,
+          "meta": 5
+        }
+      },
+      "after": {
+        "42": {
+          "task": 31609,
+          "meta": 5
+        },
+        "123": {
+          "task": 33569,
+          "meta": 5
+        },
+        "2026": {
+          "task": 30756,
+          "meta": 5
+        }
+      },
+      "additional_task_calls": 0,
+      "additional_meta_calls": 0,
+      "unchanged": true
+    },
+    "temporary_task_servers_stopped": true,
+    "gpu_memory_mib": [
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}
