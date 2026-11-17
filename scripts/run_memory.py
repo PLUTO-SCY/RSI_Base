@@ -18,7 +18,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("phase", choices=["calibrate", "search", "suite", "finalize"])
-    parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d_starter.json")
+    parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d_agent.json")
     parser.add_argument(
         "--task-base-url", help="Endpoint for one independent calibration/search worker"
     )
@@ -34,7 +34,7 @@ def main():
         help="Run suite searches or frozen test workers concurrently",
     )
     parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
-    parser.add_argument("--output", type=Path, default=root / "runs/memory-s2d-starter-v1")
+    parser.add_argument("--output", type=Path, default=root / "runs/memory-s2d-agent-demo")
     args = parser.parse_args()
     os.environ.setdefault("RSI_LOCAL_API_KEY", "EMPTY")
     config = MemoryConfig.model_validate_json(args.config.read_text())
@@ -74,7 +74,8 @@ def main():
             "config": config.model_dump(),
             "seeds": seeds,
             "test_gate": "Freeze all three searches before any final evaluation",
-            "stability_gate": "Positive test delta in every search seed and question-cluster bootstrap lower bound > 0; repeats averaged within each question",
+            "stability_gate": "Research diagnostic only: positive test delta in every search seed and question-cluster bootstrap lower bound > 0; not infrastructure acceptance",
+            "infrastructure_acceptance": "Run the proposal, execution, scoring, selection, artifact and recovery loop; report improvement over the configured initial harness. Beating strong fixed/random controls is not required.",
             "task_base_urls_by_seed": endpoints,
         }
         if config.test_status == "historical_replay":

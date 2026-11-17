@@ -166,7 +166,7 @@ def main():
             )
         )
         report["search_method_gate_scope"] = (
-            "Descriptive historical replay only; fresh independent confirmation remains outstanding"
+            "Optional research comparison against strong fixed/random controls; not infrastructure acceptance. Test status and fresh-confirmation limits are specified separately."
         )
     runtime_path = args.runtime or root / ".local/task-runtime-memory.json"
     report["task_runtime"] = read_json(runtime_path)
@@ -256,8 +256,15 @@ def main():
     print(
         json.dumps(
             {
-                "stability_gate_passed": report["stability_gate_passed"],
-                "paired_delta": report["paired_question_cluster_bootstrap"],
+                "experiment_completed": report.get(
+                    "experiment_completed", report["selection_frozen"]
+                ),
+                "gain_over_initial_harness": report["paired_question_cluster_bootstrap"],
+                "research_diagnostics": {
+                    "stability_gate_passed": report["stability_gate_passed"],
+                    "search_method_gate_passed": report.get("search_method_gate_passed"),
+                    "scope": "Research reference only; not infrastructure acceptance",
+                },
             }
         )
     )

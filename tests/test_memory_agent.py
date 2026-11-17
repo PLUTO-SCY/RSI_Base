@@ -161,6 +161,8 @@ def test_tool_agent_reads_development_and_debugs_before_submission(tmp_path, mon
         task={"model": "fixture", "base_url": "http://localhost:1"},
         meta={"model": "fixture", "base_url": "http://localhost:1"},
         proposal_strategy="agent",
+        initial_baseline="no_memory",
+        reference_policies={"strong_reference": MemoryPolicy(system_prompt="improved control")},
         rounds=1,
         probe_queries=4,
         max_probes=2,
@@ -169,6 +171,11 @@ def test_tool_agent_reads_development_and_debugs_before_submission(tmp_path, mon
     )
     meta = Meta()
     first = search(config, data, tmp_path / "run", tmp_path, meta=meta)
+    assert first["selected_baseline"] == "no_memory"
+    assert first["history"][0]["summary"]["accuracy"] == 0
+    calibration = read_json(tmp_path / "run/calibration.json")
+    assert calibration["strongest_fixed_baseline"] == "strong_reference"
+    assert calibration["baselines"]["strong_reference"]["summary"]["accuracy"] == 1
     assert first["selected"]["summary"]["accuracy"] == 1
     before = task.calls
     assert search(config, data, tmp_path / "run", tmp_path, meta=meta) == first

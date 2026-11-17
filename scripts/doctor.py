@@ -22,7 +22,7 @@ from rsi_base.memory_loop import MemoryConfig
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d_starter.json")
+    parser.add_argument("--config", type=Path, default=root / "configs/memory_s2d_agent.json")
     parser.add_argument("--data", type=Path, default=root / "data/memory-s2d-expanded")
     parser.add_argument(
         "--ready", action="store_true", help="Require Meta/data/Task readiness; GET /models only"

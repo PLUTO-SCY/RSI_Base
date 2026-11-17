@@ -1,5 +1,7 @@
 # 可读源码、可调试候选的 harness 演化
 
+本文保存强起点历史试验。当前基础设施默认改用简单起点，见[当前目标与运行方式](backbone-demo.md)。研究比较中的“稳定性未达标”不作为框架可用性的验收结论。
+
 本版针对[旧搜索诊断](harness-search-diagnosis.md)修复优化端。Task仍为固定权重Qwen3-4B-Instruct-2507，不训练LoRA。接上工具不等于证明收益，实验结论单独报告。
 
 ## Meta的能力与边界
@@ -35,7 +37,7 @@ def rank(query, memory):
 - 规范化对比布局7/8例等无效字段组合；单步候选比较全部开发请求，输入完全相同就跳过Task调用。
 - 跨候选按实际模型请求复用结果；不同repeat分别保存。两步流程按实际逐步请求缓存，不把首步相同误判成整条工作流相同。
 - 完整源码、实际输入、父子得失和失败子代轨迹均可回查。
-- 从十个固定对照中开发分数最高者起跑，包含旧随机搜索得到的三个强配置，避免从弱起点制造增长。
+- 从十个固定对照中开发分数最高者起跑，包含旧随机搜索得到的三个强配置；该历史试验用于检验强方案上的额外收益。
 - 随机搜索有相同轮数、试跑数和完整验证数上限，并包含通用Python检索模板。但随机模板空间小于Meta任意编写检索代码的空间，实际调用/token成本也不同，不能称严格等算力或全空间均匀随机。
 - 保存工具调用、候选代码、逐题轨迹、决策、物理API调用账本与源码/数据/依赖哈希。评估summary中的`model_calls`为逻辑工作流调用数；实际新增请求以`calls.jsonl`为准。
 
@@ -51,15 +53,15 @@ sh scripts/harness.sh model
 # 另开终端启动服务
 RSI_GPU=0 RSI_TASK_PORT=18000 sh scripts/harness.sh serve
 # 服务就绪后
-sh scripts/harness.sh doctor --ready --config configs/memory_s2d_agent.json
-sh scripts/harness.sh run suite --config configs/memory_s2d_agent.json \
+sh scripts/harness.sh doctor --ready --config configs/memory_s2d_agent_strong.json
+sh scripts/harness.sh run suite --config configs/memory_s2d_agent_strong.json \
   --task-base-urls http://127.0.0.1:18000/v1 http://127.0.0.1:18000/v1 http://127.0.0.1:18000/v1 \
   --output runs/my-agent-suite
-sh scripts/harness.sh run finalize --config configs/memory_s2d_agent.json \
+sh scripts/harness.sh run finalize --config configs/memory_s2d_agent_strong.json \
   --output runs/my-agent-suite
 ```
 
-三卡并行时另启动GPU1/18001与GPU2/18002，suite增加`--parallel`并替换对应端口，finalize也增加`--parallel`。全部搜索冻结后才回放测试。改代码/配置要使用新run；恢复需要完全相同的源文件和协议。旧协议仍可复现，省略`--config`时入口仍运行旧starter协议；本模式须显式指定新配置。
+三卡并行时另启动GPU1/18001与GPU2/18002，suite增加`--parallel`并替换对应端口，finalize也增加`--parallel`。全部搜索冻结后才回放测试。改代码/配置要使用新run；恢复需要完全相同的源文件和协议。旧协议仍可复现，省略`--config`时入口现在默认运行弱起点工具化配置；本页强起点参考须显式指定`configs/memory_s2d_agent_strong.json`。
 
 冻结回放结束后，记录服务指纹并导出曲线/成本；环境与代码应先提交，导出器会校验运行源码与Git字节一致：
 
@@ -78,7 +80,7 @@ sh scripts/harness.sh report --suite runs/my-agent-suite \
 
 72项离线测试通过；本机namespace隔离、候选返回值、跨候选缓存、repeat隔离和冻结恢复均有覆盖。真实DeepSeek/Claude Code预检完成18个内部轮次、17次宿主工具调用、两次Python检索试跑及提交；宿主232次Task请求、1次Meta CLI调用，未打开测试。8题的小预检未产生增长，仅用于验证闭环，不作为性能证据。首次预检因CLI轮次限制未完成提交，记录保留，随后增加限制并修正阅读/试跑顺序。
 
-## 正式结果：有增长，稳定性未达标
+## 历史研究结果：有增长，研究统计门槛未通过
 
 三次搜索均从十个固定对照中的最强者出发；Task权重、评分、数据、上下文和生成预算固定。开发平均84.19%→85.96%，两次增长、一次停滞。
 
@@ -90,7 +92,7 @@ sh scripts/harness.sh report --suite runs/my-agent-suite \
 
 平均历史回放：强固定79.99%，随机80.64%，Meta演化81.83%。相对强固定Δ=+1.83pp，95%区间[-0.19,+3.89]；相对随机Δ=+1.18pp，区间[-0.61,+3.02]。区间按题平均repeat/seed后bootstrap，条件于固定模型和数据，不提供跨任务或搜索算法的普遍保证。
 
-**稳定性门槛未通过**：seed123无增长，两项比较区间均跨0。这291题已使用过，只能历史回放，不能称全新独立确认。
+**研究统计门槛未通过**：seed123无增长，两项比较区间均跨0。这291题已使用过，只能历史回放，不能称全新独立确认。
 
 ![缩放坐标曲线](validation/memory-agent-v1-zoom.png)
 
@@ -117,7 +119,7 @@ sh scripts/harness.sh report --suite runs/my-agent-suite \
 
 [聚合结果与源码/权重指纹](validation/memory-agent-v1.json) · [工具可见性与成本审计](validation/memory-agent-search-audit.json) · [停滞seed附加检查](validation/memory-agent-probe-selection.json) · [安装/预检证据](validation/memory-agent-setup.json)。原始题目、模型输入/输出和密钥保留在忽略目录。
 
-本机正式运行命令使用`--parallel`、`--config configs/memory_s2d_agent.json`、`--data data/memory-s2d-expanded`和`--output runs/memory-s2d-agent-v1`，端口依次18000/18001/18002。实现起点为`cc87afd`；导出报告的源码/tooling提交与文件哈希见JSON。后续文档/审计提交未改变实验核心字节。
+本机已封存运行当时使用`--parallel`、`--config configs/memory_s2d_agent.json`、`--data data/memory-s2d-expanded`和`--output runs/memory-s2d-agent-v1`，端口依次18000/18001/18002。实现起点为`cc87afd`；导出报告的源码/tooling提交与文件哈希见JSON。后续文档/审计提交未改变实验核心字节。
 
 附加筛选诊断命令（全部正式搜索冻结后运行，不改正式选择）：
 
@@ -125,3 +127,5 @@ sh scripts/harness.sh report --suite runs/my-agent-suite \
 .venv/bin/python scripts/audit_probe_selection.py --suite runs/memory-s2d-agent-v1 \
   --data data/memory-s2d-expanded --seed 123
 ```
+
+精确复核本页已封存实验时，检出`61a8eb3`并使用当时的`configs/memory_s2d_agent.json`及匹配的原始run。当前同名配置已改为弱起点，不可用于恢复旧强起点run；当前强起点配置用于新参考运行。

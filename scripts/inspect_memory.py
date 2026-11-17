@@ -11,10 +11,13 @@ from pathlib import Path
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", type=Path, nargs="?", default=root / "runs/memory-s2d-starter-v1")
+    parser.add_argument("suite", type=Path, nargs="?", default=root / "runs/memory-s2d-agent-demo")
     args = parser.parse_args()
     reports = []
-    for directory in sorted(args.suite.glob("seed*")):
+    directories = (
+        [args.suite] if (args.suite / "calls.jsonl").exists() else sorted(args.suite.glob("seed*"))
+    )
+    for directory in directories:
         path = directory / "calls.jsonl"
         if not path.exists():
             continue

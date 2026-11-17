@@ -78,7 +78,7 @@ def finalize(run_directories, data, output, root):
         "test_sha256": file_hash(Path(data) / "test.jsonl"),
         "selection_frozen": True,
         "test_repeats": "same predeclared count as validation",
-        "comparison": "Selected vs strongest fixed validation baseline; random control separate",
+        "comparison": "Selected vs configured initial baseline; strongest fixed and random controls are separate research references",
     }
     statuses = {
         read_json(p / "run.json")["config"].get("test_status", "held_out") for p in directories
@@ -172,6 +172,7 @@ def finalize(run_directories, data, output, root):
     )
     result = {
         "runs": reports,
+        "experiment_completed": True,
         "selection_frozen": True,
         "weights_updated": False,
         "paired_question_cluster_bootstrap": interval,
@@ -180,6 +181,7 @@ def finalize(run_directories, data, output, root):
         "stability_gate_passed": len(reports) >= 3
         and all(r["paired"]["mean_delta"] > 0 for r in reports)
         and interval["low"] > 0,
+        "stability_gate_scope": "Research statistic for repeated improvement over the initial harness; not an infrastructure completion requirement",
         "scope": "Historical replay on previously used cases; no fresh independent confirmation"
         if "historical_replay" in statuses
         else "Stability on one public benchmark with fixed weights; not evidence of universal task or model generalization",

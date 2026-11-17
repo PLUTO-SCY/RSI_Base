@@ -1,6 +1,6 @@
 # 从全新 clone 到首次 harness 实验
 
-当前主入口是`sh scripts/harness.sh`。本指南不需要作者的环境、历史run、模型缓存或API key。先完成两题连接检查，再显式启动完整实验；默认不训练权重。实验结论与对照见[harness报告](harness-backbone.md)，旧数学pilot见[历史指南](legacy-math-quickstart.md)。
+当前主入口是`sh scripts/harness.sh`。本指南不需要作者的环境、历史run、模型缓存或API key。当前默认是弱起点工具化harness，先完成连接检查和单seed闭环，再按需运行三seed比较；默认不训练权重。实验结论与对照见[harness报告](harness-backbone.md)，旧数学pilot见[历史指南](legacy-math-quickstart.md)。
 
 ## 1. 机器与环境
 
@@ -26,11 +26,11 @@ uv使用官方固定版本安装器和项目安装目录，不修改shell profil
 ```sh
 git clone https://github.com/PLUTO-SCY/RSI_Base.git
 cd RSI_Base
-sh scripts/harness.sh setup --gpu --claude
+sh scripts/harness.sh setup --gpu --claude --sandbox
 sh scripts/harness.sh check
 ```
 
-`setup`本身只安装核心环境；两个可选参数分别添加GPU环境和项目内CLI。入口脚本也可使用绝对路径从其他工作目录调用，会自行定位仓库根目录。不需要activate，不需要sudo，不修改全局Claude配置或`.bashrc`。Python、uv、npm缓存也放在`.local/`；脚本保留在`scripts/`，依赖锁随Git提交。
+`setup`本身只安装核心环境；`--gpu`添加推理环境，`--claude`添加项目内CLI，`--sandbox`添加本地检索代码沙箱。入口脚本也可使用绝对路径从其他工作目录调用，会自行定位仓库根目录。不需要activate，不需要sudo，不修改全局Claude配置或`.bashrc`。Python、uv、npm缓存也放在`.local/`；脚本保留在`scripts/`，依赖锁随Git提交。
 
 ## 3. 凭据与数据
 
@@ -80,7 +80,7 @@ sh scripts/harness.sh smoke --meta --output runs/harness-smoke-meta
 
 ## 5. 完整实验：单卡串行或三卡并行
 
-这是显式的正式运行：3次搜索，每次5轮×2候选，每个候选在300题上重复3次；另有七个固定控制与同候选数随机搜索。Meta最多15次CLI提案，Task评估远多于smoke，请依据`calls.jsonl`核对实际成本。
+先用`sh scripts/harness.sh run search --seed 42 --output runs/my-agent-demo`验证弱起点闭环。下列suite是可选的三seed完整比较：默认每次5轮，最多4次小批试跑、2次完整候选验证，每个候选300题×3次，并记录六个固定参考与随机搜索。三seed最多15次Meta CLI调用，实际成本以账本为准；强/随机领先性不是基础设施首次验收条件。
 
 单卡服务继续运行，三个seed顺序执行：
 
