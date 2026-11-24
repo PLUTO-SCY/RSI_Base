@@ -1,4 +1,4 @@
-"""Train-only trajectory collection and frozen model/harness comparison for LoRA SFT."""
+"""Train-only trajectory collection and frozen model/harness comparison for SFT."""
 
 import fcntl
 import json
@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from .agent import TaskAgent
 from .classification import MemoryHarness, MemoryPolicy, label_score, normalize
@@ -18,13 +18,17 @@ from .memory_audit import cluster_interval, paired_records
 from .memory_loop import MemoryConfig, evaluate_policy, load_rows, stable_improvement
 from .storage import Ledger, read_json, write_json
 from .types import Limits, StrictModel, digest
+from .weights import load_adapter as load_adapter
+from .weights import load_artifact, load_parent, parent_endpoint
 
 
 class AdapterConfig(StrictModel):
+    training_mode: Literal["lora", "full"] = "lora"
     base_model: str = "Qwen/Qwen3-4B-Instruct-2507"
     base_revision: str = "cdbee75f17c01a7cc42f958dc650907174af0554"
     base_directory: str = ".local/models/qwen3-4b-instruct-2507"
     parent_adapter: str | None = None
+    parent_checkpoint: str | None = None
     rank: int = Field(default=16, ge=1, le=256)
     alpha: int = Field(default=32, ge=1)
     dropout: float = Field(default=0, ge=0, lt=1)
@@ -38,6 +42,32 @@ class AdapterConfig(StrictModel):
         if not value or len(set(value)) != len(value) or any(not item.strip() for item in value):
             raise ValueError("target_modules must contain distinct nonempty module names")
         return value
+
+    @model_validator(mode="after")
+    def parent_format(self):
+        if self.training_mode == "full" and self.parent_adapter is not None:
+            raise ValueError("Full training accepts parent_checkpoint for continuation")
+        if self.training_mode == "lora" and self.parent_checkpoint is not None:
+            raise ValueError(
+                "LoRA uses parent_adapter; set base_directory to start on a full model"
+            )
+        return self
+
+    @property
+    def parent_path(self):
+        return self.parent_checkpoint if self.training_mode == "full" else self.parent_adapter
+
+    @property
+    def artifact_name(self):
+        return "model" if self.training_mode == "full" else "adapter"
+
+    @property
+    def artifact_hash_key(self):
+        return "checkpoint_sha256" if self.training_mode == "full" else "adapter_sha256"
+
+    @property
+    def parent_hash_key(self):
+        return f"parent_{self.artifact_hash_key}"
 
 
 class SFTConfig(AdapterConfig):
@@ -91,20 +121,6 @@ def pin(path, value):
     if path.exists() and read_json(path) != value:
         raise ValueError(f"Pinned SFT inputs changed: {path}")
     write_json(path, value)
-
-
-def load_adapter(directory):
-    directory = Path(directory)
-    manifest = read_json(directory / "manifest.json")
-    files = manifest["files"]
-    if not {"adapter_config.json", "adapter_model.safetensors"}.issubset(files):
-        raise ValueError("Incomplete LoRA artifact")
-    for name, expected in files.items():
-        if Path(name).name != name or file_hash(directory / name) != expected:
-            raise ValueError("LoRA artifact changed")
-    if manifest["artifact_sha256"] != digest(files):
-        raise ValueError("LoRA artifact identity changed")
-    return manifest
 
 
 def successes(records, training, labels, *, training_target="verified"):
@@ -192,15 +208,11 @@ def collect(config, source_run, data, output, root, *, task=None, base_url=None)
             {**memory_config.task.model_dump(), "base_url": base_url}
         )
         memory_config = memory_config.model_copy(update={"task": task_settings})
-    parent_model = config.base_model
-    parent_hash = None
-    if config.parent_adapter:
-        adapter = load_adapter(root / config.parent_adapter)
-        if adapter["identity"]["config"]["base_model"] != config.base_model:
-            raise ValueError("Parent adapter belongs to another base model")
-        parent_model, parent_hash = adapter["served_model"], adapter["artifact_sha256"]
+    weights = load_parent(config, root)
+    parent_model = weights["served_model"] if weights else config.base_model
+    parent_hash = weights["artifact_sha256"] if weights else None
     if memory_config.task.model != parent_model:
-        raise ValueError("Generation model must match the base/parent adapter being trained")
+        raise ValueError("Generation model must match the training parent")
     rollout_settings = memory_config.task
     if config.collection_temperature is not None:
         if "temperature" in rollout_settings.extra_body:
@@ -216,7 +228,7 @@ def collect(config, source_run, data, output, root, *, task=None, base_url=None)
         "frozen_sha256": file_hash(source_run / "frozen.json"),
         "train_sha256": file_hash(data / "train.jsonl"),
         "labels_sha256": file_hash(data / "labels.json"),
-        "parent_adapter_sha256": parent_hash,
+        config.parent_hash_key: parent_hash,
         "split_sha256": parent["split_sha256"],
         "memory_config": memory_config.model_dump(),
         "rollout_settings": rollout_settings.model_dump(),
@@ -258,7 +270,7 @@ def collect(config, source_run, data, output, root, *, task=None, base_url=None)
             )
         finally:
             ledger.close()
-        if config.parent_adapter:
+        if config.parent_path or config.training_mode == "full":
             check_response_models(records, parent_model)
         samples, excluded = successes(
             records, training, labels, training_target=config.training_target
@@ -307,28 +319,25 @@ def check_response_models(records, expected):
     if any(
         trace.get("response_model") != expected for record in records for trace in record["traces"]
     ):
-        raise ValueError(f"Task endpoint did not report the requested adapter: {expected}")
+        raise ValueError(f"Task endpoint did not report the requested model: {expected}")
 
 
-def compare(config, data, output, root, *, base_url, split="val", tasks=None):
+def compare(config, data, output, root, *, base_url, parent_base_url=None, split="val", tasks=None):
     """Cross model and harness on development; test only after the decision is sealed."""
     data, output, root = Path(data), Path(output), Path(root)
     verify_dataset(output, config)
     collection = read_json(output / "collection_identity.json")
-    adapter = load_adapter(output / "adapter")
+    artifact = load_artifact(output / config.artifact_name, config.training_mode)
+    parent = load_parent(config, root)
+    if (parent["artifact_sha256"] if parent else None) != collection[config.parent_hash_key]:
+        raise ValueError("Training parent changed after collection")
     if (
-        config.parent_adapter
-        and load_adapter(root / config.parent_adapter)["artifact_sha256"]
-        != collection["parent_adapter_sha256"]
-    ):
-        raise ValueError("Parent adapter changed after collection")
-    if (
-        adapter["identity"]["dataset_sha256"] != file_hash(output / "train.jsonl")
-        or SFTConfig.model_validate(adapter["identity"]["config"]) != config
-        or adapter["identity"]["collection_sha256"]
+        artifact["identity"]["dataset_sha256"] != file_hash(output / "train.jsonl")
+        or SFTConfig.model_validate(artifact["identity"]["config"]) != config
+        or artifact["identity"]["collection_sha256"]
         != file_hash(output / "collection_identity.json")
     ):
-        raise ValueError("Adapter was trained on a different dataset")
+        raise ValueError("Model was trained on a different dataset")
     if any(collection[key] != value for key, value in source_identity(root).items()):
         raise ValueError("SFT source or dependency locks changed after collection")
     if split not in {"val", "test"}:
@@ -342,20 +351,24 @@ def compare(config, data, output, root, *, base_url, split="val", tasks=None):
         if (
             decision != development["decision"]
             or decision["evaluation_identity_sha256"] != digest(development_identity)
-            or decision["adapter_sha256"] != adapter["artifact_sha256"]
+            or decision[config.artifact_hash_key] != artifact["artifact_sha256"]
         ):
             raise ValueError("Frozen development decision changed")
     memory_config = MemoryConfig.model_validate(collection["memory_config"])
-    settings = memory_config.task.model_copy(update={"base_url": base_url})
-    settings = type(settings).model_validate(settings.model_dump())
+    settings = memory_config.task.model_dump()
+    model_settings = type(memory_config.task)
     models = {
-        "parent": settings,
-        "candidate": settings.model_copy(update={"model": adapter["served_model"]}),
+        "parent": model_settings.model_validate(
+            {**settings, "base_url": parent_endpoint(config, base_url, parent_base_url)}
+        ),
+        "candidate": model_settings.model_validate(
+            {**settings, "base_url": base_url, "model": artifact["served_model"]}
+        ),
     }
     identity = {
         **source_identity(root),
         "collection_sha256": file_hash(output / "collection_identity.json"),
-        "adapter_sha256": adapter["artifact_sha256"],
+        config.artifact_hash_key: artifact["artifact_sha256"],
         "config": config.model_dump(),
         "train_sha256": file_hash(data / "train.jsonl"),
         "labels_sha256": file_hash(data / "labels.json"),
@@ -411,7 +424,11 @@ def compare(config, data, output, root, *, base_url, split="val", tasks=None):
                         repeats=config.evaluation_repeats,
                         seed=config.seed,
                     )
-                    if model_name == "candidate" or config.parent_adapter:
+                    if (
+                        model_name == "candidate"
+                        or config.parent_path
+                        or config.training_mode == "full"
+                    ):
                         check_response_models(records[key], model.model)
         finally:
             ledger.close()
@@ -421,8 +438,8 @@ def compare(config, data, output, root, *, base_url, split="val", tasks=None):
             "split": split,
             "test_status": memory_config.test_status,
             "metrics": metrics,
-            "lora_effect_with_evolved_harness": pair,
-            "lora_effect_with_initial_harness": initial_pair,
+            f"{config.training_mode}_effect_with_evolved_harness": pair,
+            f"{config.training_mode}_effect_with_initial_harness": initial_pair,
             "paired_question_intervals": {
                 "evolved_harness": cluster_interval(pair["question_deltas"], seed=config.seed),
                 "initial_harness": cluster_interval(
@@ -437,7 +454,7 @@ def compare(config, data, output, root, *, base_url, split="val", tasks=None):
                 "accepted": accepted,
                 "rule": "No repeat regresses; mean gain at least one question per repeat, with the evolved harness fixed",
                 "evaluation_identity_sha256": digest(identity),
-                "adapter_sha256": adapter["artifact_sha256"],
+                config.artifact_hash_key: artifact["artifact_sha256"],
                 "selected_model": models["candidate" if accepted else "parent"].model_dump(),
                 "policy": collection["policy"],
                 "test_opened": False,
@@ -449,13 +466,13 @@ def compare(config, data, output, root, *, base_url, split="val", tasks=None):
                     "prior_policy": policies["evolved"],
                     "initial_baseline": "prior_search_best",
                     "model_context": {
-                        "origin": "lora_sft",
+                        "origin": f"{config.training_mode}_sft",
                         "training_config": config.model_dump(),
-                        "training_metrics": adapter.get("metrics", {}),
-                        "optimizer_steps": adapter.get("optimizer_steps"),
+                        "training_metrics": artifact.get("metrics", {}),
+                        "optimizer_steps": artifact.get("optimizer_steps"),
                         "train_samples": read_json(output / "dataset.json")["samples"],
-                        "candidate_model": adapter["served_model"],
-                        "candidate_adapter_sha256": adapter["artifact_sha256"],
+                        "candidate_model": artifact["served_model"],
+                        f"candidate_{config.artifact_hash_key}": artifact["artifact_sha256"],
                         "accepted": accepted,
                         "development_metrics": metrics,
                         "development_paired_gain": pair,

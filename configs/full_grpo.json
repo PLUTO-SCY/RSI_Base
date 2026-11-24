@@ -1,0 +1,9 @@
+{
+  "training_mode": "full",
+  "steps": 20,
+  "train_samples": 240,
+  "prompts_per_batch": 8,
+  "samples_per_prompt": 4,
+  "learning_rate": 0.000003,
+  "save_every": 10
+}

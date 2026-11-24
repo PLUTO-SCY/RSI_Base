@@ -1,5 +1,7 @@
 # LoRA SFT：从 harness 演化到模型更新
 
+相同的 SFT 入口也支持 [全参微调](full-tuning.md)。
+
 这一阶段复用已冻结的 harness，完成 **训练集采样 → 正确轨迹筛选 → LoRA SFT → 开发集模型选择 → 下一轮 harness 演化**。训练策略由配置固定，Meta 继续负责 harness；当前不搜索训练超参数。
 
 ## 1. 准备独立训练环境

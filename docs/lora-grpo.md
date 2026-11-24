@@ -1,5 +1,7 @@
 # LoRA GRPO
 
+相同的 GRPO 入口也支持 [全参微调](full-tuning.md)。
+
 verl 在一个节点内交替用 vLLM 采样、用 FSDP2 更新 LoRA。RSI Base 提供固定的单次 Task 提示和数值评分器，负责数据划分、PEFT 产物和模型选择。训练、部署与评测使用同一份 `configs/lora_grpo.json`。
 
 ## 安装与数据

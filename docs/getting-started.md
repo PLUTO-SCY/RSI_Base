@@ -18,8 +18,8 @@ sh scripts/harness.sh setup --gpu --claude --sandbox
 | --- | --- | --- |
 | uv 0.11.17、Python 3.11.15、核心与开发依赖 | `bootstrap.sh`、`setup.sh`、`uv.lock` | `.local/`、`.venv/` |
 | vLLM 0.11.0 与 GPU 依赖 | `setup_task.sh`、`requirements/task.lock` | `.venv-task/` |
-| LoRA SFT（`--train`） | `setup_train.sh`、`requirements/train.lock` | `.venv-train/` |
-| verl LoRA GRPO（`--rl`） | `setup_rl.py`、`requirements/verl.json`、`requirements/rl-numpy.lock` | `.venvs/rl/` |
+| SFT（`--train`） | `setup_train.sh`、`requirements/train.lock` | `.venv-train/` |
+| verl GRPO（`--rl`） | `setup_rl.py`、`requirements/verl.json`、`requirements/rl-numpy.lock` | `.venvs/rl/` |
 | Claude Code 2.1.169 | `requirements/claude-code/package-lock.json` | `.local/claude-cli/` |
 | Python 检索执行隔离 | `setup_sandbox.py`、`requirements/sandbox.json` | `.local/bin/bwrap` |
 

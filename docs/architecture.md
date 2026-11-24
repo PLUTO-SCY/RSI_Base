@@ -1,6 +1,6 @@
 # 实现结构
 
-分类 harness 演化由 Meta 提出改动，宿主执行任务、评分并选择候选。模型更新入口包括冻结分类 harness 上的 LoRA SFT，以及固定数学 harness 上的 LoRA GRPO。两者导出同一类 PEFT adapter 供 Task 服务加载。
+分类 harness 演化由 Meta 提出改动，宿主执行任务、评分并选择候选。模型更新入口包括冻结分类 harness 上的 SFT，以及固定数学 harness 上的 verl GRPO。两者均支持 LoRA adapter 和全参 Hugging Face checkpoint。
 
 ## 运行流程
 
@@ -35,7 +35,8 @@ Meta 读取源码 / 开发数据 / 完整轨迹 / 历史结果
 | `memory_audit.py` | 冻结后评测、按题配对统计与汇总 |
 | `sft.py` | 训练集轨迹筛选、模型/harness 交叉评测、模型选择和下一轮配置 |
 | `lora_train.py` | 独立环境中的 Transformers/PEFT 训练、checkpoint 恢复与 adapter 产物 |
-| `rl.py`、`scripts/train_grpo.py` | 固定数学 harness、verl GRPO、PEFT 导出和父代配对评测 |
+| `rl.py`、`scripts/train_grpo.py` | 固定数学 harness、verl GRPO、模型导出和父代配对评测 |
+| `weights.py` | adapter 与完整 checkpoint 的文件校验和父模型解析 |
 | `storage.py`、`types.py` | 原子写入、调用账本、预算和类型 |
 | `loop.py`、`benchmark.py`、`math_scoring.py`、`cli.py` | 通用记录辅助函数，以及独立的数学任务运行与评分接口 |
 
@@ -62,6 +63,6 @@ Claude Code 的配置目录、工作目录、模型和认证环境变量在子�
 - 更换分类数据：复用当前文件布局、标签协议和评测器，通过 `--data` 指定目录。
 - 增加任务类型：新增任务执行和评分模块，再接入独立运行入口；从已有明确用例出发调整共用逻辑。
 
-LoRA SFT 用留一法收集训练集轨迹，支持通过验证的最终回答或训练集标准标签作为监督目标。它在同一推理服务内交叉评测模型和 harness，按开发集选择模型，再把训练配置和开发集反馈交给下一轮 Meta。 [LoRA SFT](lora-sft.md)
+SFT 用留一法收集训练集轨迹，支持通过验证的最终回答或训练集标准标签作为监督目标。它交叉评测模型和 harness，按开发集选择模型，再把训练配置和开发集反馈交给下一轮 Meta。LoRA 模式可在一个推理服务中比较父代和候选，全参模式分别加载其 checkpoint。 [LoRA SFT](lora-sft.md) · [全参微调](full-tuning.md)
 
-LoRA GRPO 把固定数学提示和训练题交给 verl 在线采样。`grpo_reward.py` 调用项目数值评分器，`train_grpo.py` 从 FSDP2 checkpoint 导出 LoRA，`rl.py` 通过现有 Task 服务做父代配对评测与模型选择。 [LoRA GRPO](lora-grpo.md)
+GRPO 把固定数学提示和训练题交给 verl 在线采样。`grpo_reward.py` 调用项目数值评分器，`train_grpo.py` 从 FSDP2 checkpoint 导出模型，`rl.py` 通过 Task 服务做父代配对评测与模型选择。 [LoRA GRPO](lora-grpo.md) · [全参微调](full-tuning.md)

@@ -17,6 +17,7 @@
   <a href="docs/architecture.md">实现结构</a> ·
   <a href="docs/lora-sft.md">LoRA SFT</a> ·
   <a href="docs/lora-grpo.md">LoRA GRPO</a> ·
+  <a href="docs/full-tuning.md">全参微调</a> ·
   <a href="CONTRIBUTING.md">开发约定</a>
 </p>
 
@@ -26,7 +27,7 @@
 
 ## 工作方式
 
-RSI Base 为 RSI 研究提供一套可复用的实验闭环。Meta 提出 harness 改动，宿主执行任务、评测并选择版本。模型更新支持 **LoRA SFT** 和固定数学 harness 上的 **LoRA GRPO**。
+RSI Base 为 RSI 研究提供一套可复用的实验闭环。Meta 提出 harness 改动，宿主执行任务、评测并选择版本。SFT 与固定数学 harness 上的 verl GRPO 都可选择 **LoRA** 或 **全参微调**。
 
 ```mermaid
 flowchart LR
@@ -44,7 +45,7 @@ flowchart LR
 | **Meta Agent** | Claude Code + DeepSeek API | 查看源码、开发数据与完整轨迹，通过 MCP 探测并提交候选 |
 | **Task Agent** | Qwen3-4B-Instruct-2507 + vLLM | 通过 OpenAI 兼容接口执行任务，也可接入已有推理服务 |
 | **Harness** | 配置 + Python 检索函数 | 演化 prompt、检索算法、示例组织与单步／复核流程 |
-| **训练后端** | Transformers + PEFT / verl | 训练并导出 LoRA adapter，由 Task 服务加载评测 |
+| **训练后端** | Transformers + PEFT / verl | 导出 LoRA adapter 或完整模型，由 Task 服务加载评测 |
 | **实验宿主** | Python 编排与评测 | 固定评分协议，管理预算、版本、断点恢复与冻结后测试 |
 
 默认初始 harness 根据任务描述和标签，通过一次模型调用完成分类。harness 演化阶段固定 Task 权重。LoRA SFT 使用训练集轨迹做监督更新，LoRA GRPO 在固定数学 harness 上用在线采样和数值奖励更新权重。
@@ -106,6 +107,10 @@ RSI_GPU=2 sh scripts/harness.sh serve-adapter
 ## LoRA GRPO
 
 使用 verl 在线采样并优化固定数学 harness 下的 Task 模型。训练可从基础模型开始，也可读取同一基座上的已有 LoRA adapter。参见 [LoRA GRPO 使用说明](docs/lora-grpo.md)与 [verl 环境排查](docs/verl-troubleshooting.md)。
+
+## 全参微调
+
+SFT 与 GRPO 配置可设置 `"training_mode": "full"`。全参模型以 `model/` 导出，可用 `parent_checkpoint` 接入下一轮训练。配置和配对评测命令见 [全参 SFT 与全参 GRPO](docs/full-tuning.md)。
 
 ## 实验与复用
 

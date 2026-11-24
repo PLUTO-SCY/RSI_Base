@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train a LoRA adapter with verl or compare it through the Task endpoint."""
+"""Train with verl or compare weights through the Task endpoints."""
 
 import argparse
 import json
@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--data", type=Path, default=root / "data/gsm8k-grpo")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--base-url", default="http://127.0.0.1:18001/v1")
+    parser.add_argument("--parent-base-url", help="Parent endpoint for evaluate and test")
     args = parser.parse_args()
     if args.phase == "train":
         interpreter = root / ".venvs/rl/bin/python"
@@ -45,6 +46,7 @@ def main():
         root,
         args.base_url,
         split="val" if args.phase == "evaluate" else "test",
+        parent_base_url=args.parent_base_url,
     )
     print(json.dumps(report, indent=2))
 

@@ -1,4 +1,4 @@
-"""Isolated Transformers/PEFT backend. Run through scripts/train_lora.sh."""
+"""Isolated Transformers SFT backend for LoRA and full tuning."""
 
 import argparse
 import hashlib
@@ -14,7 +14,6 @@ from .loop import file_hash
 from .memory_loop import load_rows
 from .sft import (
     SFTConfig,
-    load_adapter,
     locked,
     pin,
     source_identity,
@@ -23,6 +22,7 @@ from .sft import (
 )
 from .storage import append_json, read_json, write_json
 from .types import digest
+from .weights import load_artifact, load_parent
 
 
 def model_files(directory):
@@ -67,7 +67,7 @@ def parameter_digest(model):
     return digest(
         {
             name: hashlib.sha256(
-                parameter.detach().cpu().contiguous().view(-1).view(torch.uint8).numpy().tobytes()
+                parameter.detach().cpu().contiguous().view(-1).view(torch.uint8).numpy()
             ).hexdigest()
             for name, parameter in model.named_parameters()
             if parameter.requires_grad
@@ -82,39 +82,42 @@ def train(config, output, root):
     if any(collection[key] != value for key, value in source_identity(root).items()):
         raise ValueError("SFT source or dependency locks changed after collection")
     base_directory = (root / config.base_directory).resolve()
-    parent = load_adapter(root / config.parent_adapter) if config.parent_adapter else None
+    parent = load_parent(config, root)
     identity = {
         **source_identity(root),
         "config": config.model_dump(),
         "dataset_sha256": file_hash(output / "train.jsonl"),
         "collection_sha256": file_hash(output / "collection_identity.json"),
         "base_files": model_files(base_directory),
-        "parent_adapter_sha256": parent["artifact_sha256"] if parent else None,
+        config.parent_hash_key: parent["artifact_sha256"] if parent else None,
         "world_size": int(os.environ.get("WORLD_SIZE", "1")),
         "packages": {
             name: version(name)
             for name in ["torch", "transformers", "peft", "accelerate", "safetensors"]
         },
     }
-    if identity["parent_adapter_sha256"] != collection["parent_adapter_sha256"]:
-        raise ValueError("Parent adapter differs from the collection model")
+    if identity[config.parent_hash_key] != collection[config.parent_hash_key]:
+        raise ValueError("Training parent differs from the collection model")
     if parent and parent["identity"]["base_files"] != identity["base_files"]:
-        raise ValueError("Parent adapter belongs to different base checkpoint bytes")
+        raise ValueError("Training parent belongs to different base checkpoint bytes")
+    start_directory = (
+        (root / config.parent_checkpoint).resolve() if config.parent_checkpoint else base_directory
+    )
+    target = output / config.artifact_name
     rank = int(os.environ.get("RANK", "0"))
     with locked(output) if rank == 0 else nullcontext():
-        if (output / "adapter").exists():
-            artifact = load_adapter(output / "adapter")
+        if target.exists():
+            artifact = load_artifact(target, config.training_mode)
             if artifact["identity"] != identity:
-                raise ValueError("Completed adapter has different training inputs")
+                raise ValueError("Completed model has different training inputs")
             return artifact
         if rank == 0:
             pin(output / "training/identity.json", identity)
-        return train_backend(config, output, base_directory, identity, root, rank)
+        return train_backend(config, output, start_directory, identity, root, rank)
 
 
-def train_backend(config, output, base_directory, identity, root, rank):
+def train_backend(config, output, start_directory, identity, root, rank):
     import torch
-    from peft import LoraConfig, PeftModel, get_peft_model
     from transformers import (
         AutoModelForCausalLM,
         AutoTokenizer,
@@ -125,9 +128,10 @@ def train_backend(config, output, base_directory, identity, root, rank):
     from transformers.trainer_utils import get_last_checkpoint
 
     if not torch.cuda.is_available() or not torch.cuda.is_bf16_supported():
-        raise ValueError("The LoRA backend requires a CUDA GPU with BF16 support")
+        raise ValueError("SFT requires a CUDA GPU with BF16 support")
+    full = config.training_mode == "full"
     set_seed(config.seed)
-    tokenizer = AutoTokenizer.from_pretrained(base_directory, local_files_only=True)
+    tokenizer = AutoTokenizer.from_pretrained(start_directory, local_files_only=True)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
@@ -162,19 +166,101 @@ def train_backend(config, output, base_directory, identity, root, rank):
         save_safetensors=True,
         report_to=[],
         remove_unused_columns=False,
-        optim="adamw_torch",
+        optim="adamw_torch_fused" if full else "adamw_torch",
         seed=config.seed,
         data_seed=config.seed,
         dataloader_num_workers=0,
     )
     # TrainingArguments initializes distributed state before model placement.
     model = AutoModelForCausalLM.from_pretrained(
-        base_directory,
-        torch_dtype=torch.bfloat16,
+        start_directory,
+        torch_dtype=torch.float32 if full else torch.bfloat16,
         attn_implementation="sdpa",
         local_files_only=True,
     )
     model.config.use_cache = False
+    if full:
+        trainable = model.num_parameters(only_trainable=True)
+        total = model.num_parameters()
+        if not total or trainable != total:
+            raise ValueError("Full SFT requires all model parameters to be trainable")
+    else:
+        model = lora_model(model, config, root)
+        trainable, total = model.get_nb_trainable_parameters()
+    before = parameter_digest(model) if rank == 0 else None
+    trainer = Trainer(
+        model=model,
+        args=arguments,
+        train_dataset=samples,
+        data_collator=AssistantCollator(tokenizer.pad_token_id),
+        processing_class=tokenizer,
+    )
+    checkpoints = output / "training/checkpoints"
+    previous_checkpoint = get_last_checkpoint(str(checkpoints)) if checkpoints.exists() else None
+    started = time.time()
+    attempts = output / "training/attempts.jsonl"
+    if rank == 0:
+        append_json(
+            attempts,
+            {"event": "started", "time": started, "resume_from_checkpoint": previous_checkpoint},
+        )
+        write_json(output / "training/tokenization.json", tokenization)
+    try:
+        result = trainer.train(resume_from_checkpoint=previous_checkpoint)
+        if rank == 0:
+            after = parameter_digest(model)
+            if before == after or not all(
+                torch.isfinite(parameter).all().item()
+                for parameter in model.parameters()
+                if parameter.requires_grad
+            ):
+                raise ValueError("Training did not produce finite changed weights")
+            staging = output / f".{config.artifact_name}-staging"
+            if staging.exists():
+                shutil.rmtree(staging)
+            trainer.save_model(str(staging))
+            trainer.save_state()
+            files = {p.name: file_hash(p) for p in staging.iterdir() if p.is_file()}
+            artifact_hash = digest(files)
+            artifact = {
+                "identity": identity,
+                "files": files,
+                "artifact_sha256": artifact_hash,
+                "served_model": f"rsi-{config.training_mode}-{artifact_hash[:12]}",
+                "trainable_parameters": trainable,
+                "total_parameters": total,
+                "parameters_changed": before != after,
+                "trainable_sha256_before": before,
+                "trainable_sha256_after": after,
+                "tokenization": tokenization,
+                "metrics": result.metrics,
+                "optimizer_steps": trainer.state.global_step,
+                "base_weights_frozen": not full,
+            }
+            write_json(staging / "manifest.json", artifact)
+            staging.rename(output / config.artifact_name)
+            append_json(
+                attempts,
+                {
+                    "event": "finished",
+                    "time": time.time(),
+                    "elapsed_seconds": time.time() - started,
+                    "optimizer_steps": trainer.state.global_step,
+                },
+            )
+        trainer.accelerator.wait_for_everyone()
+        return load_artifact(output / config.artifact_name, config.training_mode)
+    except BaseException as exc:
+        if rank == 0:
+            append_json(
+                attempts, {"event": "failed", "time": time.time(), "error_type": type(exc).__name__}
+            )
+        raise
+
+
+def lora_model(model, config, root):
+    from peft import LoraConfig, PeftModel, get_peft_model
+
     if config.parent_adapter:
         model = PeftModel.from_pretrained(model, root / config.parent_adapter, is_trainable=True)
         previous = model.peft_config["default"]
@@ -203,75 +289,7 @@ def train_backend(config, output, base_directory, identity, root, rank):
         for name, parameter in model.named_parameters()
     ):
         raise ValueError("Only LoRA parameters may be trainable")
-    before = parameter_digest(model) if rank == 0 else None
-    trainer = Trainer(
-        model=model,
-        args=arguments,
-        train_dataset=samples,
-        data_collator=AssistantCollator(tokenizer.pad_token_id),
-        processing_class=tokenizer,
-    )
-    checkpoints = output / "training/checkpoints"
-    previous_checkpoint = get_last_checkpoint(str(checkpoints)) if checkpoints.exists() else None
-    started = time.time()
-    attempts = output / "training/attempts.jsonl"
-    if rank == 0:
-        append_json(
-            attempts,
-            {"event": "started", "time": started, "resume_from_checkpoint": previous_checkpoint},
-        )
-        write_json(output / "training/tokenization.json", tokenization)
-    try:
-        result = trainer.train(resume_from_checkpoint=previous_checkpoint)
-        if rank == 0:
-            after = parameter_digest(model)
-            if before == after or not all(
-                torch.isfinite(parameter).all().item()
-                for parameter in model.parameters()
-                if parameter.requires_grad
-            ):
-                raise ValueError("Training did not produce a finite changed adapter")
-            staging = output / ".adapter-staging"
-            if staging.exists():
-                shutil.rmtree(staging)
-            trainer.save_model(str(staging))
-            trainer.save_state()
-            files = {p.name: file_hash(p) for p in staging.iterdir() if p.is_file()}
-            artifact_hash = digest(files)
-            artifact = {
-                "identity": identity,
-                "files": files,
-                "artifact_sha256": artifact_hash,
-                "served_model": f"rsi-lora-{artifact_hash[:12]}",
-                "trainable_parameters": trainable,
-                "total_parameters": total,
-                "parameters_changed": before != after,
-                "trainable_sha256_before": before,
-                "trainable_sha256_after": after,
-                "tokenization": tokenization,
-                "metrics": result.metrics,
-                "optimizer_steps": trainer.state.global_step,
-                "base_weights_frozen": True,
-            }
-            write_json(staging / "manifest.json", artifact)
-            staging.rename(output / "adapter")
-            append_json(
-                attempts,
-                {
-                    "event": "finished",
-                    "time": time.time(),
-                    "elapsed_seconds": time.time() - started,
-                    "optimizer_steps": trainer.state.global_step,
-                },
-            )
-        trainer.accelerator.wait_for_everyone()
-        return load_adapter(output / "adapter")
-    except BaseException as exc:
-        if rank == 0:
-            append_json(
-                attempts, {"event": "failed", "time": time.time(), "error_type": type(exc).__name__}
-            )
-        raise
+    return model
 
 
 def main():
@@ -280,12 +298,15 @@ def main():
     parser.add_argument("--run", type=Path, default=Path("runs/lora-demo"))
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
-    result = train(SFTConfig.model_validate_json(args.config.read_text()), args.run, root)
+    config = SFTConfig.model_validate_json(args.config.read_text())
+    result = train(config, args.run, root)
     if int(os.environ.get("RANK", "0")) == 0:
         print(
             json.dumps(
                 {
-                    "adapter": str(args.run / "adapter"),
+                    config.artifact_name if config.training_mode == "lora" else "checkpoint": str(
+                        args.run / config.artifact_name
+                    ),
                     "model": result["served_model"],
                     "optimizer_steps": result["optimizer_steps"],
                 }

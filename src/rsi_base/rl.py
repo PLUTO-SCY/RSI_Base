@@ -1,4 +1,4 @@
-"""Fixed-harness LoRA GRPO inputs, model selection and Task evaluation."""
+"""Fixed-harness GRPO inputs, model selection and Task evaluation."""
 
 import random
 from pathlib import Path
@@ -10,9 +10,11 @@ from .benchmark import check_disjoint, load_problems
 from .loop import evaluate, file_hash
 from .math_scoring import math_score
 from .memory_audit import cluster_interval
-from .sft import AdapterConfig, load_adapter, local_key, locked
+from .sft import AdapterConfig, local_key, locked
 from .storage import Ledger, read_json, write_json
 from .types import AgentSpec, Limits, ModelSettings, digest
+from .weights import load_artifact, parent_endpoint
+from .weights import load_parent as parent_artifact
 
 
 class GRPOConfig(AdapterConfig):
@@ -54,29 +56,23 @@ def freeze_inputs(path, value):
         write_json(path, value)
 
 
-def parent_artifact(config, root):
-    if not config.parent_adapter:
-        return None
-    return load_adapter(Path(root) / config.parent_adapter)
-
-
-def evaluate_grpo(config, data, output, root, base_url, *, split):
+def evaluate_grpo(config, data, output, root, base_url, *, split, parent_base_url=None):
     """Score a serviced parent and child with the same harness and decode settings."""
     if split not in {"val", "test"}:
         raise ValueError("Only development and frozen test can be evaluated")
     local_key()
     with locked(output) as output:
         data, root = Path(data), Path(root)
-        artifact = load_adapter(output / "adapter")
+        artifact = load_artifact(output / config.artifact_name, config.training_mode)
         identity = artifact["identity"]
-        if identity["config"] != config.model_dump():
-            raise ValueError("Evaluation config differs from the trained adapter")
+        if GRPOConfig.model_validate(identity["config"]) != config:
+            raise ValueError("Evaluation config differs from the trained model")
         if identity["train_split_sha256"] != file_hash(data / "train.jsonl"):
             raise ValueError("Training split changed")
         parent = parent_artifact(config, root)
         parent_sha = parent["artifact_sha256"] if parent else None
-        if identity["parent_adapter_sha256"] != parent_sha:
-            raise ValueError("Training parent adapter changed")
+        if identity[config.parent_hash_key] != parent_sha:
+            raise ValueError("Training parent changed")
         if split == "test":
             if not (output / "evaluation/val/report.json").is_file():
                 raise ValueError("Complete development evaluation before opening test data")
@@ -84,7 +80,7 @@ def evaluate_grpo(config, data, output, root, base_url, *, split):
             development = read_json(output / "evaluation/val/report.json")
             if (
                 decision != development["decision"]
-                or decision["adapter_sha256"] != artifact["artifact_sha256"]
+                or decision[config.artifact_hash_key] != artifact["artifact_sha256"]
                 or decision["val_sha256"] != file_hash(data / "val.jsonl")
             ):
                 raise ValueError("Development decision or its inputs changed")
@@ -99,7 +95,9 @@ def evaluate_grpo(config, data, output, root, base_url, *, split):
         settings = {
             side: ModelSettings(
                 model=name,
-                base_url=base_url,
+                base_url=parent_endpoint(config, base_url, parent_base_url)
+                if side == "parent"
+                else base_url,
                 api_key_env="RSI_LOCAL_API_KEY",
                 max_tokens=config.max_answer_tokens,
                 temperature=0,
@@ -150,9 +148,16 @@ def evaluate_grpo(config, data, output, root, base_url, *, split):
                 "accepted": accepted,
                 "selected_model": names["candidate" if accepted else "parent"],
                 "rule": "Higher paired development accuracy under the fixed harness",
-                "adapter_sha256": artifact["artifact_sha256"],
+                config.artifact_hash_key: artifact["artifact_sha256"],
                 "val_sha256": file_hash(data / "val.jsonl"),
             }
+            if config.training_mode == "full":
+                decision["selected_model"] = names["candidate" if accepted else "parent"]
+                decision["selected_checkpoint"] = str(
+                    output / config.artifact_name
+                    if accepted
+                    else root / (config.parent_checkpoint or config.base_directory)
+                )
             freeze_inputs(output / "decision.json", decision)
         report = {
             "split": split,

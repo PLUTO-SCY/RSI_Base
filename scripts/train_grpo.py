@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the pinned verl FSDP2/vLLM backend and export a PEFT adapter."""
+"""Run the pinned verl FSDP2/vLLM backend and export trained weights."""
 
 import argparse
 import json
@@ -28,6 +28,7 @@ from rsi_base.rl import GRPOConfig, freeze_inputs, parent_artifact, training_pro
 from rsi_base.sft import load_adapter, locked, source_identity
 from rsi_base.storage import append_json, read_json, write_json
 from rsi_base.types import digest
+from rsi_base.weights import load_artifact, load_checkpoint, verify_updated_checkpoint
 
 BACKEND_SHA256 = file_hash(__file__)
 
@@ -56,6 +57,7 @@ def build_parquet(problems, config, tokenizer, path):
 
 
 def verl_arguments(config, root, run, base_dir, parent_dir, gpu_count, ray_dir, attempt):
+    full = config.training_mode == "full"
     sequence_length = config.max_prompt_tokens + config.max_answer_tokens
     data = run / "train.parquet"
     options = {
@@ -74,21 +76,18 @@ def verl_arguments(config, root, run, base_dir, parent_dir, gpu_count, ray_dir, 
         "data.dataloader_num_workers": 0,
         "data.seed": config.seed,
         "actor_rollout_ref.model.path": str(base_dir),
-        "actor_rollout_ref.model.lora_rank": config.rank,
-        "actor_rollout_ref.model.lora_alpha": config.alpha,
-        "actor_rollout_ref.model.target_modules": config.target_modules,
+        "actor_rollout_ref.model.lora_rank": 0 if full else config.rank,
         "actor_rollout_ref.model.use_remove_padding": False,
         "+actor_rollout_ref.model.override_config.attn_implementation": "sdpa",
         "actor_rollout_ref.model.enable_gradient_checkpointing": True,
         "actor_rollout_ref.actor.strategy": "fsdp2",
-        "actor_rollout_ref.actor.fsdp_config.model_dtype": "bfloat16",
+        "actor_rollout_ref.actor.fsdp_config.model_dtype": "fp32" if full else "bfloat16",
         "actor_rollout_ref.actor.fsdp_config.use_torch_compile": False,
         "actor_rollout_ref.actor.optim.lr": config.learning_rate,
         "actor_rollout_ref.actor.optim.weight_decay": 0,
         "actor_rollout_ref.actor.ppo_mini_batch_size": config.prompts_per_batch,
         "actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu": 1,
         "actor_rollout_ref.actor.use_kl_loss": False,
-        "+actor_rollout_ref.actor.checkpoint.save_lora_only": True,
         "actor_rollout_ref.rollout.name": "vllm",
         "actor_rollout_ref.rollout.tensor_model_parallel_size": 1,
         "actor_rollout_ref.rollout.gpu_memory_utilization": 0.35,
@@ -121,8 +120,18 @@ def verl_arguments(config, root, run, base_dir, parent_dir, gpu_count, ray_dir, 
         "+ray_kwargs.ray_init.include_dashboard": False,
         "+ray_kwargs.ray_init._temp_dir": ray_dir,
     }
-    if parent_dir is not None:
-        options["actor_rollout_ref.model.lora_adapter_path"] = str(parent_dir)
+    if full:
+        options["trainer.max_actor_ckpt_to_keep"] = 2
+    else:
+        options.update(
+            {
+                "actor_rollout_ref.model.lora_alpha": config.alpha,
+                "actor_rollout_ref.model.target_modules": config.target_modules,
+                "+actor_rollout_ref.actor.checkpoint.save_lora_only": True,
+            }
+        )
+        if parent_dir is not None:
+            options["actor_rollout_ref.model.lora_adapter_path"] = str(parent_dir)
     return [f"{key}={json.dumps(value)}" for key, value in options.items()]
 
 
@@ -156,7 +165,7 @@ def rollout_stats(run, config):
     return {"steps": steps, "mixed_reward_groups": sum(row["mixed_reward_groups"] for row in steps)}
 
 
-def export_adapter(run, config, identity, parent_dir):
+def final_checkpoint(run, config):
     step_file = run / "checkpoints/latest_checkpointed_iteration.txt"
     step = int(step_file.read_text())
     if step != config.steps:
@@ -165,7 +174,11 @@ def export_adapter(run, config, identity, parent_dir):
     write_json(run / "rollout_stats.json", metrics)
     if not metrics["mixed_reward_groups"]:
         raise ValueError("Run has no within-prompt reward variance")
-    checkpoint = run / f"checkpoints/global_step_{step}/actor"
+    return run / f"checkpoints/global_step_{step}/actor", step, metrics
+
+
+def export_adapter(run, config, identity, parent_dir):
+    checkpoint, step, metrics = final_checkpoint(run, config)
     with tempfile.TemporaryDirectory(prefix="adapter-", dir=run) as temporary:
         AdapterMerger(
             ModelMergerConfig(
@@ -232,6 +245,42 @@ def export_adapter(run, config, identity, parent_dir):
     return load_adapter(run / "adapter")
 
 
+def export_full_model(run, config, identity, initial_directory):
+    checkpoint, step, metrics = final_checkpoint(run, config)
+    with tempfile.TemporaryDirectory(prefix=".model-", dir=run) as temporary:
+        artifact = Path(temporary) / "model"
+        artifact.mkdir()
+        FSDPModelMerger(
+            ModelMergerConfig(
+                operation="merge",
+                backend="fsdp",
+                local_dir=str(checkpoint),
+                hf_model_config_path=str(checkpoint / "huggingface"),
+                target_dir=str(artifact),
+            )
+        ).merge_and_save()
+        verify_updated_checkpoint(initial_directory, artifact)
+        files = {path.name: file_hash(path) for path in artifact.iterdir() if path.is_file()}
+        checksum = digest(files)
+        write_json(
+            artifact / "manifest.json",
+            {
+                "identity": identity,
+                "files": files,
+                "artifact_sha256": checksum,
+                "served_model": f"rsi-full-grpo-{checksum[:12]}",
+                "optimizer_steps": step,
+                "parameters_changed": True,
+                "base_weights_frozen": False,
+                "metrics": metrics,
+                "export_source_sha256": BACKEND_SHA256,
+            },
+        )
+        manifest = load_checkpoint(artifact)
+        artifact.rename(run / "model")
+    return manifest
+
+
 def train(config, data, run, root):
     devices = os.environ.get("RSI_RL_GPUS", "0,1").split(",")
     if not all(device.isdigit() for device in devices) or len(set(devices)) != len(devices):
@@ -241,18 +290,21 @@ def train(config, data, run, root):
     pin = read_json(root / "requirements/verl.json")
     if version("verl") != pin["version"]:
         raise ValueError("Run setup --rl to install the pinned verl version")
-    if config.dropout != 0:
+    full = config.training_mode == "full"
+    if not full and config.dropout != 0:
         raise ValueError("This GRPO backend requires zero LoRA dropout")
     problems = training_problems(config, data)
     base_dir = (root / config.base_directory).resolve()
     base_files = model_files(base_dir)
     parent = parent_artifact(config, root)
-    parent_dir = (root / config.parent_adapter).resolve() if parent else None
-    if parent:
+    parent_dir = (root / config.parent_path).resolve() if parent else None
+    if parent and parent["identity"]["base_files"] != base_files:
+        raise ValueError("Training parent belongs to different base checkpoint bytes")
+    start_dir = parent_dir if full and parent_dir is not None else base_dir
+    if not full and parent_dir is not None:
         peft = read_json(parent_dir / "adapter_config.json")
         if (
-            parent["identity"]["base_files"] != base_files
-            or peft["r"] != config.rank
+            peft["r"] != config.rank
             or peft["lora_alpha"] != config.alpha
             or set(peft["target_modules"]) != set(config.target_modules)
             or peft.get("lora_dropout", 0) != 0
@@ -269,7 +321,7 @@ def train(config, data, run, root):
         "method": "grpo",
         "config": config.model_dump(),
         "base_files": base_files,
-        "parent_adapter_sha256": parent["artifact_sha256"] if parent else None,
+        config.parent_hash_key: parent["artifact_sha256"] if parent else None,
         "train_split_sha256": file_hash(data / "train.jsonl"),
         "selected_training_data_sha256": digest(problems),
         "verl": pin,
@@ -283,12 +335,13 @@ def train(config, data, run, root):
     }
     with locked(run) as run:
         freeze_inputs(run / "train_identity.json", identity)
-        if (run / "adapter").exists():
-            artifact = load_adapter(run / "adapter")
+        target = run / config.artifact_name
+        if target.exists():
+            artifact = load_artifact(target, config.training_mode)
             if artifact["identity"] != identity:
-                raise ValueError("Existing adapter does not match this training run")
+                raise ValueError("Existing model does not match this training run")
             return artifact
-        tokenizer = AutoTokenizer.from_pretrained(base_dir, local_files_only=True)
+        tokenizer = AutoTokenizer.from_pretrained(start_dir, local_files_only=True)
         build_parquet(problems, config, tokenizer, run / "train.parquet")
         attempts = run / "training_attempts.jsonl"
         started = time.time()
@@ -296,8 +349,12 @@ def train(config, data, run, root):
         try:
             latest = run / "checkpoints/latest_checkpointed_iteration.txt"
             if not latest.is_file() or int(latest.read_text()) < config.steps:
-                launch_verl(config, root, run, base_dir, parent_dir, devices)
-            result = export_adapter(run, config, identity, parent_dir)
+                launch_verl(config, root, run, start_dir, None if full else parent_dir, devices)
+            result = (
+                export_full_model(run, config, identity, start_dir)
+                if full
+                else export_adapter(run, config, identity, parent_dir)
+            )
         except BaseException as error:
             append_json(
                 attempts,

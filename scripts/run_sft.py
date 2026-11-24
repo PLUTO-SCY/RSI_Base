@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect training trajectories, train LoRA and compare model updates."""
+"""Collect training trajectories, train a model and compare model updates."""
 
 import argparse
 import json
@@ -20,6 +20,7 @@ def main():
     parser.add_argument(
         "--base-url", help="Collection endpoint override; comparison default: local port 18001"
     )
+    parser.add_argument("--parent-base-url", help="Parent endpoint for evaluate and test")
     args = parser.parse_args()
     local_key()
     config = SFTConfig.model_validate_json(args.config.read_text())
@@ -58,6 +59,7 @@ def main():
             args.output,
             root,
             base_url=args.base_url or "http://127.0.0.1:18001/v1",
+            parent_base_url=args.parent_base_url,
             split="val" if args.phase == "evaluate" else "test",
         )
         print(

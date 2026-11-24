@@ -108,10 +108,15 @@ def collection(case):
 
 def artifact(case):
     output = case["output"]
-    directory = output / "adapter"
+    config = case["config"]
+    directory = output / config.artifact_name
     directory.mkdir()
-    (directory / "adapter_config.json").write_text("{}")
-    (directory / "adapter_model.safetensors").write_bytes(b"fixture weights")
+    if config.training_mode == "full":
+        names = ("config.json", "tokenizer_config.json", "model.safetensors")
+    else:
+        names = ("adapter_config.json", "adapter_model.safetensors")
+    for name in names:
+        (directory / name).write_bytes(b"fixture weights")
     files = {p.name: file_hash(p) for p in directory.iterdir()}
     value = {
         "identity": {
@@ -121,7 +126,7 @@ def artifact(case):
         },
         "files": files,
         "artifact_sha256": digest(files),
-        "served_model": "fixture-lora",
+        "served_model": f"fixture-{config.training_mode}",
     }
     write_json(directory / "manifest.json", value)
     return value
@@ -131,7 +136,10 @@ def tasks(case, *, improves=True):
     settings = case["memory_config"].task
     return {
         "parent": Task(settings, correct=not improves),
-        "candidate": Task(settings.model_copy(update={"model": "fixture-lora"}), correct=improves),
+        "candidate": Task(
+            settings.model_copy(update={"model": f"fixture-{case['config'].training_mode}"}),
+            correct=improves,
+        ),
     }
 
 
@@ -251,7 +259,9 @@ def test_assistant_boundary_mask_and_overlength_are_not_truncated():
 
 
 @pytest.mark.parametrize("improves", [True, False])
-def test_crossed_evaluation_freezes_selection_and_recovery(case, improves):
+@pytest.mark.parametrize("mode", ["lora", "full"])
+def test_crossed_evaluation_freezes_selection_and_recovery(case, improves, mode):
+    case["config"] = case["config"].model_copy(update={"training_mode": mode})
     collection(case)
     artifact(case)
     workers = tasks(case, improves=improves)
@@ -267,7 +277,10 @@ def test_crossed_evaluation_freezes_selection_and_recovery(case, improves):
     assert report["decision"]["accepted"] is improves
     assert report["decision"]["test_opened"] is False
     next_config = MemoryConfig.model_validate(read_json(case["output"] / "next-search.json"))
-    assert next_config.task.model == ("fixture-lora" if improves else "fixture-base")
+    assert next_config.task.model == (f"fixture-{mode}" if improves else "fixture-base")
+    expected_port = 18000 if mode == "full" and not improves else 18001
+    assert next_config.task.base_url == f"http://127.0.0.1:{expected_port}/v1"
+    assert next_config.model_context["origin"] == f"{mode}_sft"
     assert next_config.initial_baseline == "prior_search_best"
     assert next_config.model_context["accepted"] is improves
     assert next_config.model_context["test_opened"] is False
