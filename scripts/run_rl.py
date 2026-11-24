@@ -23,7 +23,13 @@ def main():
         interpreter = root / ".venvs/rl/bin/python"
         if not interpreter.is_file():
             parser.error("Run sh scripts/harness.sh setup --rl first.")
-        environment = {**os.environ, "PYTHONPATH": str(root / "src")}
+        paths = [str(root / "src")]
+        paths.extend(
+            str(Path(path).resolve())
+            for path in os.environ.get("PYTHONPATH", "").split(os.pathsep)
+            if path
+        )
+        environment = {**os.environ, "PYTHONPATH": os.pathsep.join(paths)}
         os.execve(
             interpreter,
             [

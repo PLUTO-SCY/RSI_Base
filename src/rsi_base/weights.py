@@ -2,10 +2,76 @@
 
 from contextlib import ExitStack
 from pathlib import Path
+from typing import Literal
+
+from pydantic import Field, field_validator, model_validator
 
 from .loop import file_hash
 from .storage import read_json
-from .types import digest
+from .types import StrictModel, digest
+
+
+class AdapterConfig(StrictModel):
+    training_mode: Literal["lora", "full"] = "lora"
+    base_model: str = "Qwen/Qwen3-4B-Instruct-2507"
+    base_revision: str = "cdbee75f17c01a7cc42f958dc650907174af0554"
+    base_directory: str = ".local/models/qwen3-4b-instruct-2507"
+    parent_adapter: str | None = None
+    parent_checkpoint: str | None = None
+    rank: int = Field(default=16, ge=1, le=256)
+    alpha: int = Field(default=32, ge=1)
+    dropout: float = Field(default=0, ge=0, lt=1)
+    target_modules: list[str] = Field(
+        default_factory=lambda: ["q_proj", "k_proj", "v_proj", "o_proj"]
+    )
+
+    @field_validator("target_modules")
+    @classmethod
+    def modules(cls, value):
+        if not value or len(set(value)) != len(value) or any(not item.strip() for item in value):
+            raise ValueError("target_modules must contain distinct nonempty module names")
+        return value
+
+    @model_validator(mode="after")
+    def parent_format(self):
+        if self.training_mode == "full" and self.parent_adapter is not None:
+            raise ValueError("Full training accepts parent_checkpoint for continuation")
+        if self.training_mode == "lora" and self.parent_checkpoint is not None:
+            raise ValueError(
+                "LoRA uses parent_adapter; set base_directory to start on a full model"
+            )
+        return self
+
+    @property
+    def parent_path(self):
+        return self.parent_checkpoint if self.training_mode == "full" else self.parent_adapter
+
+    @property
+    def artifact_name(self):
+        return "model" if self.training_mode == "full" else "adapter"
+
+    @property
+    def artifact_hash_key(self):
+        return "checkpoint_sha256" if self.training_mode == "full" else "adapter_sha256"
+
+    @property
+    def parent_hash_key(self):
+        return f"parent_{self.artifact_hash_key}"
+
+
+def model_files(directory):
+    directory = Path(directory)
+    paths = sorted(
+        p
+        for p in directory.iterdir()
+        if p.suffix in {".json", ".safetensors", ".txt"} and p.is_file()
+    )
+    if (
+        not any(p.suffix == ".safetensors" for p in paths)
+        or not (directory / "config.json").is_file()
+    ):
+        raise ValueError("Download the local base checkpoint first")
+    return {p.name: file_hash(p) for p in paths}
 
 
 def load_manifest(directory, required):

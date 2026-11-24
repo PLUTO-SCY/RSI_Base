@@ -5,27 +5,23 @@ from pathlib import Path
 
 from pydantic import Field
 
-from .agent import TaskAgent
-from .benchmark import check_disjoint, load_problems
+from .agent import DEFAULT_MATH_PROMPT, TaskAgent, local_key
+from .benchmark import check_disjoint
+from .components import IMPORT_SPEC, NUMERIC_LOADER, NUMERIC_SCORER, load_callable
 from .loop import evaluate, file_hash
-from .math_scoring import math_score
 from .memory_audit import cluster_interval
-from .sft import AdapterConfig, local_key, locked
-from .storage import Ledger, read_json, write_json
+from .sft import locked
+from .storage import Ledger, read_json
+from .storage import pin_json as freeze_inputs
 from .types import AgentSpec, Limits, ModelSettings, digest
-from .weights import load_artifact, parent_endpoint
+from .weights import AdapterConfig, load_artifact, parent_endpoint
 from .weights import load_parent as parent_artifact
 
 
 class GRPOConfig(AdapterConfig):
-    system_prompt: str = Field(
-        default=(
-            "Solve the math problem. Explain your reasoning, then end your answer with "
-            "#### followed by a single number."
-        ),
-        min_length=1,
-        max_length=8000,
-    )
+    system_prompt: str = Field(default=DEFAULT_MATH_PROMPT, min_length=1, max_length=8000)
+    problem_loader: str = Field(default=NUMERIC_LOADER, pattern=IMPORT_SPEC)
+    scorer: str = Field(default=NUMERIC_SCORER, pattern=IMPORT_SPEC)
     seed: int = 42
     steps: int = Field(default=20, ge=2, le=10000)
     train_samples: int = Field(default=240, ge=2)
@@ -42,18 +38,10 @@ class GRPOConfig(AdapterConfig):
 
 
 def training_problems(config, data):
-    rows = load_problems(Path(data) / "train.jsonl")
+    rows = load_callable(config.problem_loader)(Path(data) / "train.jsonl")
     if config.train_samples > len(rows) or config.train_samples < config.prompts_per_batch:
         raise ValueError("train_samples must fit the training split and cover a whole batch")
     return random.Random(config.seed).sample(rows, config.train_samples)
-
-
-def freeze_inputs(path, value):
-    if path.exists():
-        if read_json(path) != value:
-            raise ValueError(f"GRPO inputs changed. Use a new output directory: {path}")
-    else:
-        write_json(path, value)
 
 
 def evaluate_grpo(config, data, output, root, base_url, *, split, parent_base_url=None):
@@ -84,6 +72,7 @@ def evaluate_grpo(config, data, output, root, base_url, *, split, parent_base_ur
                 or decision["val_sha256"] != file_hash(data / "val.jsonl")
             ):
                 raise ValueError("Development decision or its inputs changed")
+        load_problems = load_callable(config.problem_loader)
         training = load_problems(data / "train.jsonl")
         problems = load_problems(data / f"{split}.jsonl")
         check_disjoint(training, problems)
@@ -133,7 +122,7 @@ def evaluate_grpo(config, data, output, root, base_url, *, split, parent_base_ur
                     TaskAgent(model, root),
                     ledger,
                     concurrency=config.evaluation_concurrency,
-                    scorer=math_score,
+                    scorer=load_callable(config.scorer),
                     expected_model=model.model,
                 )
         finally:

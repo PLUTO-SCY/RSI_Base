@@ -23,21 +23,7 @@ from .sft import (
 from .storage import append_json, read_json, write_json
 from .types import digest
 from .weights import load_artifact, load_parent
-
-
-def model_files(directory):
-    directory = Path(directory)
-    paths = sorted(
-        p
-        for p in directory.iterdir()
-        if p.suffix in {".json", ".safetensors", ".txt"} and p.is_file()
-    )
-    if (
-        not any(p.suffix == ".safetensors" for p in paths)
-        or not (directory / "config.json").is_file()
-    ):
-        raise ValueError("Download the local base checkpoint first")
-    return {p.name: file_hash(p) for p in paths}
+from .weights import model_files as model_files
 
 
 class AssistantCollator:

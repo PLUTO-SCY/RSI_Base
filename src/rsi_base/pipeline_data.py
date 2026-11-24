@@ -7,12 +7,10 @@ from dataclasses import dataclass
 from itertools import combinations
 
 from .agent import task_messages
-from .benchmark import check_disjoint, load_problems
+from .benchmark import check_disjoint
+from .components import checked_score
 from .loop import file_hash
-from .math_scoring import math_score
-from .memory_loop import load_rows
-from .sft import verify_dataset
-from .storage import write_json
+from .storage import read_jsonl, write_json
 from .types import digest
 
 
@@ -22,19 +20,24 @@ class PipelineData:
     development: list[dict]
     references: dict[str, str]
     hashes: dict[str, str | None]
-    test_count: int
 
 
-def load_data(directory):
+def load_data(directory, loader, scorer, *, load_references=True):
     files = {split: directory / f"{split}.jsonl" for split in ("train", "val", "test")}
-    splits = {split: load_problems(path) for split, path in files.items()}
+    splits = {
+        split: [] if split == "train" and not path.exists() else loader(path)
+        for split, path in files.items()
+    }
+    if not splits["val"] or not splits["test"]:
+        raise ValueError("Development and test splits must be nonempty")
     for a, b in combinations(splits.values(), 2):
         check_disjoint(a, b)
     references = {}
     path = directory / "references.jsonl"
-    if path.exists():
+    reference_file = load_references and path.is_file()
+    if reference_file:
         answers = {row["id"]: row["answer"] for row in splits["train"]}
-        for row in load_rows(path):
+        for row in read_jsonl(path):
             if (
                 set(row) != {"id", "response"}
                 or not isinstance(row["id"], str)
@@ -44,7 +47,7 @@ def load_data(directory):
             identifier, response = row["id"], row["response"]
             if identifier not in answers or identifier in references:
                 raise ValueError(f"Duplicate or non-training reference ID: {identifier}")
-            if not math_score(response, answers[identifier])["score"]:
+            if not checked_score(scorer, response, answers[identifier])["score"]:
                 raise ValueError(f"Incorrect supervised reference for {identifier}")
             references[identifier] = response
     return PipelineData(
@@ -52,10 +55,9 @@ def load_data(directory):
         splits["val"],
         references,
         {
-            **{split: file_hash(path) for split, path in files.items()},
-            "references": file_hash(path) if path.exists() else None,
+            **{split: file_hash(path) if path.exists() else None for split, path in files.items()},
+            "references": file_hash(path) if reference_file else None,
         },
-        len(splits["test"]),
     )
 
 
@@ -107,18 +109,16 @@ def online_examples(batches):
     return examples, dict(excluded)
 
 
-def write_sft_dataset(directory, config, identity, examples, excluded):
+def write_sft_dataset(directory, identity, examples, excluded):
     train_path = directory / "train.jsonl"
     train_path.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in examples))
-    write_json(
-        directory / "dataset.json",
-        {
-            "identity_sha256": digest(identity),
-            "train_sha256": file_hash(train_path),
-            "samples": len(examples),
-            "unique_training_problems": len({row["problem_id"] for row in examples}),
-            "data_source": identity["data_source"],
-            "excluded": excluded,
-        },
-    )
-    return verify_dataset(directory, config)
+    report = {
+        "identity_sha256": digest(identity),
+        "train_sha256": file_hash(train_path),
+        "samples": len(examples),
+        "unique_training_problems": len({row["problem_id"] for row in examples}),
+        "data_source": identity["data_source"],
+        "excluded": excluded,
+    }
+    write_json(directory / "dataset.json", report)
+    return report

@@ -1,10 +1,12 @@
 """Small file records and append-only application call accounting."""
 
+import fcntl
 import json
 import os
 import re
 import time
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -30,6 +32,23 @@ def read_json(path):
 def read_jsonl(path):
     with Path(path).open(encoding="utf-8") as stream:
         return [json.loads(line) for line in stream if line.strip()]
+
+
+def pin_json(path, value):
+    if path.exists():
+        if read_json(path) != value:
+            raise ValueError(f"Pinned inputs changed. Use a new output directory: {path}")
+    else:
+        write_json(path, value)
+
+
+@contextmanager
+def lock_directory(output, name):
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=True)
+    with (output / name).open("a") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield output
 
 
 def append_json(path, value):

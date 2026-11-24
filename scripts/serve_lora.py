@@ -5,9 +5,7 @@ import argparse
 import os
 from pathlib import Path
 
-from rsi_base.lora_train import model_files
-from rsi_base.sft import AdapterConfig
-from rsi_base.weights import load_artifact, load_parent
+from rsi_base.weights import AdapterConfig, load_artifact, load_parent, model_files
 
 
 def main():

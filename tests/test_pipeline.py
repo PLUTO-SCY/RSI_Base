@@ -67,13 +67,13 @@ def test_pipeline_routes_supervision_and_continues_selected_harness(tmp_path, mo
             "meta": {"model": "fake-meta", "base_url": "http://localhost"},
             "agent": {"system_prompt": "initial"},
             "sft": {**shared, "min_samples": 1, "collection_repeats": 2},
+            "sft_overrides": {"online": {"learning_rate": 0.0003}},
             "grpo": {**shared, "train_samples": 2, "prompts_per_batch": 2},
             "sft_train_samples": 3,
             "min_gain_questions": 0,
             "limits": {"rounds": 4, "max_meta_calls": 4, "max_task_calls": 50},
         }
     )
-    pipeline = Pipeline(config, data, output, ROOT)
 
     task_calls, meta_calls, train_calls = [], [], []
     proposals = iter(
@@ -127,12 +127,12 @@ def test_pipeline_routes_supervision_and_continues_selected_harness(tmp_path, mo
                 ],
             }
 
-    def trainer(root, server, method, config, training_data, destination, deadline):
+    def trainer(root, method, config, training_data, destination, deadline, **resources):
         train_calls.append((method, config, destination))
         name = "grpo_candidate"
         identity = {
             "config": config.model_dump(),
-            "base_files": pipeline.base_files,
+            "base_files": pipeline.components.base_files,
             config.parent_hash_key: (
                 read_json(Path(config.parent_path) / "manifest.json")["artifact_sha256"]
                 if config.parent_path
@@ -171,8 +171,9 @@ def test_pipeline_routes_supervision_and_continues_selected_harness(tmp_path, mo
         )
         return 0, destination / "fake-trainer.log"
 
-    monkeypatch.setattr("rsi_base.pipeline.ClaudeMeta", lambda *args, **kwargs: Meta())
-    monkeypatch.setattr("rsi_base.pipeline.train", trainer)
+    monkeypatch.setattr("rsi_base.pipeline_setup.ClaudeMeta", lambda *args, **kwargs: Meta())
+    monkeypatch.setattr("rsi_base.pipeline_strategies.run_training", trainer)
+    pipeline = Pipeline(config, data, output, ROOT)
     monkeypatch.setattr(
         pipeline.server, "agent", lambda model, temperature, deadline: Task(model, temperature)
     )
@@ -193,6 +194,8 @@ def test_pipeline_routes_supervision_and_continues_selected_harness(tmp_path, mo
     assert offline.parent_path is None
     assert grpo.parent_path == str(first_dir / offline.artifact_name)
     assert online.parent_path == str(second_dir / grpo.artifact_name)
+    assert offline.learning_rate == 0.0002
+    assert online.learning_rate == 0.0003
     assert grpo.system_prompt == "revised"
     assert len(read_jsonl(first_dir / "train.jsonl")) == 3
     assert all(
@@ -216,3 +219,105 @@ def test_pipeline_routes_supervision_and_continues_selected_harness(tmp_path, mo
     write_json(output / "frozen.json", frozen)
     with pytest.raises(ValueError, match="inputs changed"):
         pipeline.test()
+
+
+def test_pipeline_can_load_components_without_trainers_or_local_weights(tmp_path, monkeypatch):
+    module = tmp_path / "configured_rsi_test.py"
+    module.write_text(
+        """
+from rsi_base.pipeline_types import Strategy, TaskState
+from rsi_base.storage import read_jsonl
+from rsi_base.types import AgentSpec
+
+def loader(path):
+    return read_jsonl(path)
+
+def score(response, answer):
+    return {"score": int(response == answer), "status": "scored"}
+
+class Task:
+    def agent(self, model, *, temperature, deadline):
+        self.name = model.name
+        return self
+
+    def run(self, spec, question):
+        return {
+            "response": spec.system_prompt, "response_model": self.name, "finish_reason": "stop"
+        }
+
+    def release(self, devices):
+        raise AssertionError("Prompt-only experiments need no trainer resources")
+
+    def stop(self):
+        pass
+
+def make_task(root, output, runtime, model):
+    return Task()
+
+def make_strategy(root, data, prompt):
+    assert not data.train and not data.references
+
+    def apply(step, proposal):
+        agent = AgentSpec(system_prompt=prompt)
+        return TaskState(agent=agent, model=step.parent.model), {"custom_update": True}
+
+    return Strategy('Use action "revise".', apply)
+
+class Planner:
+    def propose(self, agent, evidence, directory):
+        assert evidence["available_strategies"] == ["revise"]
+        assert "heldout" not in str(evidence)
+        return {"action": "revise", "reason": "Try configured prompt", "parameters": {}}, {}
+
+def make_planner(root):
+    return Planner()
+
+def make_selection(gain):
+    return lambda comparison: comparison["gain_questions"] == gain
+"""
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    data, output = tmp_path / "data", tmp_path / "run"
+    data.mkdir()
+    for split, identifier in (("val", "dev"), ("test", "heldout")):
+        write_rows(
+            data / f"{split}.jsonl",
+            [{"id": identifier, "question": identifier, "answer": "positive"}],
+        )
+    (data / "references.jsonl").write_text("Invalid unused references")
+    config = PipelineConfig.model_validate(
+        {
+            "agent": {"system_prompt": "negative"},
+            "model": {"base_directory": str(tmp_path / "missing")},
+            "runtime": {"task_base_url": "http://localhost:9999/v1"},
+            "benchmark": {
+                "loader": "configured_rsi_test:loader",
+                "scorer": "configured_rsi_test:score",
+            },
+            "task": {"factory": "configured_rsi_test:make_task"},
+            "planner": {"factory": "configured_rsi_test:make_planner"},
+            "selection": {"factory": "configured_rsi_test:make_selection", "options": {"gain": 1}},
+            "strategies": [
+                {
+                    "name": "revise",
+                    "factory": "configured_rsi_test:make_strategy",
+                    "options": {"prompt": "positive"},
+                }
+            ],
+            "sft": {"max_steps": "unused"},
+            "grpo": {"train_samples": "unused"},
+            "limits": {"rounds": 1, "max_meta_calls": 1, "max_task_calls": 2},
+        }
+    )
+    pipeline = Pipeline(config, data, output, ROOT)
+    frozen = pipeline.run()
+    assert frozen["selected_round"] == 1
+    assert frozen["rounds"][0]["training"] == {"custom_update": True}
+    assert pipeline.test()["comparison"]["gain_questions"] == 1
+    assert read_json(output / "run.json")["source"]["components"]["strategy:revise"] == file_hash(
+        module
+    )
+    with module.open("a") as stream:
+        stream.write("\n# New revision\n")
+    with pytest.raises(ValueError, match="inputs changed"):
+        Pipeline(config, data, output, ROOT).run(resume=True)

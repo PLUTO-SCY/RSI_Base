@@ -7,6 +7,15 @@ from pathlib import Path
 from dotenv import dotenv_values
 from openai import OpenAI
 
+DEFAULT_MATH_PROMPT = (
+    "Solve the math problem. Explain your reasoning, then end your answer with "
+    "#### followed by a single number."
+)
+
+
+def local_key():
+    os.environ.setdefault("RSI_LOCAL_API_KEY", "EMPTY")
+
 
 def credentials(root):
     values = {**dotenv_values(Path(root) / ".env.local")}

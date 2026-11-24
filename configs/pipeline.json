@@ -11,17 +11,22 @@
   "agent": {
     "system_prompt": "Solve the math problem. Explain your reasoning, then end your answer with #### followed by a single number."
   },
+  "model": {
+    "base_model": "Qwen/Qwen3-4B-Instruct-2507",
+    "base_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+    "base_directory": ".local/models/qwen3-4b-instruct-2507",
+    "training_mode": "lora"
+  },
+  "strategies": ["harness", "offline_sft", "online_sft", "grpo"],
   "schedule": null,
   "sft_train_samples": 64,
   "min_gain_questions": 1,
   "sft": {
-    "training_mode": "lora",
     "max_length": 2048,
     "collection_repeats": 2,
     "collection_temperature": 0.7
   },
   "grpo": {
-    "training_mode": "lora",
     "steps": 20,
     "train_samples": 240
   },

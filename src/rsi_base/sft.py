@@ -1,73 +1,24 @@
 """Train-only trajectory collection and frozen model/harness comparison for SFT."""
 
-import fcntl
 import json
-import os
 import random
 from collections import Counter
-from contextlib import contextmanager
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator
 
 from .agent import TaskAgent
+from .agent import local_key as local_key
 from .classification import MemoryHarness, MemoryPolicy, label_score, normalize
 from .loop import file_hash
 from .memory_audit import cluster_interval, paired_records
 from .memory_loop import MemoryConfig, evaluate_policy, load_rows, stable_improvement
-from .storage import Ledger, read_json, write_json
-from .types import Limits, StrictModel, digest
+from .storage import Ledger, lock_directory, read_json, write_json
+from .types import Limits, digest
+from .weights import AdapterConfig as AdapterConfig
 from .weights import load_adapter as load_adapter
 from .weights import load_artifact, load_parent, parent_endpoint
-
-
-class AdapterConfig(StrictModel):
-    training_mode: Literal["lora", "full"] = "lora"
-    base_model: str = "Qwen/Qwen3-4B-Instruct-2507"
-    base_revision: str = "cdbee75f17c01a7cc42f958dc650907174af0554"
-    base_directory: str = ".local/models/qwen3-4b-instruct-2507"
-    parent_adapter: str | None = None
-    parent_checkpoint: str | None = None
-    rank: int = Field(default=16, ge=1, le=256)
-    alpha: int = Field(default=32, ge=1)
-    dropout: float = Field(default=0, ge=0, lt=1)
-    target_modules: list[str] = Field(
-        default_factory=lambda: ["q_proj", "k_proj", "v_proj", "o_proj"]
-    )
-
-    @field_validator("target_modules")
-    @classmethod
-    def modules(cls, value):
-        if not value or len(set(value)) != len(value) or any(not item.strip() for item in value):
-            raise ValueError("target_modules must contain distinct nonempty module names")
-        return value
-
-    @model_validator(mode="after")
-    def parent_format(self):
-        if self.training_mode == "full" and self.parent_adapter is not None:
-            raise ValueError("Full training accepts parent_checkpoint for continuation")
-        if self.training_mode == "lora" and self.parent_checkpoint is not None:
-            raise ValueError(
-                "LoRA uses parent_adapter; set base_directory to start on a full model"
-            )
-        return self
-
-    @property
-    def parent_path(self):
-        return self.parent_checkpoint if self.training_mode == "full" else self.parent_adapter
-
-    @property
-    def artifact_name(self):
-        return "model" if self.training_mode == "full" else "adapter"
-
-    @property
-    def artifact_hash_key(self):
-        return "checkpoint_sha256" if self.training_mode == "full" else "adapter_sha256"
-
-    @property
-    def parent_hash_key(self):
-        return f"parent_{self.artifact_hash_key}"
 
 
 class SFTConfig(AdapterConfig):
@@ -97,13 +48,8 @@ class SFTConfig(AdapterConfig):
         return value
 
 
-@contextmanager
 def locked(output):
-    output = Path(output)
-    output.mkdir(parents=True, exist_ok=True)
-    with (output / ".sft.lock").open("a") as handle:
-        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        yield output
+    return lock_directory(output, ".sft.lock")
 
 
 def source_identity(root):
@@ -489,7 +435,3 @@ def compare(config, data, output, root, *, base_url, parent_base_url=None, split
             report["decision"] = read_json(output / "decision.json")
         write_json(directory / "report.json", report)
         return report
-
-
-def local_key():
-    os.environ.setdefault("RSI_LOCAL_API_KEY", "EMPTY")

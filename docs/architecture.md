@@ -36,8 +36,10 @@ Meta 读取源码 / 开发数据 / 完整轨迹 / 历史结果
 | `sft.py` | 训练集轨迹筛选、模型/harness 交叉评测、模型选择和下一轮配置 |
 | `lora_train.py` | 独立环境中的 Transformers/PEFT 训练、checkpoint 恢复与 adapter 产物 |
 | `rl.py`、`scripts/train_grpo.py` | 固定数学 harness、verl GRPO、模型导出和父代配对评测 |
-| `pipeline.py` | 联合策略选择、父版本接续、统一开发集与冻结测试 |
-| `pipeline_data.py`、`pipeline_runtime.py` | 离线与在线 SFT 数据、Task 服务和训练进程管理 |
+| `pipeline.py` | 按策略接口编排轮次、提交父版本、运行配对评测与冻结测试 |
+| `pipeline_setup.py`、`pipeline_types.py`、`components.py` | 配置装配、可加载组件接口、Python 组件入口与指纹 |
+| `pipeline_strategies.py`、`pipeline_data.py` | 内置策略、划分校验、离线与在线 SFT 数据准备 |
+| `pipeline_runtime.py`、`pipeline_weights.py` | 本地或外接 Task 服务、训练进程与模型权重身份 |
 | `weights.py` | adapter 与完整 checkpoint 的文件校验和父模型解析 |
 | `storage.py`、`types.py` | 原子写入、调用账本、预算和类型 |
 | `loop.py`、`benchmark.py`、`math_scoring.py`、`cli.py` | 通用记录辅助函数，以及独立的数学任务运行与评分接口 |

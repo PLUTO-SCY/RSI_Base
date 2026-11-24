@@ -23,13 +23,13 @@ from verl.model_merger.base_model_merger import ModelMergerConfig
 from verl.model_merger.fsdp_model_merger import FSDPModelMerger
 
 from rsi_base.agent import task_messages
+from rsi_base.components import callable_hash, load_callable
 from rsi_base.loop import file_hash
-from rsi_base.lora_train import model_files
 from rsi_base.rl import GRPOConfig, freeze_inputs, parent_artifact, training_problems
 from rsi_base.sft import load_adapter, locked, source_identity
 from rsi_base.storage import append_json, read_json, write_json
 from rsi_base.types import digest
-from rsi_base.weights import load_artifact, load_checkpoint, verify_updated_checkpoint
+from rsi_base.weights import load_artifact, load_checkpoint, model_files, verify_updated_checkpoint
 
 BACKEND_SHA256 = file_hash(__file__)
 
@@ -48,7 +48,7 @@ def build_parquet(problems, config, tokenizer, path):
                 "data_source": "rsi_numeric",
                 "prompt": prompt,
                 "reward_model": {"style": "rule", "ground_truth": item["answer"]},
-                "extra_info": {"index": index, "id": item["id"]},
+                "extra_info": {"index": index, "id": item["id"], "scorer": config.scorer},
             }
         )
     pq.write_table(pa.Table.from_pylist(records), path)
@@ -328,6 +328,8 @@ def train(config, data, run, root):
         "backend_files": {
             "train_grpo.py": BACKEND_SHA256,
             "grpo_reward.py": file_hash(root / "scripts/grpo_reward.py"),
+            "problem_loader": callable_hash(load_callable(config.problem_loader)),
+            "scorer": callable_hash(load_callable(config.scorer)),
         },
         "devices": devices,
     }
