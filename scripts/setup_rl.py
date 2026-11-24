@@ -77,10 +77,35 @@ def main():
                 "flash-attn",
                 "--no-install-package",
                 "trl",
+                "--no-install-package",
+                "numpy",
                 "--python",
                 pin["python"],
             ],
             cwd=source,
+            env=environment,
+            check=True,
+        )
+        interpreter = root / ".venvs/rl/bin/python"
+        subprocess.run(
+            [
+                "uv",
+                "pip",
+                "install",
+                "--python",
+                str(interpreter),
+                "--no-deps",
+                "--require-hashes",
+                "--only-binary",
+                ":all:",
+                "--requirement",
+                str(root / "requirements/rl-numpy.lock"),
+            ],
+            env=environment,
+            check=True,
+        )
+        subprocess.run(
+            ["uv", "pip", "check", "--python", str(interpreter)],
             env=environment,
             check=True,
         )

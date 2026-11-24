@@ -29,6 +29,8 @@ from rsi_base.sft import load_adapter, locked, source_identity
 from rsi_base.storage import append_json, read_json, write_json
 from rsi_base.types import digest
 
+BACKEND_SHA256 = file_hash(__file__)
+
 
 def build_parquet(problems, config, tokenizer, path):
     records = []
@@ -223,7 +225,7 @@ def export_adapter(run, config, identity, parent_dir):
             "parameters_changed": changed,
             "base_weights_frozen": True,
             "metrics": metrics,
-            "export_source_sha256": file_hash(__file__),
+            "export_source_sha256": BACKEND_SHA256,
         }
         write_json(artifact / "manifest.json", manifest)
         artifact.rename(run / "adapter")
@@ -271,8 +273,11 @@ def train(config, data, run, root):
         "train_split_sha256": file_hash(data / "train.jsonl"),
         "selected_training_data_sha256": digest(problems),
         "verl": pin,
+        "numpy": version("numpy"),
+        "rl_numpy_lock_sha256": file_hash(root / "requirements/rl-numpy.lock"),
         "backend_files": {
-            name: file_hash(root / "scripts" / name) for name in ("train_grpo.py", "grpo_reward.py")
+            "train_grpo.py": BACKEND_SHA256,
+            "grpo_reward.py": file_hash(root / "scripts/grpo_reward.py"),
         },
         "devices": devices,
     }
