@@ -1,0 +1,7 @@
+{
+  "version": "0.9.1",
+  "revision": "1876b06d0a3e4e71e06230be10af14492ca8a75b",
+  "archive_sha256": "073302fd349ef8479571f88d6bd4022e60a6bf189df6396809d80f70d40c4b37",
+  "lock_sha256": "d30f7e35c9f077c3c27aae1012711a753939db81a9a2cf4bcdbdf03fab59d0a9",
+  "python": "3.12.13"
+}

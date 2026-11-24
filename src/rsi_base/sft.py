@@ -20,7 +20,7 @@ from .storage import Ledger, read_json, write_json
 from .types import Limits, StrictModel, digest
 
 
-class SFTConfig(StrictModel):
+class AdapterConfig(StrictModel):
     base_model: str = "Qwen/Qwen3-4B-Instruct-2507"
     base_revision: str = "cdbee75f17c01a7cc42f958dc650907174af0554"
     base_directory: str = ".local/models/qwen3-4b-instruct-2507"
@@ -31,6 +31,16 @@ class SFTConfig(StrictModel):
     target_modules: list[str] = Field(
         default_factory=lambda: ["q_proj", "k_proj", "v_proj", "o_proj"]
     )
+
+    @field_validator("target_modules")
+    @classmethod
+    def modules(cls, value):
+        if not value or len(set(value)) != len(value) or any(not item.strip() for item in value):
+            raise ValueError("target_modules must contain distinct nonempty module names")
+        return value
+
+
+class SFTConfig(AdapterConfig):
     epochs: float = Field(default=1, gt=0, le=20)
     learning_rate: float = Field(default=0.0002, gt=0, le=0.01)
     batch_size: int = Field(default=1, ge=1, le=32)
@@ -48,13 +58,6 @@ class SFTConfig(StrictModel):
     max_collection_calls: int = Field(default=2000, ge=1)
     max_evaluation_calls: int = Field(default=10000, ge=1)
     wall_seconds: float = Field(default=7200, gt=0)
-
-    @field_validator("target_modules")
-    @classmethod
-    def modules(cls, value):
-        if not value or len(set(value)) != len(value) or any(not item.strip() for item in value):
-            raise ValueError("target_modules must contain distinct nonempty module names")
-        return value
 
     @field_validator("max_steps")
     @classmethod

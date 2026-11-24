@@ -5,16 +5,18 @@ RSI_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$RSI_ROOT"
 RSI_WITH_GPU=0
 RSI_WITH_TRAIN=0
+RSI_WITH_RL=0
 RSI_WITH_CLAUDE=0
 RSI_WITH_SANDBOX=0
 for RSI_OPTION in "$@"; do
   case "$RSI_OPTION" in
     --gpu) RSI_WITH_GPU=1 ;;
     --train) RSI_WITH_TRAIN=1 ;;
+    --rl) RSI_WITH_RL=1 ;;
     --claude) RSI_WITH_CLAUDE=1 ;;
     --sandbox) RSI_WITH_SANDBOX=1 ;;
     --help|-h)
-      echo "Usage: sh scripts/bootstrap.sh [--gpu] [--train] [--claude] [--sandbox]"
+      echo "Usage: sh scripts/bootstrap.sh [--gpu] [--train] [--rl] [--claude] [--sandbox]"
       echo "Core Python environment is always installed. GPU and Claude tools are optional."
       exit 0 ;;
     *) echo "Unknown option: $RSI_OPTION" >&2; exit 2 ;;
@@ -52,5 +54,8 @@ if [ "$RSI_WITH_GPU" = 1 ]; then
 fi
 if [ "$RSI_WITH_TRAIN" = 1 ]; then
   sh scripts/setup_train.sh
+fi
+if [ "$RSI_WITH_RL" = 1 ]; then
+  .venv/bin/python scripts/setup_rl.py
 fi
 echo "Ready. Next: sh scripts/harness.sh data; sh scripts/harness.sh doctor"

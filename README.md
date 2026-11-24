@@ -16,6 +16,7 @@
   <a href="docs/getting-started.md">使用文档</a> ·
   <a href="docs/architecture.md">实现结构</a> ·
   <a href="docs/lora-sft.md">LoRA SFT</a> ·
+  <a href="docs/lora-grpo.md">LoRA GRPO</a> ·
   <a href="CONTRIBUTING.md">开发约定</a>
 </p>
 
@@ -25,7 +26,7 @@
 
 ## 工作方式
 
-RSI Base 为 RSI 研究提供一套可复用的实验闭环。当前支持 **harness 演化** 与 **LoRA SFT 模型更新**：Meta 提出 harness 改动，宿主执行任务、评测并选择版本；冻结的 harness 可进一步生成训练轨迹，更新 Task 模型。
+RSI Base 为 RSI 研究提供一套可复用的实验闭环。Meta 提出 harness 改动，宿主执行任务、评测并选择版本。模型更新支持 **LoRA SFT** 和固定数学 harness 上的 **LoRA GRPO**。
 
 ```mermaid
 flowchart LR
@@ -43,7 +44,7 @@ flowchart LR
 | **Meta Agent** | Claude Code + DeepSeek API | 查看源码、开发数据与完整轨迹，通过 MCP 探测并提交候选 |
 | **Task Agent** | Qwen3-4B-Instruct-2507 + vLLM | 通过 OpenAI 兼容接口执行任务，也可接入已有推理服务 |
 | **Harness** | 配置 + Python 检索函数 | 演化 prompt、检索算法、示例组织与单步／复核流程 |
-| **训练后端** | Transformers + PEFT | 独立环境完成 LoRA SFT，保存 adapter 并交回推理服务 |
+| **训练后端** | Transformers + PEFT / verl | 训练并导出 LoRA adapter，由 Task 服务加载评测 |
 | **实验宿主** | Python 编排与评测 | 固定评分协议，管理预算、版本、断点恢复与冻结后测试 |
 
 默认初始 harness 根据任务描述和标签，通过一次模型调用完成分类。harness 演化阶段固定权重，模型更新阶段使用经验证的训练轨迹进行 LoRA SFT。
@@ -102,6 +103,10 @@ RSI_GPU=2 sh scripts/harness.sh serve-adapter
 
 保持 adapter 服务运行，在另一个终端执行 `sh scripts/harness.sh sft evaluate`。开发集评测会交叉比较训练前后模型与初始／演化后 harness，并生成下一轮搜索配置。完整流程、恢复、多卡训练与冻结后测试见 [LoRA SFT 使用说明](docs/lora-sft.md)。
 
+## LoRA GRPO
+
+使用 verl 在线采样并优化固定数学 harness 下的 Task 模型。训练可从基础模型开始，也可读取同一基座上的已有 LoRA adapter。安装、训练和父代配对评测见 [LoRA GRPO 使用说明](docs/lora-grpo.md)。
+
 ## 实验与复用
 
 | 想做什么 | 入口 |
@@ -122,7 +127,7 @@ RSI_GPU=2 sh scripts/harness.sh serve-adapter
 
 ```text
 RSI_Base/
-├── configs/               harness 与 LoRA SFT 配置
+├── configs/               harness、LoRA SFT 与 GRPO 配置
 ├── src/rsi_base/           Agent、harness、搜索、评测与记录
 ├── scripts/               安装、数据准备、服务、运行与导出
 ├── requirements/          GPU、CLI、隔离工具及数据版本锁

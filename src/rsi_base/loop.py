@@ -40,7 +40,9 @@ def completed(directory):
     return value["state"]
 
 
-def evaluate(directory, problems, spec, task, ledger, concurrency=1, scorer=score):
+def evaluate(
+    directory, problems, spec, task, ledger, concurrency=1, scorer=score, *, expected_model=None
+):
     """Settle every admitted call; resume successes even across an interrupted batch."""
     directory.mkdir(parents=True, exist_ok=True)
     identity = {
@@ -60,6 +62,10 @@ def evaluate(directory, problems, spec, task, ledger, concurrency=1, scorer=scor
     ids = [x["id"] for x in records]
     if len(set(ids)) != len(ids) or not set(ids).issubset(expected_ids):
         raise ValueError("Evaluation checkpoint contains duplicate or unknown IDs")
+    if expected_model and any(row.get("response_model") != expected_model for row in records):
+        raise ValueError(
+            f"Evaluation checkpoint includes responses from a different model: {expected_model}"
+        )
     done = {row["id"]: row for row in records}
     pending = [p for p in problems if p["id"] not in done]
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
@@ -75,6 +81,10 @@ def evaluate(directory, problems, spec, task, ledger, concurrency=1, scorer=scor
             for problem, call_id, future in jobs:
                 try:
                     result = future.result()
+                    if expected_model and result.get("response_model") != expected_model:
+                        raise ValueError(
+                            f"Task endpoint did not serve requested model: {expected_model}"
+                        )
                 except Exception as exc:
                     ledger.finish(
                         call_id,

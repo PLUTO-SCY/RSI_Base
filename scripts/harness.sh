@@ -15,7 +15,7 @@ if [ "$#" -gt 0 ]; then shift; fi
 case "$RSI_COMMAND" in
   --help|-h|help)
     echo "Usage: sh scripts/harness.sh COMMAND [arguments]"
-    echo "  setup [--gpu] [--train] [--claude] [--sandbox]  Install project-local environments/tools"
+    echo "  setup [--gpu] [--train] [--rl] [--claude] [--sandbox]  Install project-local environments/tools"
     echo "  data                      Rebuild/verify pinned public data (idempotent)"
     echo "  model [arguments]         Download/resume the pinned Qwen checkpoint"
     echo "  credentials               Save a hidden project-local API credential"
@@ -24,6 +24,7 @@ case "$RSI_COMMAND" in
     echo "  smoke [--meta]            Two validation queries; optional ONE Meta call"
     echo "  run PHASE [arguments]    calibrate/search/suite/finalize; explicit full run"
     echo "  sft PHASE [arguments]    collect/train/evaluate/test for LoRA model updates"
+    echo "  rl PHASE [arguments]     train/evaluate/test for LoRA GRPO on a fixed Task prompt"
     echo "  serve-adapter [--run DIR]  Serve base + immutable LoRA on port 18001"
     echo "  runtime [arguments]      Save local model/runtime fingerprints"
     echo "  inspect [suite]          Print experiment progress"
@@ -44,6 +45,7 @@ case "$RSI_COMMAND" in
   smoke) exec .venv/bin/python scripts/smoke_harness.py "$@" ;;
   run) exec .venv/bin/python scripts/run_memory.py "$@" ;;
   sft) exec .venv/bin/python scripts/run_sft.py "$@" ;;
+  rl) exec .venv/bin/python scripts/run_rl.py "$@" ;;
   serve-adapter) exec .venv/bin/python scripts/serve_lora.py "$@" ;;
   runtime)
     [ -x .venv-task/bin/python ] || { echo "Run setup --gpu first." >&2; exit 1; }

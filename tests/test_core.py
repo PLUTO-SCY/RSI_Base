@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from rsi_base.agent import TaskAgent
-from rsi_base.benchmark import check_disjoint, parse_number, score
+from rsi_base.benchmark import check_disjoint, load_problems, parse_number, score
 from rsi_base.improve import ClaudeMeta, parse_proposal
 from rsi_base.loop import build_evidence, evaluate, run
 from rsi_base.storage import BudgetExceeded, Ledger
@@ -104,6 +104,31 @@ def test_overlap_detected_by_question():
         check_disjoint(
             [{"id": "a", "question": "Same  question"}], [{"id": "b", "question": "same question"}]
         )
+
+
+def test_math_jsonl_preserves_unicode_line_separators(tmp_path):
+    path = tmp_path / "numbers.jsonl"
+    rows = [{"id": "case", "question": "Line one\u2028Line two", "answer": "2"}]
+    path.write_text(json.dumps(rows[0], ensure_ascii=False) + "\n", encoding="utf-8")
+    assert load_problems(path) == rows
+
+
+def test_evaluation_never_caches_misserved_adapter(tmp_path):
+    ledger = Ledger(tmp_path / "ledger.jsonl", Limits())
+    problems = [{"id": "case", "question": "How many?", "answer": "2"}]
+    try:
+        with pytest.raises(ValueError, match="did not serve requested model"):
+            evaluate(
+                tmp_path / "evaluation",
+                problems,
+                AgentSpec(system_prompt="fixed prompt"),
+                FakeTask(),
+                ledger,
+                expected_model="rsi-grpo-example",
+            )
+    finally:
+        ledger.close()
+    assert not (tmp_path / "evaluation/results.jsonl").exists()
 
 
 def test_loop_selection_rollback_isolation_and_resume(tmp_path):

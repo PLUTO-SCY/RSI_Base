@@ -7,7 +7,8 @@ from pathlib import Path
 
 
 def load_problems(path):
-    rows = [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
+    with Path(path).open(encoding="utf-8") as stream:
+        rows = [json.loads(line) for line in stream if line.strip()]
     if not rows:
         raise ValueError("Dataset is empty")
     seen_ids, seen_questions = set(), set()

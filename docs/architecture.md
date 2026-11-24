@@ -35,6 +35,7 @@ Meta 读取源码 / 开发数据 / 完整轨迹 / 历史结果
 | `memory_audit.py` | 冻结后评测、按题配对统计与汇总 |
 | `sft.py` | 训练集轨迹筛选、模型/harness 交叉评测、模型选择和下一轮配置 |
 | `lora_train.py` | 独立环境中的 Transformers/PEFT 训练、checkpoint 恢复与 adapter 产物 |
+| `rl.py`、`scripts/train_grpo.py` | 固定数学 harness、verl GRPO、PEFT 导出和父代配对评测 |
 | `storage.py`、`types.py` | 原子写入、调用账本、预算和类型 |
 | `loop.py`、`benchmark.py`、`math_scoring.py`、`cli.py` | 通用记录辅助函数，以及独立的数学任务运行与评分接口 |
 
