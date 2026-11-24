@@ -57,6 +57,9 @@ flowchart LR
 ### 1. 准备环境与资源
 
 ```sh
+git clone https://github.com/PLUTO-SCY/RSI_Base.git
+cd RSI_Base
+
 # 安装项目内的 Python、GPU 推理、Claude Code 与隔离执行环境
 sh scripts/harness.sh setup --gpu --claude --sandbox
 
@@ -65,6 +68,8 @@ sh scripts/harness.sh credentials
 sh scripts/harness.sh data
 sh scripts/harness.sh model
 ```
+
+同机使用 SFT 和 verl GRPO 时，安装命令加上 `--train --rl`。全套安装及训练数据准备见 [环境与运行](docs/getting-started.md)。
 
 ### 2. 启动 Task 服务
 

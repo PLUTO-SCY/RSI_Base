@@ -4,15 +4,23 @@
 
 ## 1. 安装
 
-完整本地环境：
+宿主机需要 Linux x86_64、Git、curl、Node.js ≥18/npm。本地推理和训练需要 NVIDIA 驱动和支持 BF16 的 GPU。verl GRPO 的依赖需要支持 CUDA 13.0 的 NVIDIA 驱动。
+
+只运行本地 harness 演化时，安装 Task、Meta 和隔离执行环境。
 
 ```sh
 sh scripts/harness.sh setup --gpu --claude --sandbox
 ```
 
-需要 Linux x86_64、Git、curl、Node.js ≥18/npm。本地推理另需 NVIDIA 驱动和支持 BF16 的 GPU。默认 4B 模型以单卡服务，显存需求取决于上下文和并发；`serve_task.sh` 中可以调整相关参数。已有远程 Task 服务时省略 `--gpu`，修改配置中的 `task` 即可。
+同时运行 harness 演化、SFT 与 GRPO 时，安装全套环境。
 
-安装入口与版本：
+```sh
+sh scripts/harness.sh setup --gpu --claude --sandbox --train --rl
+```
+
+已有 harness 环境时，用 `sh scripts/harness.sh setup --train --rl` 补装训练环境。LoRA 和全参微调使用相同的训练依赖。
+
+默认 4B 模型以单卡服务，显存需求取决于上下文和并发，可以通过 `serve` 参数调整。已有远程 Task 服务时可省略 `--gpu`，并修改配置中的 `task`。
 
 | 内容 | 脚本 / 版本文件 | 本地位置 |
 | --- | --- | --- |
@@ -25,7 +33,7 @@ sh scripts/harness.sh setup --gpu --claude --sandbox
 
 隔离执行依赖内核允许用户命名空间。提供的 bubblewrap 包针对 Linux x86_64/Ubuntu 20.04；其他系统可提供兼容的 `bwrap`。`doctor --ready` 会实际运行隔离探针，失败时先解决宿主兼容性。
 
-训练流程见 [LoRA SFT](lora-sft.md)和 [LoRA GRPO](lora-grpo.md)。GRPO 的依赖版本、宿主检查和安装故障处理见 [verl 环境排查](verl-troubleshooting.md)。
+安装后可按照 [verl 环境排查](verl-troubleshooting.md)运行 CUDA 算子检查。训练流程见 [LoRA SFT](lora-sft.md)、[LoRA GRPO](lora-grpo.md)和 [全参微调](full-tuning.md)。
 
 仅做开发和离线检查：
 
@@ -55,6 +63,12 @@ data/s2d/
 ```
 
 重复执行会校验现有文件，文件发生变化或不完整时直接报错，不覆盖。数据处理先移除归一化重复及字符三元组 Jaccard ≥0.9 的近重复，再按标签分层划分开发和测试样本。示例采用公开合成数据，划分曾用于开发，因此默认 `test_status=historical_replay`；需独立泛化验证时换用未参与开发的数据并设置 `held_out`。
+
+运行 GRPO 时，再准备默认数学数据。脚本按数据锁下载并校验 GSM8K，生成 `data/gsm8k-grpo/`。
+
+```sh
+.venv/bin/python scripts/prepare_grpo_data.py
+```
 
 ## 3. 启动 Task 服务
 
