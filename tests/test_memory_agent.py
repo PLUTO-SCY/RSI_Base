@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from rsi_base.classification import MemoryHarness, MemoryPolicy, effective_policy
+from rsi_base.classification import MemoryHarness, MemoryIndex, MemoryPolicy, effective_policy
 from rsi_base.memory_code import run_code
 from rsi_base.memory_loop import MemoryConfig, evaluate_policy
 from rsi_base.memory_search import search
@@ -86,6 +86,34 @@ def test_contrast_pair_count_and_selection_aliases_canonicalize():
     assert effective_policy(MemoryPolicy(retrieval_code="unused")) == effective_policy(
         MemoryPolicy()
     )
+
+
+def test_python_retrieval_batches_large_repeated_memory_payload(monkeypatch):
+    training = [
+        {"id": str(i), "question": f"example {i} " + "x" * 17_000, "answer": "fruit"}
+        for i in range(32)
+    ]
+    index = MemoryIndex(training)
+    policy = MemoryPolicy(retrieval="python", retrieval_code="fixture")
+    queries = [(f"query {i}", str(i % len(training))) for i in range(80)]
+    calls = []
+
+    def bounded_worker(_code, jobs, *, metrics):
+        if len(json.dumps(jobs)) > 20 * 1024**2:
+            raise MemoryError("Worker input exceeds capacity")
+        calls.extend(jobs)
+        return [[{"id": job["memory"][0]["id"], "score": 1}] for job in jobs]
+
+    monkeypatch.setattr("rsi_base.memory_code.run_code", bounded_worker)
+    index.prepare_code(policy, queries)
+    for (query, excluded), job in zip(queries, calls, strict=True):
+        ranking = index.ranking_cache[(policy.retrieval_code, query, excluded)]
+        assert job["query"] == query
+        assert len(job["memory"]) == len(training) - 1
+        assert all(row["id"] != excluded for row in job["memory"])
+        assert ranking[0]["id"] == job["memory"][0]["id"]
+    index.prepare_code(policy, queries)
+    assert len(calls) == len(queries)
 
 
 def test_tool_agent_reads_development_and_debugs_before_submission(tmp_path, monkeypatch):

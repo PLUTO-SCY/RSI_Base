@@ -7,13 +7,14 @@ import random
 from collections import Counter
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, field_validator
 
 from .agent import TaskAgent
 from .classification import MemoryHarness, MemoryPolicy, label_score, normalize
 from .loop import file_hash
-from .memory_audit import paired_records
+from .memory_audit import cluster_interval, paired_records
 from .memory_loop import MemoryConfig, evaluate_policy, load_rows, stable_improvement
 from .storage import Ledger, read_json, write_json
 from .types import Limits, StrictModel, digest
@@ -41,6 +42,8 @@ class SFTConfig(StrictModel):
     seed: int = 42
     min_samples: int = Field(default=16, ge=1)
     collection_repeats: int = Field(default=1, ge=1, le=5)
+    collection_temperature: float | None = Field(default=None, ge=0, le=2)
+    training_target: Literal["verified", "reference"] = "verified"
     evaluation_repeats: int = Field(default=3, ge=1, le=5)
     max_collection_calls: int = Field(default=2000, ge=1)
     max_evaluation_calls: int = Field(default=10000, ge=1)
@@ -101,8 +104,8 @@ def load_adapter(directory):
     return manifest
 
 
-def successes(records, training, labels):
-    """Supervise only the final verified call; never relabel an incorrect response."""
+def successes(records, training, labels, *, training_target="verified"):
+    """Export final calls with verifier-accepted or explicitly supervised targets."""
     bank = {row["id"]: row for row in training}
     samples, reasons, seen = [], Counter(), set()
     for record in records:
@@ -117,11 +120,11 @@ def successes(records, training, labels):
         if final["response"] != record["response"]:
             raise ValueError("Final trace differs from scored output")
         score = label_score(final["response"], problem["answer"], labels)
-        if not score["score"]:
+        if record.get("score") != score["score"]:
+            raise ValueError("Collection score differs from fixed verifier")
+        if not score["score"] and training_target == "verified":
             reasons[score["status"]] += 1
             continue
-        if record.get("score") != 1:
-            raise ValueError("Collection score differs from fixed verifier")
         if any(identifier not in bank for identifier in record["memory_ids"]):
             raise ValueError("Non-training memory in SFT collection")
         used = [bank[identifier] for identifier in record["memory_ids"]]
@@ -132,8 +135,12 @@ def successes(records, training, labels):
             raise ValueError("Unsupported Task message contract")
         if any(not isinstance(m["content"], str) for m in messages):
             raise ValueError("Task messages must contain text")
-        messages = [*messages, {"role": "assistant", "content": final["response"]}]
-        key = digest(messages)
+        target = (
+            normalize(problem["answer"]) if training_target == "reference" else final["response"]
+        )
+        if normalize(target) not in labels:
+            raise ValueError("Training target is absent from the label set")
+        key = digest([messages, normalize(target)])
         if key in seen:
             reasons["duplicate_messages"] += 1
             continue
@@ -142,8 +149,9 @@ def successes(records, training, labels):
             {
                 "id": record["id"],
                 "problem_id": problem["id"],
-                "messages": messages,
+                "messages": [*messages, {"role": "assistant", "content": target}],
                 "trace_sha256": digest(final),
+                "observed_status": score["status"],
             }
         )
     return samples, dict(reasons)
@@ -190,6 +198,13 @@ def collect(config, source_run, data, output, root, *, task=None, base_url=None)
         parent_model, parent_hash = adapter["served_model"], adapter["artifact_sha256"]
     if memory_config.task.model != parent_model:
         raise ValueError("Generation model must match the base/parent adapter being trained")
+    rollout_settings = memory_config.task
+    if config.collection_temperature is not None:
+        if "temperature" in rollout_settings.extra_body:
+            raise ValueError("Set collection_temperature outside task.extra_body")
+        rollout_settings = rollout_settings.model_copy(
+            update={"temperature": config.collection_temperature}
+        )
     identity = {
         **source_identity(root),
         "config": config.model_dump(),
@@ -201,10 +216,11 @@ def collect(config, source_run, data, output, root, *, task=None, base_url=None)
         "parent_adapter_sha256": parent_hash,
         "split_sha256": parent["split_sha256"],
         "memory_config": memory_config.model_dump(),
+        "rollout_settings": rollout_settings.model_dump(),
         "initial_policy": frozen["baseline"]["policy"],
         "policy": frozen["selected"]["policy"],
         "leave_one_out": True,
-        "supervision": "Final verified model response only; training split only",
+        "supervision": config.training_target,
     }
     with locked(output) as output:
         pin(output / "collection_identity.json", identity)
@@ -231,7 +247,7 @@ def collect(config, source_run, data, output, root, *, task=None, base_url=None)
                 training,
                 MemoryPolicy.model_validate(identity["policy"]),
                 harness,
-                task or TaskAgent(memory_config.task, root),
+                task or TaskAgent(rollout_settings, root),
                 ledger,
                 repeats=config.collection_repeats,
                 seed=config.seed,
@@ -239,7 +255,11 @@ def collect(config, source_run, data, output, root, *, task=None, base_url=None)
             )
         finally:
             ledger.close()
-        samples, excluded = successes(records, training, labels)
+        if config.parent_adapter:
+            check_response_models(records, parent_model)
+        samples, excluded = successes(
+            records, training, labels, training_target=config.training_target
+        )
         if len(samples) < config.min_samples:
             raise ValueError(f"Only {len(samples)} verified samples; need {config.min_samples}")
         payload = "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in samples)
@@ -248,6 +268,11 @@ def collect(config, source_run, data, output, root, *, task=None, base_url=None)
             "identity_sha256": digest(identity),
             "train_sha256": file_hash(output / "train.jsonl"),
             "samples": len(samples),
+            "unique_training_problems": len({row["problem_id"] for row in samples}),
+            "targets_from": config.training_target,
+            "observed_statuses_in_samples": dict(
+                Counter(row["observed_status"] for row in samples)
+            ),
             "excluded": excluded,
             "collection_summary": summary,
             "development_opened": False,
@@ -264,7 +289,7 @@ def verify_dataset(output, config):
         read_json(output / "dataset.json"),
     )
     if (
-        identity["config"] != config.model_dump()
+        SFTConfig.model_validate(identity["config"]) != config
         or report["identity_sha256"] != digest(identity)
         or report["train_sha256"] != file_hash(output / "train.jsonl")
     ):
@@ -273,6 +298,13 @@ def verify_dataset(output, config):
     if len(rows) != report["samples"] or len(rows) < config.min_samples:
         raise ValueError("SFT sample count changed")
     return report
+
+
+def check_response_models(records, expected):
+    if any(
+        trace.get("response_model") != expected for record in records for trace in record["traces"]
+    ):
+        raise ValueError(f"Task endpoint did not report the requested adapter: {expected}")
 
 
 def compare(config, data, output, root, *, base_url, split="val", tasks=None):
@@ -289,7 +321,7 @@ def compare(config, data, output, root, *, base_url, split="val", tasks=None):
         raise ValueError("Parent adapter changed after collection")
     if (
         adapter["identity"]["dataset_sha256"] != file_hash(output / "train.jsonl")
-        or adapter["identity"]["config"] != config.model_dump()
+        or SFTConfig.model_validate(adapter["identity"]["config"]) != config
         or adapter["identity"]["collection_sha256"]
         != file_hash(output / "collection_identity.json")
     ):
@@ -376,14 +408,24 @@ def compare(config, data, output, root, *, base_url, split="val", tasks=None):
                         repeats=config.evaluation_repeats,
                         seed=config.seed,
                     )
+                    if model_name == "candidate" or config.parent_adapter:
+                        check_response_models(records[key], model.model)
         finally:
             ledger.close()
         pair = paired_records(records["parent_evolved"], records["candidate_evolved"])
+        initial_pair = paired_records(records["parent_initial"], records["candidate_initial"])
         report = {
             "split": split,
             "test_status": memory_config.test_status,
             "metrics": metrics,
             "lora_effect_with_evolved_harness": pair,
+            "lora_effect_with_initial_harness": initial_pair,
+            "paired_question_intervals": {
+                "evolved_harness": cluster_interval(pair["question_deltas"], seed=config.seed),
+                "initial_harness": cluster_interval(
+                    initial_pair["question_deltas"], seed=config.seed
+                ),
+            },
             "test_used_for_selection": False,
         }
         if split == "val":

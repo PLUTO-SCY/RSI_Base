@@ -24,9 +24,12 @@ sh scripts/harness.sh sft collect --source-run runs/demo --output runs/lora-demo
 `collect` 要求源运行已有 `frozen.json`，验证训练记忆和标签的校验值，再用冻结的 harness 重新执行 **训练集**。它不读取开发题目或测试内容，不将开发／测试轨迹用于 SFT。
 
 - 检索采用留一法，排除题目本身与相同文本的训练记忆。
-- 只保留模型实际生成、通过固定评分器验证的正确结果；不将错误回答替换成标准答案。
+- 默认 `training_target="verified"`，保留模型实际生成且通过固定评分器的回答。
+- 有标注的数据可用 `training_target="reference"`。使用同一个最终调用的输入，以训练集标准标签做监督。采样统计会区分这些样本在训练前是正确、错误还是格式不符。
 - direct 流程监督唯一一次回答；verify/rewrite 流程只监督最终通过验证的分类调用。错误草稿可以保留在最终调用的输入中，不作为训练目标。
-- 所有调用正常结束才可入选，截断、格式错误和重复消息被剔除；样本不足时停止并保留已有记录。
+- 所有调用正常结束才可入选。重复输入和目标只保留一条；`verified` 还会过滤错误和格式不符的回答。样本不足时停止并保留已有记录。
+
+`collection_repeats` 控制每题采样次数。用 `collection_temperature` 可单独调节采样温度，例如设置为 `0.7` 并采样 3 次，评测仍使用源运行的模型参数。`dataset.json` 记录样本数、覆盖的不同题目数和筛选原因，便于发现重复采样或困难题覆盖不足。
 
 产物为 `train.jsonl`、`dataset.json`、`collection_identity.json` 和 `collection/` 中的原始轨迹。重复相同命令会复用已完成采样。若源服务端口变化，可指定 `collect --base-url URL`，模型名称必须仍匹配实际基础模型或父 adapter。
 
@@ -85,7 +88,7 @@ sh scripts/harness.sh sft evaluate --output runs/lora-demo
 
 接受规则为：在演化后 harness 固定时，候选每次重复的正确数均不下降，平均至少多答对一题。否则保留父模型。此规则用于基础设施的版本选择，不等价于统计显著性或泛化结论。
 
-选择结果写入 `decision.json`，四组开发集报告在 `evaluation/val/report.json`。`next-search.json` 自动引用被选中的模型和当前 harness，不覆盖源运行。
+选择结果写入 `decision.json`，四组开发集报告在 `evaluation/val/report.json`。报告含固定 harness 时的按题配对差值和 95% bootstrap 区间，重复评测先按题平均。`next-search.json` 引用被选中的模型和当前 harness。
 
 ## 5. 继续演化或结束测试
 
@@ -113,6 +116,6 @@ sh scripts/harness.sh sft test --output runs/lora-demo
 
 所有阶段使用同一 `--config`、`--data` 和 `--output`。默认数据为 `data/s2d`，对照服务为 `http://127.0.0.1:18001/v1`；地址可用 `--base-url` 修改。训练采样和评测均有独立调用账本和预算。当前采样／评分适配分类任务，其他 benchmark 需要接入相应轨迹转换和验证器。
 
-单次 SFT 只证明模型更新路径可运行；loss 下降、开发集提升和独立测试提升需要分别判断。所有训练消息、权重、日志与报告留在被 Git 忽略的运行目录，仓库只保留可复用实现。
+评估训练收益时，在同一个 harness 和相同解码参数下比较父模型与 adapter。可用 `reference` 做已标注任务的监督基线，再比较 `verified` 的采样覆盖率和独立测试增益。多随机种子的比较应使用同一份测试集，并按题汇总配对差值。训练消息、权重、日志与报告保存在被 Git 忽略的运行目录。
 
 实现依据：[Transformers Trainer](https://huggingface.co/docs/transformers/v4.57.1/en/main_classes/trainer)、[Chat templates](https://huggingface.co/docs/transformers/v4.57.1/en/chat_templating)、[PEFT LoRA](https://huggingface.co/docs/peft/package_reference/lora)、[vLLM 0.11 LoRA serving](https://docs.vllm.ai/en/v0.11.0/features/lora.html)。

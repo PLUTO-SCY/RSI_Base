@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect verified training trajectories, train LoRA, compare and freeze model selection."""
+"""Collect training trajectories, train LoRA and compare model updates."""
 
 import argparse
 import json
@@ -41,7 +41,14 @@ def main():
         )
         print(
             json.dumps(
-                {"samples": result["samples"], "excluded": result["excluded"], "test_opened": False}
+                {
+                    "samples": result["samples"],
+                    "unique_training_problems": result["unique_training_problems"],
+                    "targets_from": result["targets_from"],
+                    "observed_statuses_in_samples": result["observed_statuses_in_samples"],
+                    "excluded": result["excluded"],
+                    "test_opened": False,
+                }
             )
         )
     else:
@@ -60,6 +67,7 @@ def main():
                     "accuracy": {
                         name: value["accuracy"] for name, value in result["metrics"].items()
                     },
+                    "paired_question_intervals": result["paired_question_intervals"],
                     "model_update_accepted": result["decision"]["accepted"],
                 },
                 indent=2,

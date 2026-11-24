@@ -209,6 +209,33 @@ def test_export_keeps_only_correct_final_call_and_rejects_foreign_cases():
         successes([{**correct, "problem_id": "test-case"}], training, ["fruit", "machine"])
     with pytest.raises(ValueError, match="itself"):
         successes([{**correct, "memory_ids": ["t"]}], training, ["fruit", "machine"])
+    references, excluded = successes(
+        [wrong, {**correct, "id": "3:t"}, truncated],
+        training,
+        ["fruit", "machine"],
+        training_target="reference",
+    )
+    assert len(references) == 1
+    assert references[0]["messages"] == samples[0]["messages"]
+    assert references[0]["observed_status"] == "wrong"
+    assert references[0]["trace_sha256"] == digest(wrong["traces"][-1])
+    assert excluded == {"duplicate_messages": 1, "unfinished_trace": 1}
+
+
+def test_collection_sampling_override_does_not_change_evaluation_temperature(case, monkeypatch):
+    case["config"] = case["config"].model_copy(update={"collection_temperature": 0.8})
+    settings_seen = []
+
+    def new_task(settings, _root):
+        settings_seen.append(settings)
+        return Task(settings)
+
+    monkeypatch.setattr("rsi_base.sft.TaskAgent", new_task)
+    case["task"] = None
+    collection(case)
+    manifest = read_json(case["output"] / "collection_identity.json")
+    assert settings_seen[0].temperature == manifest["rollout_settings"]["temperature"] == 0.8
+    assert manifest["memory_config"]["task"]["temperature"] == 0
 
 
 def test_assistant_boundary_mask_and_overlength_are_not_truncated():

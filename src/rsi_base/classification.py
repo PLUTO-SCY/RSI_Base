@@ -1,5 +1,6 @@
 """Evolvable memory retrieval, context selection and two-call classification harness."""
 
+import json
 import math
 import re
 from collections import Counter
@@ -128,16 +129,24 @@ class MemoryIndex:
             for query, excluded in queries
             if (policy.retrieval_code, query, excluded) not in self.ranking_cache
         ]
-        if missing:
+        if not missing:
+            return
+        # The worker reads the whole JSON payload before ranking. Each job carries
+        # its own permitted memory, so bound the serialized input per process.
+        memory_bytes = len(json.dumps(self.training))
+        query_bytes = max(len(json.dumps(query)) for query, _ in missing)
+        batch_size = max(1, (16 * 1024**2) // (memory_bytes + query_bytes + 64))
+        for offset in range(0, len(missing), batch_size):
+            batch = missing[offset : offset + batch_size]
             outputs = run_code(
                 policy.retrieval_code,
                 [
                     {"query": query, "memory": self.permitted(query, excluded)}
-                    for query, excluded in missing
+                    for query, excluded in batch
                 ],
                 metrics=self.code_metrics,
             )
-            for (query, excluded), ranking in zip(missing, outputs, strict=True):
+            for (query, excluded), ranking in zip(batch, outputs, strict=True):
                 self.ranking_cache[(policy.retrieval_code, query, excluded)] = ranking
 
     def retrieve(self, query, policy, *, exclude_id=None):
