@@ -1,6 +1,6 @@
 # 实现结构
 
-当前实现包含固定权重的分类 harness 演化，以及冻结 harness 后的 LoRA SFT 模型更新。Meta 提出改动，宿主掌握任务执行、评分和候选选择；运行产物与源码分开保存。
+分类 harness 演化由 Meta 提出改动，宿主执行任务、评分并选择候选。模型更新入口包括冻结分类 harness 上的 LoRA SFT，以及固定数学 harness 上的 LoRA GRPO。两者导出同一类 PEFT adapter 供 Task 服务加载。
 
 ## 运行流程
 
@@ -39,7 +39,7 @@ Meta 读取源码 / 开发数据 / 完整轨迹 / 历史结果
 | `storage.py`、`types.py` | 原子写入、调用账本、预算和类型 |
 | `loop.py`、`benchmark.py`、`math_scoring.py`、`cli.py` | 通用记录辅助函数，以及独立的数学任务运行与评分接口 |
 
-`scripts/harness.sh` 统一对外入口；脚本层负责环境安装、参数解析、服务启动、运行调度和产物导出。核心流程不导入 GPU 框架。vLLM 放在 `.venv-task/`；`lora_train.py` 的训练入口延迟导入 GPU 依赖，运行在独立的 `.venv-train/`。
+`scripts/harness.sh` 统一对外入口。脚本层负责环境安装、参数解析、服务启动、运行调度和产物导出。独立 GPU 环境分别服务于 Task 推理、SFT 训练和 verl GRPO。 [环境与运行](getting-started.md#1-安装)
 
 ## Meta 的信息和权限
 
@@ -62,4 +62,6 @@ Claude Code 的配置目录、工作目录、模型和认证环境变量在子�
 - 更换分类数据：复用当前文件布局、标签协议和评测器，通过 `--data` 指定目录。
 - 增加任务类型：新增任务执行和评分模块，再接入独立运行入口；从已有明确用例出发调整共用逻辑。
 
-LoRA SFT 通过显式阶段接入：只用训练集留一法生成的正确最终调用训练，mask prompt loss；保存带基础模型与父 adapter 哈希的不可变产物；在同一推理服务内交叉评测模型和 harness，按开发集选择是否更新，再将训练配置和开发集反馈交给下一轮 Meta。详见 [LoRA SFT](lora-sft.md)。当前训练超参数固定在配置中，尚未实现训练策略搜索或自动数据配比。
+LoRA SFT 用留一法收集训练集轨迹，支持通过验证的最终回答或训练集标准标签作为监督目标。它在同一推理服务内交叉评测模型和 harness，按开发集选择模型，再把训练配置和开发集反馈交给下一轮 Meta。 [LoRA SFT](lora-sft.md)
+
+LoRA GRPO 把固定数学提示和训练题交给 verl 在线采样。`grpo_reward.py` 调用项目数值评分器，`train_grpo.py` 从 FSDP2 checkpoint 导出 LoRA，`rl.py` 通过现有 Task 服务做父代配对评测与模型选择。 [LoRA GRPO](lora-grpo.md)

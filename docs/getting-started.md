@@ -18,12 +18,14 @@ sh scripts/harness.sh setup --gpu --claude --sandbox
 | --- | --- | --- |
 | uv 0.11.17、Python 3.11.15、核心与开发依赖 | `bootstrap.sh`、`setup.sh`、`uv.lock` | `.local/`、`.venv/` |
 | vLLM 0.11.0 与 GPU 依赖 | `setup_task.sh`、`requirements/task.lock` | `.venv-task/` |
+| LoRA SFT（`--train`） | `setup_train.sh`、`requirements/train.lock` | `.venv-train/` |
+| verl LoRA GRPO（`--rl`） | `setup_rl.py`、`requirements/verl.json`、`requirements/rl-numpy.lock` | `.venvs/rl/` |
 | Claude Code 2.1.169 | `requirements/claude-code/package-lock.json` | `.local/claude-cli/` |
 | Python 检索执行隔离 | `setup_sandbox.py`、`requirements/sandbox.json` | `.local/bin/bwrap` |
 
 隔离执行依赖内核允许用户命名空间。提供的 bubblewrap 包针对 Linux x86_64/Ubuntu 20.04；其他系统可提供兼容的 `bwrap`。`doctor --ready` 会实际运行隔离探针，失败时先解决宿主兼容性。
 
-需要 LoRA 训练时加 `--train`，具体采样、训练和模型版本选择见 [LoRA SFT](lora-sft.md)。
+训练流程见 [LoRA SFT](lora-sft.md)和 [LoRA GRPO](lora-grpo.md)。GRPO 的依赖版本、宿主检查和安装故障处理见 [verl 环境排查](verl-troubleshooting.md)。
 
 仅做开发和离线检查：
 

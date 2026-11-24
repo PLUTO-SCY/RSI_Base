@@ -47,7 +47,7 @@ flowchart LR
 | **训练后端** | Transformers + PEFT / verl | 训练并导出 LoRA adapter，由 Task 服务加载评测 |
 | **实验宿主** | Python 编排与评测 | 固定评分协议，管理预算、版本、断点恢复与冻结后测试 |
 
-默认初始 harness 根据任务描述和标签，通过一次模型调用完成分类。harness 演化阶段固定权重，模型更新阶段使用经验证的训练轨迹进行 LoRA SFT。
+默认初始 harness 根据任务描述和标签，通过一次模型调用完成分类。harness 演化阶段固定 Task 权重。LoRA SFT 使用训练集轨迹做监督更新，LoRA GRPO 在固定数学 harness 上用在线采样和数值奖励更新权重。
 
 ## 快速开始
 
@@ -105,7 +105,7 @@ RSI_GPU=2 sh scripts/harness.sh serve-adapter
 
 ## LoRA GRPO
 
-使用 verl 在线采样并优化固定数学 harness 下的 Task 模型。训练可从基础模型开始，也可读取同一基座上的已有 LoRA adapter。安装、训练和父代配对评测见 [LoRA GRPO 使用说明](docs/lora-grpo.md)。
+使用 verl 在线采样并优化固定数学 harness 下的 Task 模型。训练可从基础模型开始，也可读取同一基座上的已有 LoRA adapter。参见 [LoRA GRPO 使用说明](docs/lora-grpo.md)与 [verl 环境排查](docs/verl-troubleshooting.md)。
 
 ## 实验与复用
 
@@ -136,4 +136,4 @@ RSI_Base/
 └── uv.lock                核心与开发依赖锁
 ```
 
-运行结果保存在 `runs/`，环境、缓存和模型保存在 `.local/`、`.venv/`、`.venv-task/`、`.venv-train/` 等本地目录，均由 Git 忽略。仓库只维护当前可复用的代码、脚本、配置、测试和必要文档。
+运行结果保存在 `runs/`。核心、Task 推理、SFT 和 GRPO 环境分别位于 `.venv/`、`.venv-task/`、`.venv-train/` 和 `.venvs/rl/`，缓存和模型位于 `.local/`。这些目录由 Git 忽略。环境入口见 [环境与运行](docs/getting-started.md#1-安装)。

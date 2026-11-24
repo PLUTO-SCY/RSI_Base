@@ -61,7 +61,8 @@ def main():
             "UV_PROJECT_ENVIRONMENT": str(root / ".venvs/rl"),
             "UV_LINK_MODE": "copy",
         }
-        # Use SDPA in the trainer because this tag's external flash-attn wheel is unavailable.
+        # The GRPO launcher uses SDPA and no critic. See docs/verl-troubleshooting.md.
+        # Apply the NumPy compatibility pin after syncing the untouched upstream lock.
         subprocess.run(
             [
                 "uv",

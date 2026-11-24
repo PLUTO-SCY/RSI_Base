@@ -10,7 +10,7 @@ sh scripts/harness.sh model
 .venv/bin/python scripts/prepare_grpo_data.py
 ```
 
-`requirements/verl.json` 固定 verl 版本、源码和上游依赖锁。RL 环境位于 `.venvs/rl/`，需要能运行 CUDA 13.0 的 NVIDIA 驱动。训练使用 PyTorch SDPA，安装跳过上游依赖组里的独立 FlashAttention wheel 和 TRL。`requirements/rl-numpy.lock` 固定与 Python 3.12 下 `mistral-common` 兼容的 NumPy 2.3.5，安装最后运行依赖一致性检查。Task 服务从 `.venv-task/` 启动。
+`requirements/verl.json` 固定 verl 版本、源码和上游依赖锁。RL 环境位于 `.venvs/rl/`，需要能运行 CUDA 13.0 的 NVIDIA 驱动。Task 服务从 `.venv-task/` 启动。依赖覆盖及验证方法见 [verl 环境排查](verl-troubleshooting.md)。
 
 默认数据以固定种子从 GSM8K 官方训练池划出 400 题作开发集，剩余 7,073 题用于训练。官方 1,319 题用作最终测试。也可用 `--data DIR` 接入相同格式的数值任务，目录提供 `train.jsonl`、`val.jsonl`、`test.jsonl`。每行包含字符串 `id`、`question`、`answer`。训练只读取训练划分，答案由验证器使用。训练阶段的 rollout 和 checkpoint 保存在指定的运行目录。
 
@@ -21,7 +21,7 @@ RSI_RL_GPUS=0,1 sh scripts/harness.sh rl train --output runs/grpo-demo
 RSI_GPU=2 sh scripts/harness.sh serve-adapter --run runs/grpo-demo
 ```
 
-训练可以改为 `RSI_RL_GPUS=0,1,2,3`。每批题数 `prompts_per_batch` 要能整除所选 GPU 数。`samples_per_prompt` 控制组内采样数。训练超参数、GPU、代码、数据和基座哈希在运行开始时固定。同一目录重试会用最近的 verl checkpoint 恢复，已导出的 adapter 直接校验后返回。不同设置使用新的目录。
+训练可以改为 `RSI_RL_GPUS=0,1,2,3`。每批题数 `prompts_per_batch` 必须是所选 GPU 数的整数倍。`samples_per_prompt` 控制组内采样数。训练超参数、GPU、代码、数据和基座哈希在运行开始时固定。同一目录重试会用最近的 verl checkpoint 恢复，已导出的 adapter 直接校验后返回。不同设置使用新的目录。
 
 从已有 adapter 开始时，把配置的 `parent_adapter` 设为其 `adapter/` 目录，并使用 `--config PATH`。父 adapter 和本轮的基座、rank、alpha 及目标模块必须匹配。GRPO 使用组内标准化优势，当前配方关闭 KL。日志保留每步采样与分数，组内全对或全错时 GRPO 没有该组的奖励学习信号。
 
