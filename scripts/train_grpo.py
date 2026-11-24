@@ -22,6 +22,7 @@ from transformers import AutoTokenizer
 from verl.model_merger.base_model_merger import ModelMergerConfig
 from verl.model_merger.fsdp_model_merger import FSDPModelMerger
 
+from rsi_base.agent import task_messages
 from rsi_base.loop import file_hash
 from rsi_base.lora_train import model_files
 from rsi_base.rl import GRPOConfig, freeze_inputs, parent_artifact, training_problems
@@ -36,10 +37,7 @@ BACKEND_SHA256 = file_hash(__file__)
 def build_parquet(problems, config, tokenizer, path):
     records = []
     for index, item in enumerate(problems):
-        prompt = [
-            {"role": "system", "content": config.system_prompt},
-            {"role": "user", "content": item["question"]},
-        ]
+        prompt = task_messages(config.system_prompt, item["question"])
         tokens = tokenizer.apply_chat_template(
             prompt, tokenize=True, add_generation_prompt=True, return_dict=False
         )

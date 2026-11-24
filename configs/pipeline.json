@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "model": "deepseek-v4.1-flash",
+    "base_url": "https://zgc.apihy.com",
+    "state_dir": ".local/claude-pipeline",
+    "prompt_char_budget": 1800,
+    "max_tokens": 8192,
+    "timeout": 600,
+    "effort": "medium"
+  },
+  "agent": {
+    "system_prompt": "Solve the math problem. Explain your reasoning, then end your answer with #### followed by a single number."
+  },
+  "schedule": null,
+  "sft_train_samples": 64,
+  "min_gain_questions": 1,
+  "sft": {
+    "training_mode": "lora",
+    "max_length": 2048,
+    "collection_repeats": 2,
+    "collection_temperature": 0.7
+  },
+  "grpo": {
+    "training_mode": "lora",
+    "steps": 20,
+    "train_samples": 240
+  },
+  "runtime": {
+    "task_gpu": 0,
+    "sft_gpus": [1],
+    "grpo_gpus": [2, 3],
+    "task_port": 18002
+  },
+  "limits": {
+    "rounds": 5,
+    "task_concurrency": 8,
+    "max_task_calls": 6000,
+    "max_meta_calls": 5,
+    "wall_seconds": 21600
+  }
+}

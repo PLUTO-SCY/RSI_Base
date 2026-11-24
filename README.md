@@ -3,16 +3,17 @@
 <h1>RSI Base</h1>
 
 <p><strong>递归自我改进的基础实验环境</strong></p>
-<p>让 Meta Agent 基于真实运行证据改进 Task Agent 的 harness。</p>
+<p>让 Meta Agent 基于运行证据选择下一次 harness 或模型权重更新。</p>
 
 <p>
   <a href="https://github.com/PLUTO-SCY/RSI_Base/actions/workflows/ci.yml"><img src="https://github.com/PLUTO-SCY/RSI_Base/actions/workflows/ci.yml/badge.svg?branch=main" alt="Offline checks"></a>
   <img src="https://img.shields.io/badge/Python-3.11-3776AB?logo=python&amp;logoColor=white" alt="Python 3.11">
-  <img src="https://img.shields.io/badge/Focus-Harness%20Evolution-0F766E" alt="Focus: Harness Evolution">
+  <img src="https://img.shields.io/badge/RSI-Harness%20%2B%20Weights-0F766E" alt="Harness and weight evolution">
 </p>
 
 <p>
   <a href="#快速开始">快速开始</a> ·
+  <a href="docs/pipeline.md">联合演化</a> ·
   <a href="docs/getting-started.md">使用文档</a> ·
   <a href="docs/architecture.md">实现结构</a> ·
   <a href="docs/lora-sft.md">LoRA SFT</a> ·
@@ -27,28 +28,26 @@
 
 ## 工作方式
 
-RSI Base 为 RSI 研究提供一套可复用的实验闭环。Meta 提出 harness 改动，宿主执行任务、评测并选择版本。SFT 与固定数学 harness 上的 verl GRPO 都可选择 **LoRA** 或 **全参微调**。
+RSI Base 为 RSI 研究提供一套可复用的实验闭环。联合演化中，Meta 每轮选择改 harness、用离线或在线数据做 SFT，或用 verl 做 GRPO。宿主执行候选、配对评测并选择下一轮的父版本。SFT 和 GRPO 均支持 **LoRA** 和 **全参微调**。
 
 ```mermaid
 flowchart LR
-    A["初始 Harness"] --> B["执行任务 · 收集轨迹"]
-    B --> C["Meta 分析 · 提议与探测"]
-    C --> D["宿主评测 · 选择与记录"]
-    D -->|下一轮| B
-    D -->|搜索结束| E["冻结版本 · 测试与导出"]
-    D -->|可选 LoRA SFT| F["采样 · 训练 · 模型选择"]
-    F -->|继续演化| B
+    A["父版本 · Harness + 模型"] --> B["Meta 分析开发集轨迹"]
+    B --> C["改 Harness · 离线 SFT · 在线 SFT · GRPO"]
+    C --> D["宿主配对评测"]
+    D -->|下一轮| A
+    D -->|演化结束| E["冻结版本 · 测试"]
 ```
 
 | 组件 | 当前实现 | 职责 |
 | --- | --- | --- |
-| **Meta Agent** | Claude Code + DeepSeek API | 查看源码、开发数据与完整轨迹，通过 MCP 探测并提交候选 |
+| **Meta Agent** | Claude Code + DeepSeek API | 为数学联合流程选择策略，为分类流程通过 MCP 探测并提交 harness |
 | **Task Agent** | Qwen3-4B-Instruct-2507 + vLLM | 通过 OpenAI 兼容接口执行任务，也可接入已有推理服务 |
 | **Harness** | 配置 + Python 检索函数 | 演化 prompt、检索算法、示例组织与单步／复核流程 |
 | **训练后端** | Transformers + PEFT / verl | 导出 LoRA adapter 或完整模型，由 Task 服务加载评测 |
 | **实验宿主** | Python 编排与评测 | 固定评分协议，管理预算、版本、断点恢复与冻结后测试 |
 
-默认初始 harness 根据任务描述和标签，通过一次模型调用完成分类。harness 演化阶段固定 Task 权重。LoRA SFT 使用训练集轨迹做监督更新，LoRA GRPO 在固定数学 harness 上用在线采样和数值奖励更新权重。
+联合流程使用单轮数学 harness。分类示例支持演化检索、示例组织和复核流程。
 
 ## 快速开始
 
@@ -94,7 +93,19 @@ sh scripts/harness.sh inspect
 默认使用 [`configs/default.json`](configs/default.json)，演化 **5 轮**，产物写入 `runs/demo/`。中断后使用相同命令恢复，已完成的请求会被复用。
 
 > [!TIP]
-> 已有 Task 推理服务时，可省略 GPU 环境安装与模型下载，修改配置中的 `task` 即可。环境均保存在项目内，安装脚本不修改系统 Python、shell profile 或全局 Claude 配置。
+> 分类流程可接入已有 Task 服务，修改配置中的 `task` 即可。环境均保存在项目内，安装脚本不修改系统 Python、shell profile 或全局 Claude 配置。
+
+## 联合演化
+
+准备 GPU、Claude、SFT 和 verl 环境后，用同一入口运行和测试。
+
+```sh
+.venv/bin/python scripts/prepare_grpo_data.py --with-references
+sh scripts/harness.sh pipeline run --output runs/joint-adaptive
+sh scripts/harness.sh pipeline test --output runs/joint-adaptive
+```
+
+默认配置和固定顺序对照见 [联合演化使用说明](docs/pipeline.md)。
 
 ## LoRA SFT
 
@@ -121,7 +132,7 @@ SFT 与 GRPO 配置可设置 `"training_mode": "full"`。全参模型以 `model/
 
 | 想做什么 | 入口 |
 | --- | --- |
-| 修改模型、轮数和预算 | [`configs/default.json`](configs/default.json) |
+| 修改模型、轮数和预算 | [联合演化配置](configs/pipeline.json) · [分类 harness 配置](configs/default.json) |
 | 运行离线检查 | `sh scripts/harness.sh check` |
 | 查看运行进度 | `sh scripts/harness.sh inspect runs/demo` |
 | 多种子实验、冻结后测试与曲线导出 | [运行与恢复](docs/getting-started.md#4-执行与恢复) |

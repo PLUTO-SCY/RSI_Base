@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import random
+import re
 import tempfile
 from pathlib import Path
 
@@ -12,11 +13,12 @@ import httpx
 
 from rsi_base.benchmark import check_disjoint, load_problems
 from rsi_base.loop import file_hash
-from rsi_base.storage import read_json, write_json
+from rsi_base.math_scoring import math_score
+from rsi_base.storage import read_json, read_jsonl, write_json
 from rsi_base.types import digest
 
 
-def get_split(lock, split, cache):
+def get_source(lock, split, cache):
     expected = lock["sources"][split]
     path = cache / f"{expected['sha256']}.jsonl"
     if not path.exists():
@@ -34,16 +36,20 @@ def get_split(lock, split, cache):
             staged.rename(path)
     if file_hash(path) != expected["sha256"]:
         raise ValueError(f"Cached GSM8K {split} source changed")
-    rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    rows = read_jsonl(path)
     if len(rows) != expected["count"]:
         raise ValueError(f"Unexpected GSM8K {split} size")
+    return rows
+
+
+def get_split(lock, split, cache):
     return [
         {
             "id": f"gsm8k-{split}-{i}",
             "question": row["question"],
             "answer": row["answer"].rsplit("####", 1)[1].strip(),
         }
-        for i, row in enumerate(rows)
+        for i, row in enumerate(get_source(lock, split, cache))
     ]
 
 
@@ -85,12 +91,47 @@ def prepare(output, root):
     return result
 
 
+def prepare_references(output, root):
+    lock = read_json(root / "requirements/data/gsm8k.json")
+    source = {
+        f"gsm8k-train-{index}": row
+        for index, row in enumerate(get_source(lock, "train", root / ".local/gsm8k-sources"))
+    }
+    references = []
+    for problem in load_problems(output / "train.jsonl"):
+        row = source[problem["id"]]
+        response = re.sub(r"<<[^<>]*>>", "", row["answer"])
+        if (
+            row["question"] != problem["question"]
+            or not math_score(response, problem["answer"])["score"]
+        ):
+            raise ValueError(f"GSM8K solution does not match {problem['id']}")
+        references.append({"id": problem["id"], "response": response})
+    path = output / "references.jsonl"
+    payload = "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in references).encode()
+    expected = hashlib.sha256(payload).hexdigest()
+    if path.exists() and file_hash(path) != expected:
+        raise ValueError("Existing GSM8K references changed. Use a new output directory")
+    if not path.exists():
+        with tempfile.TemporaryDirectory(dir=output) as temporary:
+            staged = Path(temporary) / path.name
+            staged.write_bytes(payload)
+            staged.replace(path)
+    return {"count": len(references), "sha256": expected}
+
+
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=root / "data/gsm8k-grpo")
+    parser.add_argument(
+        "--with-references", action="store_true", help="Export train-only solutions"
+    )
     args = parser.parse_args()
-    print(json.dumps(prepare(args.output, root), indent=2))
+    result = prepare(args.output, root)
+    if args.with_references:
+        result = {**result, "references": prepare_references(args.output, root)}
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

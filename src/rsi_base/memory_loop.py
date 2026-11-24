@@ -14,7 +14,7 @@ from pydantic import Field
 from .agent import TaskAgent
 from .classification import MemoryHarness, MemoryPolicy, effective_policy, label_score
 from .loop import completed, file_hash, seal
-from .storage import Ledger, append_json, read_json, write_json
+from .storage import Ledger, append_json, read_json, read_jsonl, write_json
 from .types import Limits, MetaSettings, ModelSettings, StrictModel, digest
 
 
@@ -99,7 +99,7 @@ def baseline_policies(prior_policy=None, reference_policies=None):
 
 
 def load_rows(path):
-    return [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
+    return read_jsonl(path)
 
 
 @contextmanager

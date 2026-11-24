@@ -25,6 +25,7 @@ case "$RSI_COMMAND" in
     echo "  run PHASE [arguments]    calibrate/search/suite/finalize; explicit full run"
     echo "  sft PHASE [arguments]    collect/train/evaluate/test for LoRA or full SFT"
     echo "  rl PHASE [arguments]     train/evaluate/test for LoRA or full GRPO"
+    echo "  pipeline PHASE [arguments]  Joint harness, SFT and GRPO development/test"
     echo "  serve-model [--run DIR] [--parent]  Serve trained weights or their parent"
     echo "  serve-adapter [--run DIR]  Alias for serve-model"
     echo "  runtime [arguments]      Save local model/runtime fingerprints"
@@ -47,6 +48,7 @@ case "$RSI_COMMAND" in
   run) exec .venv/bin/python scripts/run_memory.py "$@" ;;
   sft) exec .venv/bin/python scripts/run_sft.py "$@" ;;
   rl) exec .venv/bin/python scripts/run_rl.py "$@" ;;
+  pipeline) exec .venv/bin/python scripts/run_pipeline.py "$@" ;;
   serve-model|serve-adapter) exec .venv/bin/python scripts/serve_lora.py "$@" ;;
   runtime)
     [ -x .venv-task/bin/python ] || { echo "Run setup --gpu first." >&2; exit 1; }

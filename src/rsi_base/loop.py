@@ -2,7 +2,6 @@
 
 import fcntl
 import hashlib
-import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -10,7 +9,7 @@ from .agent import TaskAgent
 from .benchmark import check_disjoint, load_problems, score
 from .improve import ClaudeMeta
 from .math_scoring import math_score
-from .storage import Ledger, append_json, read_json, write_json
+from .storage import Ledger, append_json, read_json, read_jsonl, write_json
 from .types import AgentSpec, Proposal, digest
 
 
@@ -58,7 +57,7 @@ def evaluate(
     else:
         write_json(manifest, identity)
     path = directory / "results.jsonl"
-    records = [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+    records = read_jsonl(path) if path.exists() else []
     expected_ids = [x["id"] for x in problems]
     ids = [x["id"] for x in records]
     if len(set(ids)) != len(ids) or not set(ids).issubset(expected_ids):
@@ -159,11 +158,7 @@ def build_evidence(parent_records, problems, history, rounds_dir):
         if (directory / "proposal.json").exists() and (directory / "decision.json").exists():
             decision = read_json(directory / "decision.json")
             rows_path = directory / "results.jsonl"
-            rows = (
-                [json.loads(line) for line in rows_path.read_text().splitlines()]
-                if rows_path.exists()
-                else []
-            )
+            rows = read_jsonl(rows_path) if rows_path.exists() else []
             feedback.append(
                 {
                     "round": directory.name,
@@ -261,9 +256,7 @@ def _run(config, dev, test, output, ledger, task, meta, rounds):
             continue
         current = AgentSpec.model_validate(state["agent"])
         parent_dir = output / "rounds" / f"{state['selected_round']:03}"
-        parent_records = [
-            json.loads(line) for line in (parent_dir / "results.jsonl").read_text().splitlines()
-        ]
+        parent_records = read_jsonl(parent_dir / "results.jsonl")
         evidence = build_evidence(parent_records, dev, history, output / "rounds")
         evidence["fixed_task_instructions"] = (
             config.task.user_suffix or "Preserve the parent's answer-format contract."

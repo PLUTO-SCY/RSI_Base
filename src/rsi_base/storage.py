@@ -27,6 +27,11 @@ def read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def read_jsonl(path):
+    with Path(path).open(encoding="utf-8") as stream:
+        return [json.loads(line) for line in stream if line.strip()]
+
+
 def append_json(path, value):
     with Path(path).open("a", encoding="utf-8") as handle:
         handle.write(redact(json.dumps(value, ensure_ascii=False)) + "\n")
@@ -62,7 +67,7 @@ class Ledger:
     def records(self):
         if not self.path.exists():
             return []
-        return [json.loads(line) for line in self.path.read_text().splitlines()]
+        return read_jsonl(self.path)
 
     def start(self, kind, **metadata):
         maximum = self.limits.max_task_calls if kind == "task" else self.limits.max_meta_calls

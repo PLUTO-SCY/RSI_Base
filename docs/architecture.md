@@ -1,8 +1,8 @@
 # 实现结构
 
-分类 harness 演化由 Meta 提出改动，宿主执行任务、评分并选择候选。模型更新入口包括冻结分类 harness 上的 SFT，以及固定数学 harness 上的 verl GRPO。两者均支持 LoRA adapter 和全参 Hugging Face checkpoint。
+数学联合流程按轮次调度 harness、离线 SFT、在线 SFT 和 verl GRPO，并把收录的 harness 与模型权重一同传给下一轮。分类 harness 演化由 Meta 提出改动，宿主执行任务、评分并选择候选。SFT 和 GRPO 也有独立入口，均支持 LoRA adapter 和全参 Hugging Face checkpoint。 [联合演化](pipeline.md)
 
-## 运行流程
+## 分类 harness 运行流程
 
 ```text
 配置 + 数据锁 + 固定 Task 模型
@@ -36,6 +36,8 @@ Meta 读取源码 / 开发数据 / 完整轨迹 / 历史结果
 | `sft.py` | 训练集轨迹筛选、模型/harness 交叉评测、模型选择和下一轮配置 |
 | `lora_train.py` | 独立环境中的 Transformers/PEFT 训练、checkpoint 恢复与 adapter 产物 |
 | `rl.py`、`scripts/train_grpo.py` | 固定数学 harness、verl GRPO、模型导出和父代配对评测 |
+| `pipeline.py` | 联合策略选择、父版本接续、统一开发集与冻结测试 |
+| `pipeline_data.py`、`pipeline_runtime.py` | 离线与在线 SFT 数据、Task 服务和训练进程管理 |
 | `weights.py` | adapter 与完整 checkpoint 的文件校验和父模型解析 |
 | `storage.py`、`types.py` | 原子写入、调用账本、预算和类型 |
 | `loop.py`、`benchmark.py`、`math_scoring.py`、`cli.py` | 通用记录辅助函数，以及独立的数学任务运行与评分接口 |

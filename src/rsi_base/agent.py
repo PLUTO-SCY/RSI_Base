@@ -16,6 +16,14 @@ def credentials(root):
     return values
 
 
+def task_messages(system_prompt, question, user_suffix=""):
+    user_content = question + "\n\n" + user_suffix if user_suffix else question
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_content},
+    ]
+
+
 class TaskAgent:
     def __init__(self, settings, root):
         self.settings = settings
@@ -27,13 +35,7 @@ class TaskAgent:
         )
 
     def run(self, spec, question):
-        user_content = question
-        if self.settings.user_suffix:
-            user_content += "\n\n" + self.settings.user_suffix
-        messages = [
-            {"role": "system", "content": spec.system_prompt},
-            {"role": "user", "content": user_content},
-        ]
+        messages = task_messages(spec.system_prompt, question, self.settings.user_suffix)
         started = time.monotonic()
         response = self.client.chat.completions.create(
             model=self.settings.model,

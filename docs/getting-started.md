@@ -20,7 +20,7 @@ sh scripts/harness.sh setup --gpu --claude --sandbox --train --rl
 
 已有 harness 环境时，用 `sh scripts/harness.sh setup --train --rl` 补装训练环境。LoRA 和全参微调使用相同的训练依赖。
 
-默认 4B 模型以单卡服务，显存需求取决于上下文和并发，可以通过 `serve` 参数调整。已有远程 Task 服务时可省略 `--gpu`，并修改配置中的 `task`。
+默认 4B 模型以单卡服务，显存需求取决于上下文和并发，可以通过 `serve` 参数调整。独立分类流程可使用远程 Task 服务，省略 `--gpu` 并修改配置中的 `task`。数学联合流程在本机管理 Task 服务。 [联合演化](pipeline.md)
 
 | 内容 | 脚本 / 版本文件 | 本地位置 |
 | --- | --- | --- |
@@ -69,6 +69,8 @@ data/s2d/
 ```sh
 .venv/bin/python scripts/prepare_grpo_data.py
 ```
+
+联合演化使用同一数据目录。加 `--with-references` 可同时生成离线 SFT 所需的训练题参考解答。
 
 ## 3. 启动 Task 服务
 
